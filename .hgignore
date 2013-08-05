@@ -1,0 +1,6 @@
+syntax: glob
+pbrenderer/Debug/
+pbrenderer/Release/
+*.ipch
+Debug/
+Release/
