@@ -10,11 +10,12 @@
 #include <glm/gtx/projection.hpp>
 
 #include "mesh.h"
+#include "LYCamera.h"
 
 int width = 1024;
 int height = 768;
 
-float particleRadius = 0.1f;
+float particleRadius = 0.01f;
 
 const float NEARP = 0.1f;
 const float FARP = 100.0f;
@@ -37,6 +38,7 @@ glm::mat4 mv;
 glm::mat4 p;
 
 Mesh* m_pMesh;
+LYCamera *m_pCamera;
 
 // initialize OpenGL
 void initGL(int *argc, char **argv){
@@ -55,6 +57,7 @@ void initGL(int *argc, char **argv){
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 	
 	m_pMesh = new Mesh();
+	m_pCamera = new LYCamera();
 
 	m_pMesh->LoadMesh("bunny-color.ply");
 	glutReportErrors();
@@ -62,6 +65,7 @@ void initGL(int *argc, char **argv){
 
 void reshape(int w, int h)
 {
+	m_pCamera->perspProjection(w, h, 60.0f, NEARP, FARP);
 	p = glm::mat4();
 	p = glm::perspective(60.0f, (float) w/ (float) h, NEARP, FARP);
 
@@ -166,9 +170,6 @@ void idle(void)
 	glutPostRedisplay();
 }
 
-float modelView[16];
-float projection[16];
-
 void display()
 {
 	// update the simulation
@@ -189,6 +190,7 @@ void display()
 	glm::mat4 rotX = glm::rotate(camera_rot_lag[0], 1.0f, 0.0f, 0.0f);
 	glm::mat4 rotY = glm::rotate(camera_rot_lag[1], 0.0f, 1.0f, 0.0f);
 	mv = mv * rotX * rotY;
+	m_pCamera->setModelView(mv);
 	// cube
 	glColor3f(1.0, 1.0, 1.0);
 

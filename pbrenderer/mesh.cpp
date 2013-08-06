@@ -199,7 +199,7 @@ void Mesh::Render2(glm::mat4 p, glm::mat4 mv, float particleRadius)
 
 	mainShader->useShader();
 	glUniformMatrix4fv(glGetUniformLocation(mainShader->getProgramId(), "mv"), 1, GL_FALSE, &mv[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(mainShader->getProgramId(), "p"), 1, GL_FALSE, &mv[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(mainShader->getProgramId(), "p"), 1, GL_FALSE, &p[0][0]);
 	glUniform1f( glGetUniformLocation(mainShader->getProgramId(), "pointScale"), 768.0f / tanf(60.0f*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(mainShader->getProgramId(), "pointRadius"), particleRadius);
 	Render();
