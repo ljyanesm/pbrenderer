@@ -27,6 +27,6 @@ void main()
 	fs_Position = vec4(Position.xyz, 1.0);
 
 	vec4 pos = vec4(Position, 1.0);
-	gl_Position = pos * p * mv;
+	gl_Position = p * mv * pos;
 	vsColor = Color;
 }

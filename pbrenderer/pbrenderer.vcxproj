@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="LYCamera.cpp" />
     <ClCompile Include="LYShader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_3d.cpp" />
@@ -87,6 +88,7 @@
     <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LYCamera.h" />
     <ClInclude Include="LYShader.h" />
     <ClInclude Include="math_3d.h" />
     <ClInclude Include="mesh.h" />
