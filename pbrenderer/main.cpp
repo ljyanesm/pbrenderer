@@ -11,6 +11,9 @@
 
 #include "mesh.h"
 #include "LYCamera.h"
+#include "Screenspace_Renderer.h"
+
+Screenspace_Renderer *screenspace_renderer;
 
 int width = 1024;
 int height = 768;
@@ -33,6 +36,8 @@ bool displayEnabled = true;
 bool bPause = false;
 
 const float inertia = 0.1f;
+
+Screenspace_Renderer::DisplayMode mode = Screenspace_Renderer::DISPLAY_TOTAL;
 
 glm::mat4 mv;
 glm::mat4 p;
@@ -60,6 +65,9 @@ void initGL(int *argc, char **argv){
 	m_pCamera = new LYCamera();
 
 	m_pMesh->LoadMesh("bunny-color.ply");
+
+	screenspace_renderer = new Screenspace_Renderer(m_pMesh, m_pCamera);
+
 	glutReportErrors();
 }
 
@@ -135,6 +143,10 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case 'q':
 		exit(0);
 		break;
+	case 'p':
+		mode = (Screenspace_Renderer::DisplayMode)
+			((mode+ 1) % Screenspace_Renderer::NUM_DISPLAY_MODES);
+		break;
 	case 'r':
 		displayEnabled = !displayEnabled;
 		break;
@@ -194,7 +206,7 @@ void display()
 	// cube
 	glColor3f(1.0, 1.0, 1.0);
 
-	m_pMesh->Render2(p, mv, particleRadius);
+	screenspace_renderer->display(mode);
 
 	glutSwapBuffers();
 	glutReportErrors();

@@ -85,6 +85,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_3d.cpp" />
     <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="Screenspace_Renderer.cpp" />
     <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +93,7 @@
     <ClInclude Include="LYShader.h" />
     <ClInclude Include="math_3d.h" />
     <ClInclude Include="mesh.h" />
+    <ClInclude Include="Screenspace_Renderer.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
