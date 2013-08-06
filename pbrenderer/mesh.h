@@ -59,12 +59,32 @@ struct Vertex
 
 class Mesh
 {
+
+#define INVALID_MATERIAL 0xFFFFFFFF
+
+	struct MeshEntry {
+		MeshEntry();
+
+		~MeshEntry();
+
+		void Init(const std::vector<Vertex>& Vertices,
+			const std::vector<unsigned int>& Indices);
+
+		GLuint VB;
+		GLuint IB;
+		unsigned int NumIndices;
+		unsigned int MaterialIndex;
+};
+
 public:
     Mesh();
 
     ~Mesh();
 
     bool LoadMesh(const std::string& Filename);
+
+	const std::vector<MeshEntry> getEntries() {return m_Entries; }
+	const std::vector<Texture*> getTextures() { return m_Textures; }
 
 	void Render();
 	void Render2(glm::mat4 p, glm::mat4 mv, float pr);
@@ -75,22 +95,6 @@ private:
 	void InitShaders();
     bool InitMaterials(const aiScene* pScene, const std::string& Filename);
     void Clear();
-
-#define INVALID_MATERIAL 0xFFFFFFFF
-
-    struct MeshEntry {
-        MeshEntry();
-
-        ~MeshEntry();
-
-        void Init(const std::vector<Vertex>& Vertices,
-                  const std::vector<unsigned int>& Indices);
-
-        GLuint VB;
-        GLuint IB;
-        unsigned int NumIndices;
-        unsigned int MaterialIndex;
-    };
 
     std::vector<MeshEntry> m_Entries;
     std::vector<Texture*> m_Textures;

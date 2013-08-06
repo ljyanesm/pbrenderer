@@ -46,9 +46,7 @@ LYshader::LYshader(const char* vss,const char* fss, const char *attribLoc)
 	glAttachShader(program,fs);
 	
 	glBindAttribLocation(program, 0, "Position");
-	glBindAttribLocation(program, 1, "Normal");
-	glBindAttribLocation(program, 2, "Texture");
-	glBindAttribLocation(program, 3, "Color");
+	glBindAttribLocation(program, 1, attribLoc);
 
 	glLinkProgram(program);
 	glUseProgram(program);	

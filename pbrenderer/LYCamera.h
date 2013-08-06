@@ -34,6 +34,12 @@ public:
 
 	glm::mat4 getProjection() { return projection; }
 
+	int getWidth() { return m_width; }
+	int getHeight() { return m_height; }
+	float getFOV() { return m_fov; }
+	float getNear() { return m_near; }
+	float getFar() { return m_far; }
+
 private:
 	glm::mat4 modelview;
 	glm::mat4 projection;
