@@ -4,3 +4,5 @@ pbrenderer/Release/
 *.ipch
 Debug/
 Release/
+pbrenderer.opensdf
+pbrenderer.sdf
