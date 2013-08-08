@@ -1,4 +1,4 @@
-#version 330
+#version 420
 
 uniform mat4x4 u_ModelView;
 uniform mat4x4 u_Persp;

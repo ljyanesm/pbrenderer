@@ -1,4 +1,7 @@
 #version 330
+
+uniform float u_Width;
+uniform float u_Height;
 uniform mat4 u_Persp;
 uniform mat4 u_InvTrans;
 uniform mat4 u_InvProj;
@@ -37,8 +40,8 @@ vec3 getEyePos(in vec2 texCoord){
 void main()
 {       
     //Get Depth Information about the Pixel
-	vec2 texel_x = vec2(1.0/640.0, 0.0);
-	vec2 texel_y = vec2(0.0, 1.0/480.0);
+	vec2 texel_x = vec2(u_Width, 0.0);
+	vec2 texel_y = vec2(0.0, u_Height);
 
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
 	if (exp_depth > 0.99)

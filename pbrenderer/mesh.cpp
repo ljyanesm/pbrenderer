@@ -26,6 +26,7 @@ Mesh::MeshEntry::~MeshEntry()
 void Mesh::MeshEntry::Init(const std::vector<Vertex>& Vertices,
                           const std::vector<unsigned int>& Indices)
 {
+	m_Vertices = Vertices;
     NumIndices = Indices.size();
 
     glGenBuffers(1, &VB);

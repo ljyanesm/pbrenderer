@@ -49,7 +49,6 @@ LYshader::LYshader(const char* vss,const char* fss, const char *attribLoc)
 	glBindAttribLocation(program, 1, attribLoc);
 
 	glLinkProgram(program);
-	glUseProgram(program);	
 }
 
 LYshader::~LYshader()

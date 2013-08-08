@@ -37,7 +37,7 @@ bool bPause = false;
 
 const float inertia = 0.1f;
 
-Screenspace_Renderer::DisplayMode mode = Screenspace_Renderer::DISPLAY_TOTAL;
+Screenspace_Renderer::DisplayMode mode = Screenspace_Renderer::DISPLAY_DEPTH;
 
 glm::mat4 mv;
 glm::mat4 p;
@@ -62,7 +62,7 @@ void initGL(int *argc, char **argv){
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 	
 	m_pMesh = new Mesh();
-	m_pCamera = new LYCamera();
+	m_pCamera = new LYCamera(width, height);
 
 	m_pMesh->LoadMesh("bunny-color.ply");
 
@@ -165,6 +165,9 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case GLUT_KEY_DOWN:
 		camera_trans[2] -= 0.5f;
 		break;
+	case 'd':
+		screenspace_renderer->dumpIntoPdb("bunny");
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -187,6 +190,7 @@ void display()
 	// update the simulation
 	if (!bPause)
 	{
+		screenspace_renderer->setPointRadius(particleRadius);
 	}
 
 	// render
@@ -204,7 +208,6 @@ void display()
 	mv = mv * rotX * rotY;
 	m_pCamera->setModelView(mv);
 	// cube
-	glColor3f(1.0, 1.0, 1.0);
 
 	screenspace_renderer->display(mode);
 

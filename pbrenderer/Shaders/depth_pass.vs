@@ -1,4 +1,4 @@
-#version 330
+#version 420
 
 uniform mat4x4 u_ModelView;
 uniform mat4x4 u_Persp;
@@ -7,8 +7,8 @@ uniform mat4x4 u_InvTrans;
 uniform float pointRadius;  // point size in world space
 uniform float pointScale;   // scale to calculate size in pixels
 
-in vec3 Position;
-in vec3 Color;
+layout (location = 0) in vec3 Position;
+layout (location = 3) in vec3 Color;
 
 out vec3 fs_PosEye;
 out vec4 fs_Position;

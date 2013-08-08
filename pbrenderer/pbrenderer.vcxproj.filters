@@ -62,10 +62,34 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="mainShader.frag">
+    <None Include="Shaders\blur_pass.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="mainShader.vs">
+    <None Include="Shaders\blur_pass.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\depth_pass.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\depth_pass.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\mainShader.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\mainShader.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\normal_pass.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\normal_pass.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\shader.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\shader.vs">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

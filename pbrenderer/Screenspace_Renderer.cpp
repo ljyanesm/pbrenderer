@@ -185,24 +185,11 @@ void Screenspace_Renderer::_initFBO(int w, int h) {
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F , w, h, 0, GL_RGBA, GL_FLOAT, 0);
 
-	////Background Texture Initialization
-	//glBindTexture(GL_TEXTURE_2D, m_backgroundTexture);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-	//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB , w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-	//glBindTexture(GL_TEXTURE_2D, 0);
-
-	//m_backgroundTexData = (unsigned char *)malloc(sizeof(unsigned char) * 4 * w * h);
 
 	glGenFramebuffers(1, &m_FBO);
 	glGenFramebuffers(1, &m_normalsFBO);
-	//glGenFramebuffers(1, &m_backgroundFBO);
 	glGenFramebuffers(1, &m_blurDepthFBO);
 
 	//Create First Framebuffer Object
@@ -210,22 +197,22 @@ void Screenspace_Renderer::_initFBO(int w, int h) {
 
 	// Instruct openGL that we won't bind a color texture with the currently binded FBO
 	glReadBuffer(GL_NONE);
+
 	GLint position_loc = glGetFragDataLocation(depthShader->getProgramId(),"out_Position");
 	GLint color_loc = glGetFragDataLocation(depthShader->getProgramId(),"out_Color");
 	GLenum draws [2];
 	draws[position_loc] = GL_COLOR_ATTACHMENT1;
 	draws[color_loc] = GL_COLOR_ATTACHMENT0;
 
-	glDrawBuffers(2, draws);
-
 	// attach the texture to FBO depth attachment point
-	int test = GL_COLOR_ATTACHMENT0;
 	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_depthTexture, 0);
 	glBindTexture(GL_TEXTURE_2D, m_positionTexture);    
 	glFramebufferTexture(GL_FRAMEBUFFER, draws[position_loc], m_positionTexture, 0);
 	glBindTexture(GL_TEXTURE_2D, m_colorTexture);    
 	glFramebufferTexture(GL_FRAMEBUFFER, draws[color_loc], m_colorTexture, 0);
+
+	glDrawBuffers(2, draws);
 
 	// check FBO status
 	FBOstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -277,22 +264,24 @@ void Screenspace_Renderer::_drawPoints()
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	for (unsigned int i = 0 ; i < m_mesh->getEntries().size() ; i++) {
-		glBindBuffer(GL_ARRAY_BUFFER, m_mesh->getEntries()[i].VB);
+	unsigned int size = m_mesh->getEntries()->size();
+	for (unsigned int i = 0 ; i < size ; i++) {
+		int vbo = m_mesh->getEntries()->at(i).VB;
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)12);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20);
 		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)32);
+		int ib = m_mesh->getEntries()->at(i).IB;
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mesh->getEntries()[i].IB);
+		const unsigned int MaterialIndex = m_mesh->getEntries()->at(i).MaterialIndex;
 
-		const unsigned int MaterialIndex = m_mesh->getEntries()[i].MaterialIndex;
-
-		if (MaterialIndex < m_mesh->getTextures().size() && m_mesh->getTextures()[MaterialIndex]) {
-			m_mesh->getTextures()[MaterialIndex]->Bind(GL_TEXTURE0);
+		if (MaterialIndex < m_mesh->getTextures()->size() && m_mesh->getTextures()->at(MaterialIndex)) {
+			m_mesh->getTextures()->at(MaterialIndex)->Bind(GL_TEXTURE0);
 		}
-
-		glDrawElements(GL_POINTS, m_mesh->getEntries()[i].NumIndices, GL_UNSIGNED_INT, 0);
+		int numIndices = m_mesh->getEntries()->at(i).NumIndices;
+		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	}
 
 	glDisableVertexAttribArray(0);
@@ -313,18 +302,24 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	_bindFBO(m_FBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	glEnable(GL_TEXTURE_2D);
+
 	//Draw Particles
 	glEnable(GL_POINT_SPRITE_ARB);
+	glActiveTexture(GL_TEXTURE0);
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
 	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
 	depthShader->useShader();
+	GLint pointScale_loc = glGetUniformLocation(depthShader->getProgramId(), "pointScale");
+	GLint pointRadius_loc =  glGetUniformLocation(depthShader->getProgramId(), "pointRadius");
+	GLint u_ModelView_loc = glGetUniformLocation(depthShader->getProgramId(),"u_ModelView");
+	GLint u_Persp_loc = glGetUniformLocation(depthShader->getProgramId(),"u_Persp");
+	GLint u_InvTrans = glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans");
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "u_Far"), m_camera->getFar() );
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "u_Near"), m_camera->getNear() );
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE,&m_camera->getModelView()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
@@ -373,6 +368,8 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 
 	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Far"), m_camera->getFar() );
 	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Near"), m_camera->getNear() );
+	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Width"), 1.0/m_camera->getWidth() );
+	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Height"), 1.0/m_camera->getHeight() );
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 	glm::mat4 inverse_projectiond = glm::inverse(m_camera->getProjection());
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_InvProj"),1,GL_FALSE,&inverse_projectiond[0][0]);
@@ -413,6 +410,7 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 
 	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Far"), m_camera->getFar());
 	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Near"), m_camera->getNear());
+	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Aspect"), m_camera->getWidth()/m_camera->getHeight());
 	glUniform1i( glGetUniformLocation(totalShader->getProgramId(), "u_DisplayType"), mode);
 
 	glDrawElements(GL_TRIANGLES, m_device_quad.num_indices, GL_UNSIGNED_SHORT,0);
@@ -421,4 +419,26 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
+}
+
+void Screenspace_Renderer::dumpIntoPdb(std::string outputFilename)
+{
+	std::ofstream outFile;
+	outFile.open((outputFilename+".pdb").c_str());
+	std::vector<Vertex> vertices = m_mesh->getEntries()->at(0).m_Vertices;
+	for(int i=0; i< vertices.size(); i++)
+	{
+		float localSCP[3] = {vertices.at(i).m_pos.x, vertices.at(i).m_pos.y, vertices.at(i).m_pos.z}; //get centre values of points
+
+		outFile << "ATOM "<<std::setw(6)<<i+1<<" O   HOH     1    ";
+		outFile << std::setw(8);
+		outFile << std::setprecision(3);
+		outFile.setf(std::ios::fixed);
+		outFile <<std::setw(8)<<std::setprecision(3)<<localSCP[0]<<std::setw(8)<<std::setprecision(3)<<localSCP[1]<<std::setw(8)<<std::setprecision(3)<<localSCP[2];
+		outFile << "  1.00 67.53           O  "<<std::endl;
+
+	}
+	outFile << "END                                                                             " << std::endl;
+	outFile.close();
+
 }

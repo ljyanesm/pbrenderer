@@ -1,5 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <iostream>
+#include <iomanip>
 
 #include "LYShader.h"
 #include "LYCamera.h"
@@ -46,6 +48,8 @@ public:
 	void setCamera(LYCamera *c) { m_camera = c; }
 	void setMesh(Mesh *m) { m_mesh = m; }
 	void setPointRadius(float r) { m_pointRadius = r; }
+
+	void dumpIntoPdb(std::string o);
 
 protected:
 	void _initQuad();
