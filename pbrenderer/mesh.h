@@ -70,6 +70,7 @@ class Mesh
 		void Init(const std::vector<Vertex>& Vertices,
 			const std::vector<unsigned int>& Indices);
 
+		std::vector<Vertex> m_Vertices;
 		GLuint VB;
 		GLuint IB;
 		unsigned int NumIndices;
@@ -83,8 +84,10 @@ public:
 
     bool LoadMesh(const std::string& Filename);
 
-	const std::vector<MeshEntry> getEntries() {return m_Entries; }
-	const std::vector<Texture*> getTextures() { return m_Textures; }
+	const std::vector<MeshEntry> *getEntries() { return &m_Entries; }
+	const std::vector<Texture*>  *getTextures() { return &m_Textures; }
+
+
 
 	void Render();
 	void Render2(glm::mat4 p, glm::mat4 mv, float pr);

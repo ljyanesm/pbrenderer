@@ -30,6 +30,7 @@ uniform samplerCube u_Cubemaptex;
 
 uniform float u_Far;
 uniform float u_Near;
+uniform float u_Aspect;
 uniform int u_DisplayType;
 
 in vec2 fs_Texcoord;
@@ -46,7 +47,7 @@ float linearizeDepth(float exp_depth, float near, float far) {
 
 vec3 uvToEye(vec2 texCoord, float depth){
 	float fovy = radians(60.0);
-	float aspect = 640.0f / 480.0f;
+	float aspect = u_Aspect;
 	float invFocalLenX   = tan(fovy * 0.5) * aspect;
 	float invFocalLenY   = tan(fovy * 0.5);
 	//vec2 uv = (texCoord * vec2(2.0,-2.0) - vec2(1.0,-1.0));
