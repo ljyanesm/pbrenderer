@@ -8,10 +8,10 @@
 #undef main
 #include <SDL_image.h>
 
-class Texture
+class LYTexture
 {
 public:
-    Texture(GLenum TextureTarget, const char *FileName);
+    LYTexture(GLenum TextureTarget, const char *FileName);
 
     bool Load();
 
