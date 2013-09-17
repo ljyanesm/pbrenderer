@@ -1,13 +1,13 @@
 #include <iostream>
-#include "texture.h"
+#include "LYTexture.h"
 
-Texture::Texture(GLenum TextureTarget, const char* FileName)
+LYTexture::LYTexture(GLenum TextureTarget, const char* FileName)
 {
     m_textureTarget = TextureTarget;
     m_fileName      = FileName;
 }
 
-bool Texture::Load()
+bool LYTexture::Load()
 {
 	SDL_Surface *img = IMG_Load(m_fileName);
 	SDL_PixelFormat form = {NULL, 32, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff, 0, 255};
@@ -22,7 +22,7 @@ bool Texture::Load()
     return true;
 }
 
-void Texture::Bind(GLenum TextureUnit)
+void LYTexture::Bind(GLenum TextureUnit)
 {
     glActiveTexture(TextureUnit);
     glBindTexture(m_textureTarget, m_textureObj);

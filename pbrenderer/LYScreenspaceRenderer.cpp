@@ -1,4 +1,4 @@
-#include "Screenspace_Renderer.h"
+#include "LYScreenspaceRenderer.h"
 
 void checkFramebufferStatus(GLenum framebufferStatus) {
 	switch (framebufferStatus) {
@@ -30,14 +30,14 @@ void checkFramebufferStatus(GLenum framebufferStatus) {
 	}
 }
 
-Screenspace_Renderer::Screenspace_Renderer()
+LYScreenspaceRenderer::LYScreenspaceRenderer()
 {
 	_initShaders();
 	_initFBO(m_camera->getWidth(), m_camera->getHeight());
 	_initQuad();
 }
 
-Screenspace_Renderer::Screenspace_Renderer(Mesh *m, LYCamera *c) :
+LYScreenspaceRenderer::LYScreenspaceRenderer(LYMesh *m, LYCamera *c) :
 	m_mesh(m), 
 	m_camera(c)
 {
@@ -47,11 +47,11 @@ Screenspace_Renderer::Screenspace_Renderer(Mesh *m, LYCamera *c) :
 }
 
 
-Screenspace_Renderer::~Screenspace_Renderer(void)
+LYScreenspaceRenderer::~LYScreenspaceRenderer(void)
 {
 }
 
-void Screenspace_Renderer::_initShaders() 
+void LYScreenspaceRenderer::_initShaders() 
 {
 	mainShader = new LYshader("./shaders/mainShader.vs", "./shaders/mainShader.frag", "Color");
 	depthShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
@@ -60,26 +60,22 @@ void Screenspace_Renderer::_initShaders()
 	totalShader = new LYshader("./shaders/shader.vs", "./shaders/shader.frag", "Texcoord");
 }
 
-void Screenspace_Renderer::_setTextures() {
-	glEnable(GL_TEXTURE_2D);
+void LYScreenspaceRenderer::_setTextures() {
 	glBindTexture(GL_TEXTURE_2D,0); 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glColorMask(true,true,true,true);
 	glDisable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Screenspace_Renderer::_bindFBO(GLuint FBO) {
-	glDisable(GL_TEXTURE_2D);
+void LYScreenspaceRenderer::_bindFBO(GLuint FBO) {
 	glBindTexture(GL_TEXTURE_2D,0); //Bad mojo to unbind the framebuffer using the texture
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	//glColorMask(false,false,false,false);
 	glEnable(GL_DEPTH_TEST);
 }
 
-void Screenspace_Renderer::_initQuad() {
+void LYScreenspaceRenderer::_initQuad() {
 	float size = 1.0f;
 	vertex2_t verts [] = {  {glm::vec3(-size,size,-0.2f),glm::vec2(0,1)},
 	{glm::vec3(-size,-size,-0.2f),glm::vec2(0,0)},
@@ -117,10 +113,10 @@ void Screenspace_Renderer::_initQuad() {
 	glBindVertexArray(0);
 }
 
-void Screenspace_Renderer::_initFBO(int w, int h) {
+void LYScreenspaceRenderer::_initFBO(int w, int h) {
 	GLenum FBOstatus;
 
-	glActiveTexture(GL_TEXTURE10);
+	glActiveTexture(GL_TEXTURE0);
 
 	glGenTextures(1, &m_depthTexture);
 	glGenTextures(1, &m_colorTexture);
@@ -131,13 +127,11 @@ void Screenspace_Renderer::_initFBO(int w, int h) {
 
 	//Depth Texture Initializations
 	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
-
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
@@ -150,40 +144,40 @@ void Screenspace_Renderer::_initFBO(int w, int h) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
 
 	//Normal Texture Initialization
 	glBindTexture(GL_TEXTURE_2D, m_normalTexture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F , w, h, 0, GL_RGBA, GL_FLOAT,0);
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F , w, h, 0, GL_RGBA, GL_FLOAT,0);
 
 	//Position Texture Initialization
 	glBindTexture(GL_TEXTURE_2D, m_positionTexture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F , w, h, 0, GL_RGBA, GL_FLOAT,0);
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F , w, h, 0, GL_RGBA, GL_FLOAT,0);
 
 	//Color Texture Initialization
 	glBindTexture(GL_TEXTURE_2D, m_colorTexture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F , w, h, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F , w, h, 0, GL_RGBA, GL_FLOAT, 0);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -257,7 +251,7 @@ void Screenspace_Renderer::_initFBO(int w, int h) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Screenspace_Renderer::_drawPoints()
+void LYScreenspaceRenderer::_drawPoints()
 {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -268,10 +262,10 @@ void Screenspace_Renderer::_drawPoints()
 	for (unsigned int i = 0 ; i < size ; i++) {
 		int vbo = m_mesh->getEntries()->at(i).VB;
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)12);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)32);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
 		int ib = m_mesh->getEntries()->at(i).IB;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
@@ -291,25 +285,21 @@ void Screenspace_Renderer::_drawPoints()
 
 }
 
-void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
+void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 {
 	glm::mat4 inverse_transposed = glm::inverse(m_camera->getModelView());
 	//Render Attributes to Texture
-	glClearColor(0.75, 0.75, 0.75, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	_setTextures();
 	_bindFBO(m_FBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glEnable(GL_TEXTURE_2D);
-
 	//Draw Particles
 	glEnable(GL_POINT_SPRITE_ARB);
 	glActiveTexture(GL_TEXTURE0);
-	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
-	glDepthMask(GL_TRUE);
+	//glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
 	depthShader->useShader();
@@ -337,8 +327,6 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glBindVertexArray(m_device_quad.vertex_array);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_device_quad.vbo_indices);
 
-	glEnable(GL_TEXTURE_2D);
-
 	glActiveTexture(GL_TEXTURE11);
 	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 	glUniform1i(glGetUniformLocation(blurDepthShader->getProgramId(), "u_Depthtex"),11);
@@ -352,12 +340,11 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	//Write Normals to Texture from Depth Texture
 	_setTextures();
 	_bindFBO(m_normalsFBO);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	normalShader->useShader();
 	glBindVertexArray(m_device_quad.vertex_array);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_device_quad.vbo_indices);
-
-	glEnable(GL_TEXTURE_2D);
 
 	glActiveTexture(GL_TEXTURE11);
 	glBindTexture(GL_TEXTURE_2D, m_blurDepthTexture);
@@ -368,8 +355,8 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 
 	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Far"), m_camera->getFar() );
 	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Near"), m_camera->getNear() );
-	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Width"), 1.0/m_camera->getWidth() );
-	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Height"), 1.0/m_camera->getHeight() );
+	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Width"), (GLfloat) 1.0/m_camera->getWidth() );
+	glUniform1f( glGetUniformLocation(normalShader->getProgramId(), "u_Height"), (GLfloat) 1.0/m_camera->getHeight() );
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 	glm::mat4 inverse_projectiond = glm::inverse(m_camera->getProjection());
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_InvProj"),1,GL_FALSE,&inverse_projectiond[0][0]);
@@ -384,8 +371,6 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	totalShader->useShader();
 	glBindVertexArray(m_device_quad.vertex_array);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_device_quad.vbo_indices);
-
-	glEnable(GL_TEXTURE_2D);
 
 	glActiveTexture(GL_TEXTURE6);
 	glBindTexture(GL_TEXTURE_2D, m_blurDepthTexture);
@@ -410,7 +395,7 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 
 	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Far"), m_camera->getFar());
 	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Near"), m_camera->getNear());
-	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Aspect"), m_camera->getWidth()/m_camera->getHeight());
+	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Aspect"), (GLfloat) m_camera->getWidth()/m_camera->getHeight());
 	glUniform1i( glGetUniformLocation(totalShader->getProgramId(), "u_DisplayType"), mode);
 
 	glDrawElements(GL_TRIANGLES, m_device_quad.num_indices, GL_UNSIGNED_SHORT,0);
@@ -421,12 +406,12 @@ void Screenspace_Renderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glBindVertexArray(0);
 }
 
-void Screenspace_Renderer::dumpIntoPdb(std::string outputFilename)
+void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
 {
 	std::ofstream outFile;
 	outFile.open((outputFilename+".pdb").c_str());
-	std::vector<Vertex> vertices = m_mesh->getEntries()->at(0).m_Vertices;
-	for(int i=0; i< vertices.size(); i++)
+	std::vector<LYVertex> vertices = m_mesh->getEntries()->at(0).m_Vertices;
+	for(unsigned int i=0; i< vertices.size(); i++)
 	{
 		float localSCP[3] = {vertices.at(i).m_pos.x, vertices.at(i).m_pos.y, vertices.at(i).m_pos.z}; //get centre values of points
 
