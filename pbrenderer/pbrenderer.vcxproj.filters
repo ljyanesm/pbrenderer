@@ -36,9 +36,6 @@
     <ClCompile Include="LYScreenspaceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LYSpaceHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LYOctree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
