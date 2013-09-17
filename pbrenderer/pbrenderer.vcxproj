@@ -83,7 +83,6 @@
     <ClCompile Include="LYCamera.cpp" />
     <ClCompile Include="LYCell.cpp" />
     <ClCompile Include="LYOctree.cpp" />
-    <ClCompile Include="LYSpaceHandler.cpp" />
     <ClCompile Include="LYShader.cpp" />
     <ClCompile Include="LYSpatialHash.cpp" />
     <ClCompile Include="LYVertex.cpp" />
