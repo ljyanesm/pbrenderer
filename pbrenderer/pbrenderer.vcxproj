@@ -81,23 +81,34 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="LYCamera.cpp" />
+    <ClCompile Include="LYCell.cpp" />
+    <ClCompile Include="LYOctree.cpp" />
+    <ClCompile Include="LYSpaceHandler.cpp" />
     <ClCompile Include="LYShader.cpp" />
+    <ClCompile Include="LYSpatialHash.cpp" />
+    <ClCompile Include="LYVertex.cpp" />
+    <ClCompile Include="LYWorld.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="math_3d.cpp" />
-    <ClCompile Include="mesh.cpp" />
-    <ClCompile Include="Screenspace_Renderer.cpp" />
-    <ClCompile Include="texture.cpp" />
+    <ClCompile Include="LYMesh.cpp" />
+    <ClCompile Include="LYScreenspaceRenderer.cpp" />
+    <ClCompile Include="LYTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="defines.h" />
     <ClInclude Include="LYCamera.h" />
+    <ClInclude Include="LYCell.h" />
+    <ClInclude Include="LYOctree.h" />
+    <ClInclude Include="LYSpaceHandler.h" />
     <ClInclude Include="LYShader.h" />
-    <ClInclude Include="math_3d.h" />
-    <ClInclude Include="mesh.h" />
-    <ClInclude Include="Screenspace_Renderer.h" />
-    <ClInclude Include="texture.h" />
-    <ClInclude Include="util.h" />
+    <ClInclude Include="LYSpatialHash.h" />
+    <ClInclude Include="LYVertex.h" />
+    <ClInclude Include="LYWorld.h" />
+    <ClInclude Include="LYMesh.h" />
+    <ClInclude Include="LYScreenspaceRenderer.h" />
+    <ClInclude Include="LYTexture.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="LYSpatialHash.cu" />
     <None Include="Shaders\blur_pass.frag" />
     <None Include="Shaders\blur_pass.vs" />
     <None Include="Shaders\depth_pass.frag" />

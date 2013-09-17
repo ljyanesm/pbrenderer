@@ -1,4 +1,4 @@
-#version 330
+#version 420
 
 //ENUMS
 #define	DISPLAY_DEPTH 0
@@ -64,7 +64,7 @@ vec3 uvToEye(vec2 texCoord, float depth){
 void main()
 {
 	//Uniform Light Direction (Billboard)
-    vec4 lightDir = u_ModelView * vec4(0.7f, 1.0f, 0.0f, 0.0f);
+    vec4 lightDir = vec4(0.7f, 1.0f, 0.0f, 0.0f);
         
     //Get Texture Information about the Pixel
     vec3 N = texture(u_Normaltex,fs_Texcoord).xyz;

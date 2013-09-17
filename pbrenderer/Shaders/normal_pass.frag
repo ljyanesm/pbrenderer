@@ -1,4 +1,4 @@
-#version 330
+#version 420
 
 uniform float u_Width;
 uniform float u_Height;

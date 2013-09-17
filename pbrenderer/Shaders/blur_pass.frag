@@ -1,4 +1,4 @@
-#version 330
+#version 420
 
 uniform sampler2D u_Depthtex;
 
@@ -32,8 +32,8 @@ void main()
     
     for(int x = -windowWidth; x < windowWidth; x++){
 		for(int y = -windowWidth; y < windowWidth; y++){
-			vec2 sample = vec2(fs_Texcoord.s + x*blurRadius, fs_Texcoord.t + y*blurRadius);
-			float sampleDepth = texture(u_Depthtex, sample).r;
+			vec2 samp = vec2(fs_Texcoord.s + x*blurRadius, fs_Texcoord.t + y*blurRadius);
+			float sampleDepth = texture(u_Depthtex, samp).r;
 			
 			if(sampleDepth < 0.999){
 				//Spatial
