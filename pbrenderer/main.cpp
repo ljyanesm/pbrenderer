@@ -9,11 +9,13 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
-#include "mesh.h"
-#include "LYCamera.h"
-#include "Screenspace_Renderer.h"
 
-Screenspace_Renderer *screenspace_renderer;
+#include "LYWorld.h"
+#include "LYMesh.h"
+#include "LYCamera.h"
+#include "LYScreenspaceRenderer.h"
+
+LYScreenspaceRenderer *screenspace_renderer;
 
 int width = 1024;
 int height = 768;
@@ -37,12 +39,13 @@ bool bPause = false;
 
 const float inertia = 0.1f;
 
-Screenspace_Renderer::DisplayMode mode = Screenspace_Renderer::DISPLAY_DEPTH;
+LYScreenspaceRenderer::DisplayMode mode = LYScreenspaceRenderer::DISPLAY_DIFFUSE_SPEC;
 
 glm::mat4 mv;
 glm::mat4 p;
 
-Mesh* m_pMesh;
+LYWorld m_pWorld;
+LYMesh* m_pMesh;
 LYCamera *m_pCamera;
 
 // initialize OpenGL
@@ -59,14 +62,14 @@ void initGL(int *argc, char **argv){
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-	
-	m_pMesh = new Mesh();
+	glClearColor(0.75, 0.75, 0.75, 1);
+
+	m_pMesh = new LYMesh();
 	m_pCamera = new LYCamera(width, height);
 
 	m_pMesh->LoadMesh("bunny-color.ply");
 
-	screenspace_renderer = new Screenspace_Renderer(m_pMesh, m_pCamera);
+	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
 
 	glutReportErrors();
 }
@@ -144,8 +147,8 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		exit(0);
 		break;
 	case 'p':
-		mode = (Screenspace_Renderer::DisplayMode)
-			((mode+ 1) % Screenspace_Renderer::NUM_DISPLAY_MODES);
+		mode = (LYScreenspaceRenderer::DisplayMode)
+			((mode+ 1) % LYScreenspaceRenderer::NUM_DISPLAY_MODES);
 		break;
 	case 'r':
 		displayEnabled = !displayEnabled;
