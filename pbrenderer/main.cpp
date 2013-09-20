@@ -127,12 +127,11 @@ void initGL(int *argc, char **argv){
 
 void reshape(int w, int h)
 {
-	m_pCamera->perspProjection(w, h, 60.0f, NEARP, FARP);
+	m_pCamera->perspProjection(width, height, 60.0f, NEARP, FARP);
 	p = glm::mat4();
-	p = glm::perspective(60.0f, (float) w/ (float) h, NEARP, FARP);
+	p = glm::perspective(60.0f, (float) width/ (float) height, NEARP, FARP);
 
-	glViewport(0, 0, w, h);
-
+	glViewport(0, 0, width, height);
 }
 
 void mouse(int button, int state, int x, int y)
