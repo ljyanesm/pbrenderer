@@ -15,12 +15,13 @@ out vec4 fs_Position;
 out vec4 fs_Color;
 
 void main(void) {
-	vec3 posEye = (u_ModelView * vec4(Position.xyz, 1.0f)).xyz;
+	vec4 pos = u_ModelView * vec4(Position.xyz, 1.0f);
+	vec3 posEye = pos.xyz;
 	float dist = length(posEye);
 	gl_PointSize = pointRadius * (pointScale/dist);
 	
 	fs_PosEye = posEye;
-	fs_Position = u_ModelView * vec4(Position.xyz, 1.0);
+	fs_Position = pos;
 	fs_Color = vec4(Color.xyz,1.0f);
-	gl_Position = u_Persp * u_ModelView * vec4(Position.xyz, 1.0);
+	gl_Position = u_Persp * pos;
 }

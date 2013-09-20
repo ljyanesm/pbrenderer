@@ -1,126 +1,166 @@
-#include "LYSpatialHash.h"
+#if defined(__APPLE__) || defined(MACOSX)
+#include <GLUT/glut.h>
+#else
+#include <GL/freeglut.h>
+#endif
 
+#include <cstdlib>
+#include <cstdio>
+#include <string.h>
 
-// calculate position in uniform grid
-__device__ int3 calcGridPos(float3 p)
-{
-	int3 gridPos;
-	gridPos.x = floor((p.x) / params.cellSize.x);
-	gridPos.y = floor((p.y) / params.cellSize.y);
-	gridPos.z = floor((p.z) / params.cellSize.z);
-	return gridPos;
-}
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
 
-// calculate address in grid from position (clamping to edges)
-__device__ uint calcGridHash(int3 gridPos)
-{
-	gridPos.x = gridPos.x & (params.gridSize.x-1);  // wrap grid, assumes size is power of 2
-	gridPos.y = gridPos.y & (params.gridSize.y-1);
-	gridPos.z = gridPos.z & (params.gridSize.z-1);
-	return __umul24(__umul24(gridPos.z, params.gridSize.y), params.gridSize.x) + __umul24(gridPos.y, params.gridSize.x) + gridPos.x;
-}
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
 
-// calculate grid hash value for each particle
-__global__
-	void calcHashD(uint*   gridParticleHash,  // output
-	uint*   gridParticleIndex, // output
-	float4* pos,               // input: positions
-	uint    numParticles)
-{
-	uint index = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-	if (index >= numParticles) return;
+#include <helper_functions.h>
+#include "thrust/device_ptr.h"
+#include "thrust/for_each.h"
+#include "thrust/iterator/zip_iterator.h"
+#include "thrust/sort.h"
 
-	volatile float4 p = pos[index];
+#include "LYSpatialHash_impl.cuh"
 
-	// get address in grid
-	int3 gridPos = calcGridPos(make_float3(p.x, p.y, p.z));
-	uint hash = calcGridHash(gridPos);
+extern "C" {
 
-	// store grid hash and particle index
-	gridParticleHash[index] = hash;
-	gridParticleIndex[index] = index;
-}
+	void allocateArray(void **devPtr, size_t size)
+	{
+		checkCudaErrors(cudaMalloc(devPtr, size));
+	}
 
-// rearrange particle data into sorted order, and find the start of each cell
-// in the sorted hash array
-__global__
-	void reorderDataAndFindCellStartD(uint*   cellStart,        // output: cell start index
-	uint*   cellEnd,          // output: cell end index
-	float4* sortedPos,        // output: sorted positions
-	float4* sortedNor,        // output: sorted positions
-	float4* sortedVel,        // output: sorted velocities
-	float* sortedMass,       // output: sorted masses
-	float* sortedPressure,
-	float4* sortedForce,
-	uint *  gridParticleHash, // input: sorted grid hashes
-	uint *  gridParticleIndex,// input: sorted particle indices
-	float4* oldPos,           // input: sorted position array
-	float4* oldNor,           // input: sorted position array
-	float4* oldVel,           // input: sorted velocity array
-	float* oldMass,          // input: sorted mass array
-	float* oldPressure,
-	float4* oldForce,
-	uint    numParticles)
-{
-	extern __shared__ uint sharedHash[];    // blockSize + 1 elements
-	uint index = __umul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	void freeArray(void *devPtr)
+	{
+		checkCudaErrors(cudaFree(devPtr));
+	}
 
-	uint hash;
-	// handle case when no. of particles not multiple of block size
-	if (index < numParticles) {
-		hash = gridParticleHash[index];
+	void registerGLBufferObject(uint vbo, struct cudaGraphicsResource **cuda_vbo_resource)
+	{
+		checkCudaErrors(cudaGraphicsGLRegisterBuffer(cuda_vbo_resource, vbo,
+			cudaGraphicsMapFlagsNone));
+	}
 
-		// Load hash data into shared memory so that we can look
-		// at neighboring particle's hash value without loading
-		// two hash values per thread
-		sharedHash[threadIdx.x+1] = hash;
+	void unregisterGLBufferObject(struct cudaGraphicsResource *cuda_vbo_resource)
+	{
+		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resource));
+	}
 
-		if (index > 0 && threadIdx.x == 0)
+	void *mapGLBufferObject(struct cudaGraphicsResource **cuda_vbo_resource)
+	{
+		void *ptr;
+		checkCudaErrors(cudaGraphicsMapResources(1, cuda_vbo_resource, 0));
+		size_t num_bytes;
+		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&ptr, &num_bytes,
+			*cuda_vbo_resource));
+		return ptr;
+	}
+
+	void unmapGLBufferObject(struct cudaGraphicsResource *cuda_vbo_resource)
+	{
+		checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_vbo_resource, 0));
+	}
+
+	void copyArrayToDevice(void *device, const void *host, int offset, int size)
+	{
+		checkCudaErrors(cudaMemcpy((char *) device + offset, host, size, cudaMemcpyHostToDevice));
+	}
+	
+	void copyArrayFromDevice(void *host, const void *device,
+	struct cudaGraphicsResource **cuda_vbo_resource, int size)
+	{
+		if (cuda_vbo_resource)
 		{
-			// first thread in block must load neighbor particle hash
-			sharedHash[0] = gridParticleHash[index-1];
+			device = mapGLBufferObject(cuda_vbo_resource);
+		}
+
+		checkCudaErrors(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
+
+		if (cuda_vbo_resource)
+		{
+			unmapGLBufferObject(*cuda_vbo_resource);
 		}
 	}
 
-	__syncthreads();
-
-	if (index < numParticles) {
-		// If this particle has a different cell index to the previous
-		// particle then it must be the first particle in the cell,
-		// so store the index of this particle in the cell.
-		// As it isn't the first particle, it must also be the cell end of
-		// the previous particle's cell
-
-		if (index == 0 || hash != sharedHash[threadIdx.x])
-		{
-			cellStart[hash] = index;
-			if (index > 0)
-				cellEnd[sharedHash[threadIdx.x]] = index;
-		}
-
-		if (index == numParticles - 1)
-		{
-			cellEnd[hash] = index + 1;
-		}
-
-		// Now use the sorted index to reorder the pos and vel data
-		uint sortedIndex = gridParticleIndex[index];
-		float4 nor = FETCH(oldNor, sortedIndex);       // macro does either global read or texture fetch
-		float4 pos = FETCH(oldPos, sortedIndex);       // macro does either global read or texture fetch
-		//		printf("pos[%3d] = (%4.3f, %4.3f, %4.3f)\n", index, pos.x, pos.y, pos.z);
-		float4 vel = FETCH(oldVel, sortedIndex);       // see particles_kernel.cuh
-		float4 force = FETCH(oldForce, sortedIndex);
-		float mass = FETCH(oldMass, sortedIndex);
-		float pressure = FETCH(oldPressure, sortedIndex);
-
-		sortedPos[index] = pos;
-		sortedNor[index] = nor;
-		sortedVel[index] = vel;
-		sortedMass[index] = mass;
-		sortedPressure[index] = pressure;
-		sortedForce[index] = force;
-		//printf("Particle[%4d].mass = %.4f\n", index, mass);
+	void setParameters(SimParams *hostParams)
+	{
+		// copy parameters to constant memory
+		checkCudaErrors( cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)) );
 	}
 
-	__syncthreads ();
+
+    //Round a / b to nearest higher integer value
+    uint iDivUp(uint a, uint b)
+    {
+        return (a % b != 0) ? (a / b + 1) : (a / b);
+    }
+
+    // compute grid and thread block size for a given number of elements
+    void computeGridSize(uint n, uint blockSize, uint &numBlocks, uint &numThreads)
+    {
+        numThreads = min(blockSize, n);
+        numBlocks = iDivUp(n, numThreads);
+    }
+
+    void calcHash(uint  *gridParticleHash,
+                  uint  *gridParticleIndex,
+                  LYVertex *pos,
+                  int    numVertices)
+    {
+        uint numThreads, numBlocks;
+        computeGridSize(numVertices, 256, numBlocks, numThreads);
+
+        // execute the kernel
+        calcHashD<<< numBlocks, numThreads >>>(gridParticleHash,
+                                               gridParticleIndex,
+                                               (LYVertex *) pos,
+                                               numVertices);
+
+        // check if kernel invocation generated an error
+        getLastCudaError("Kernel execution failed");
+    }
+
+    void reorderDataAndFindCellStart(uint  *cellStart,
+                                     uint  *cellEnd,
+                                     LYVertex *sortedPos,
+                                     uint  *gridParticleHash,
+                                     uint  *gridParticleIndex,
+                                     LYVertex *oldPos,
+                                     uint   numVertices,
+                                     uint   numCells)
+    {
+        uint numThreads, numBlocks;
+        computeGridSize(numVertices, 256, numBlocks, numThreads);
+
+        // set all cells to empty
+        checkCudaErrors(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
+
+#if USE_TEX
+        checkCudaErrors(cudaBindTexture(0, oldPosTex, oldPos, numVertices*sizeof(float4)));
+        checkCudaErrors(cudaBindTexture(0, oldVelTex, oldVel, numVertices*sizeof(float4)));
+#endif
+
+        uint smemSize = sizeof(uint)*(numThreads+1);
+        reorderDataAndFindCellStartD<<< numBlocks, numThreads, smemSize>>>(
+            cellStart,
+            cellEnd,
+            (LYVertex *) sortedPos,
+            gridParticleHash,
+            gridParticleIndex,
+            (LYVertex *) oldPos,
+            numVertices);
+        getLastCudaError("Kernel execution failed: reorderDataAndFindCellStartD");
+
+#if USE_TEX
+        checkCudaErrors(cudaUnbindTexture(oldPosTex));
+        checkCudaErrors(cudaUnbindTexture(oldVelTex));
+#endif
+    }
+
+	    void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numVertices)
+    {
+        thrust::sort_by_key(thrust::device_ptr<uint>(dGridParticleHash),
+                            thrust::device_ptr<uint>(dGridParticleHash + numVertices),
+                            thrust::device_ptr<uint>(dGridParticleIndex));
+    }
+
 }

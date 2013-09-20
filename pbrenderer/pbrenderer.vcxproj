@@ -29,6 +29,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -38,10 +39,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -50,14 +51,19 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.4;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.4;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -68,24 +74,29 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.4;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.4;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="LYCamera.cpp" />
     <ClCompile Include="LYCell.cpp" />
+    <ClCompile Include="LYHapticKeyboard.cpp" />
     <ClCompile Include="LYOctree.cpp" />
     <ClCompile Include="LYShader.cpp" />
     <ClCompile Include="LYSpatialHash.cpp" />
-    <ClCompile Include="LYVertex.cpp" />
+    <ClCompile Include="LYTimer.cpp" />
     <ClCompile Include="LYWorld.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="LYMesh.cpp" />
@@ -94,12 +105,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="defines.h" />
+    <ClInclude Include="LYAbCollisionHandler.h" />
     <ClInclude Include="LYCamera.h" />
     <ClInclude Include="LYCell.h" />
+    <ClInclude Include="LYHapticInterface.h" />
+    <ClInclude Include="LYHapticKeyboard.h" />
     <ClInclude Include="LYOctree.h" />
     <ClInclude Include="LYSpaceHandler.h" />
     <ClInclude Include="LYShader.h" />
     <ClInclude Include="LYSpatialHash.h" />
+    <ClInclude Include="LYTimer.h" />
     <ClInclude Include="LYVertex.h" />
     <ClInclude Include="LYWorld.h" />
     <ClInclude Include="LYMesh.h" />
@@ -107,13 +122,18 @@
     <ClInclude Include="LYTexture.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="LYSpatialHash.cu" />
+    <CudaCompile Include="LYSpatialHash.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <None Include="LYSpatialHash.cuh">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="LYSpatialHash_impl.cuh" />
+    <None Include="LYSpatialHash_kernel.cuh" />
     <None Include="Shaders\blur_pass.frag" />
     <None Include="Shaders\blur_pass.vs" />
     <None Include="Shaders\depth_pass.frag" />
     <None Include="Shaders\depth_pass.vs" />
-    <None Include="Shaders\mainShader.frag" />
-    <None Include="Shaders\mainShader.vs" />
     <None Include="Shaders\normal_pass.frag" />
     <None Include="Shaders\normal_pass.vs" />
     <None Include="Shaders\shader.frag" />
@@ -121,5 +141,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
   </ImportGroup>
 </Project>

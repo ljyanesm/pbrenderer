@@ -43,10 +43,13 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="LYVertex.cpp">
+    <ClCompile Include="LYCell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LYCell.cpp">
+    <ClCompile Include="LYTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LYHapticKeyboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -87,6 +90,18 @@
     <ClInclude Include="LYCell.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LYAbCollisionHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYHapticInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYHapticKeyboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\blur_pass.frag">
@@ -101,12 +116,6 @@
     <None Include="Shaders\depth_pass.vs">
       <Filter>shaders</Filter>
     </None>
-    <None Include="Shaders\mainShader.frag">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="Shaders\mainShader.vs">
-      <Filter>shaders</Filter>
-    </None>
     <None Include="Shaders\normal_pass.frag">
       <Filter>shaders</Filter>
     </None>
@@ -119,8 +128,19 @@
     <None Include="Shaders\shader.vs">
       <Filter>shaders</Filter>
     </None>
-    <None Include="LYSpatialHash.cu">
-      <Filter>Source Files</Filter>
+    <None Include="LYSpatialHash_impl.cuh">
+      <Filter>Header Files</Filter>
     </None>
+    <None Include="LYSpatialHash_kernel.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="LYSpatialHash.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="LYSpatialHash.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
