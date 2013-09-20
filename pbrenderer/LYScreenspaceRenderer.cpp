@@ -280,7 +280,6 @@ void LYScreenspaceRenderer::_drawPoints()
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(3);
-
 }
 
 void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
@@ -399,6 +398,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
+
 }
 
 void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)

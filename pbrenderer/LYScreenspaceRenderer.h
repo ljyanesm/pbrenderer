@@ -3,6 +3,9 @@
 #include <iostream>
 #include <iomanip>
 
+#include <GL\glew.h>
+#include <GL\freeglut.h>
+
 #include "LYShader.h"
 #include "LYCamera.h"
 #include "LYMesh.h"
