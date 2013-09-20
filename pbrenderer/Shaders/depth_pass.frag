@@ -20,7 +20,7 @@ void main(void)
     vec3 N;
     N.xy = gl_PointCoord.xy*vec2(2.0, -2.0) + vec2(-1.0, 1.0);
     float mag = dot(N.xy, N.xy);
-    if (mag > 1.0) discard;   // kill pixels outside circle
+    if (mag >= 1.0) discard;   // kill pixels outside circle
     N.z = sqrt(1.0-mag);
     
     //calculate depth

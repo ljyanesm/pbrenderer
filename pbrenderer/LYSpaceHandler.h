@@ -2,11 +2,17 @@
 
 #include "LYVertex.h"
 #include "LYCell.h"
+
+/*
+	Abstract class for the space handling techniques classes to be implemented on the GPU or the CPU
+*/
+
 class LYSpaceHandler
 {
 public:
 	virtual void update() = 0;
 	virtual void clear() = 0;
+	virtual void dump() = 0;
 
 	virtual void setDeviceVertices(LYVertex *hostVertices) = 0;
 

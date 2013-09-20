@@ -25,7 +25,7 @@ void main()
     float sum = 0;
     float wsum = 0;
     
-    if(exp_depth > 0.999){
+    if(exp_depth >= 0.999){
 		out_Depth = vec4(exp_depth);
 		return;
     }

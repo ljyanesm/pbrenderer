@@ -53,7 +53,6 @@ LYScreenspaceRenderer::~LYScreenspaceRenderer(void)
 
 void LYScreenspaceRenderer::_initShaders() 
 {
-	mainShader = new LYshader("./shaders/mainShader.vs", "./shaders/mainShader.frag", "Color");
 	depthShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 	normalShader = new LYshader("./shaders/normal_pass.vs", "./shaders/normal_pass.frag", "Texcoord");
 	blurDepthShader = new LYshader("./shaders/blur_pass.vs", "./shaders/blur_pass.frag", "Texcoord");
@@ -122,7 +121,6 @@ void LYScreenspaceRenderer::_initFBO(int w, int h) {
 	glGenTextures(1, &m_colorTexture);
 	glGenTextures(1, &m_normalTexture);
 	glGenTextures(1, &m_positionTexture);
-	//glGenTextures(1, &m_backgroundTexture);
 	glGenTextures(1, &m_blurDepthTexture);
 
 	//Depth Texture Initializations
@@ -299,7 +297,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glEnable(GL_POINT_SPRITE_ARB);
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
-	//glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
 	depthShader->useShader();
@@ -384,9 +382,6 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, m_positionTexture);
 	glUniform1i(glGetUniformLocation(totalShader->getProgramId(), "u_Positiontex"),3);
-	//glActiveTexture(GL_TEXTURE4);
-	//glBindTexture(GL_TEXTURE_2D, m_backgroundTexture);
-	//glUniform1i(glGetUniformLocation(totalShader->getProgramId(), "u_Backgroundtex"),4);
 
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &m_camera->getModelView()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);

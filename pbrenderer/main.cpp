@@ -4,23 +4,31 @@
 #include <cstdlib>
 #include <cmath>
 
+// CUDA runtime
+#include <cuda_runtime.h>
+
+// CUDA utilities and system includes
+#include <helper_functions.h>
+#include <helper_cuda.h>    // includes cuda.h and cuda_runtime_api.h
+#include <helper_cuda_gl.h> // includes cuda_gl_interop.h// includes cuda_gl_interop.h
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
-
 #include "LYWorld.h"
 #include "LYMesh.h"
 #include "LYCamera.h"
 #include "LYScreenspaceRenderer.h"
-
-LYScreenspaceRenderer *screenspace_renderer;
+#include "LYSpatialHash.h"
+#include "LYHapticKeyboard.h"
+#include "LYTimer.h"
 
 int width = 1024;
 int height = 768;
 
-float particleRadius = 0.01f;
+float pointRadius = 0.01f;
 
 const float NEARP = 0.1f;
 const float FARP = 100.0f;
@@ -40,20 +48,61 @@ bool bPause = false;
 const float inertia = 0.1f;
 
 LYScreenspaceRenderer::DisplayMode mode = LYScreenspaceRenderer::DISPLAY_DIFFUSE_SPEC;
+bool mouseMode = 0;
 
 glm::mat4 mv;
 glm::mat4 p;
 
 LYWorld m_pWorld;
+// Information below this line has to move to LYWorld.
+///////////////////////////////////////////////////////
+LYScreenspaceRenderer *screenspace_renderer;
+LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
 LYCamera *m_pCamera;
+LYHapticInterface *haptic_interface;
+///////////////////////////////////////////////////////
 
+// Timer variables to measure performance
+///////////////////////////////////////////////////////
+clock_t startTimer;
+clock_t endTimer;
+char fps_string[120];
+///////////////////////////////////////////////////////
+
+// FPS Control variables for rendering
+///////////////////////////////////////////////////////
+const int FRAMES_PER_SECOND = 30;
+const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
+///////////////////////////////////////////////////////
+
+enum {M_VIEW = 0, M_MOVE};
+
+void cudaInit(int argc, char **argv)
+{    
+	int devID;
+
+	// use command-line specified CUDA device, otherwise use device with highest Gflops/s
+	devID = findCudaDevice(argc, (const char **)argv);
+
+	if (devID < 0)
+	{
+		printf("No CUDA Capable devices found, exiting...\n");
+		exit(EXIT_SUCCESS);
+	}
+}
+
+
+void initCUDA(int argc, char **argv)
+{
+	cudaInit(argc, argv);
+}
 // initialize OpenGL
 void initGL(int *argc, char **argv){
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
-	glutCreateWindow("Point-Based Renderer");
+	glutCreateWindow(fps_string);
 
 	glewInit();
 	if (!glewIsSupported("GL_VERSION_2_0 GL_VERSION_1_5 GL_ARB_multitexture GL_ARB_vertex_buffer_object")) {
@@ -70,6 +119,8 @@ void initGL(int *argc, char **argv){
 	m_pMesh->LoadMesh("bunny-color.ply");
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
+	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).NumIndices, make_uint3(256, 256, 256));
+	haptic_interface = new LYHapticKeyboard();
 
 	glutReportErrors();
 }
@@ -111,19 +162,43 @@ void motion(int x, int y)
 	dx = (float)(x - ox);
 	dy = (float)(y - oy);
 
-	if (buttonState == 3) {
-		// left+middle = zoom
-		camera_trans[2] += (dy / 100.0f) * 0.5f * fabs(camera_trans[2]);
-	}
-	else if (buttonState & 2) {
-		// middle = translate
-		camera_trans[0] += dx / 100.0f;
-		camera_trans[1] -= dy / 100.0f;
-	}
-	else if (buttonState & 1) {
-		// left = rotate
-		camera_rot[0] += dy / 5.0f;
-		camera_rot[1] += dx / 5.0f;
+	switch (mouseMode){
+	case M_VIEW:
+		if (buttonState == 3) {
+			// left+middle = zoom
+			camera_trans[2] += (dy / 100.0f) * 0.5f * fabs(camera_trans[2]);
+		}
+		else if (buttonState & 2) {
+			// middle = translate
+			camera_trans[0] += dx / 100.0f;
+			camera_trans[1] -= dy / 100.0f;
+		}
+		else if (buttonState & 1) {
+			// left = rotate
+			camera_rot[0] += dy / 5.0f;
+			camera_rot[1] += dx / 5.0f;
+		}
+		break;
+	case M_MOVE:
+		glm::vec3 p = haptic_interface->getPosition();
+		glm::vec4 r, v;
+		if (buttonState == 1) {
+			v.x = dx * haptic_interface->getSpeed();
+			v.y = -dy * haptic_interface->getSpeed();
+			r = m_pCamera->getModelView() * v;
+			p.x += r.x;
+			p.y += r.y;
+			p.z += r.z;
+		} else {
+			v.z = dy * haptic_interface->getSpeed();
+			r = m_pCamera->getModelView() * v;
+			p.x += r.x;
+			p.y += r.y;
+			p.z += r.z;
+		}
+
+		haptic_interface->setPosition(p);
+		break;
 	}
 
 	ox = x; oy = y;
@@ -157,10 +232,10 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		wireframe = !wireframe;
 		break;
 	case '+':
-		particleRadius += 0.001f;
+		pointRadius += 0.001f;
 		break;
 	case '-':
-		particleRadius -= 0.001f;
+		pointRadius -= 0.001f;
 		break;
 	case GLUT_KEY_UP:
 		camera_trans[2] += 0.5f;
@@ -170,6 +245,12 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		break;
 	case 'd':
 		screenspace_renderer->dumpIntoPdb("bunny");
+		break;
+	case 'f':
+		space_handler->dump();
+		break;
+	case 'c':
+		mouseMode = !mouseMode;
 		break;
 	}
 	glutPostRedisplay();
@@ -188,12 +269,20 @@ void idle(void)
 	glutPostRedisplay();
 }
 
+DWORD next_game_tick = GetTickCount();
+int sleep_time = 0;
+
 void display()
 {
+	LYTimer t(true);
+	LYTimer spaceHandler_timer(true);
 	// update the simulation
 	if (!bPause)
 	{
-		screenspace_renderer->setPointRadius(particleRadius);
+		space_handler->update();
+
+		screenspace_renderer->setPointRadius(pointRadius);
+		spaceHandler_timer.Stop();
 	}
 
 	// render
@@ -210,17 +299,21 @@ void display()
 	glm::mat4 rotY = glm::rotate(camera_rot_lag[1], 0.0f, 1.0f, 0.0f);
 	mv = mv * rotX * rotY;
 	m_pCamera->setModelView(mv);
-	// cube
 
 	screenspace_renderer->display(mode);
 
 	glutSwapBuffers();
 	glutReportErrors();
+
+	sprintf(fps_string, "Point-Based Rendering \t FPS: %5.3f \t SpaceHandler FPS: %5.3f", 1000.0f / (t.Elapsed()), 1000.0f / (spaceHandler_timer.Elapsed()));
+	glutSetWindowTitle(fps_string);
+
 }
 
 int main(int argc, char **argv)
 {
 	initGL(&argc, argv);
+	initCUDA(argc, argv);
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
