@@ -72,7 +72,7 @@ bool LYMesh::LoadMesh(const std::string& Filename)
     else {
         printf("Error parsing '%s': '%s'\n", Filename.c_str(), Importer.GetErrorString());
     }
-
+	printf("The model has been loaded correctly\n");
     return Ret;
 }
 

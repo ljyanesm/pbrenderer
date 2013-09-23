@@ -121,6 +121,7 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).NumIndices, make_uint3(256, 256, 256));
 	haptic_interface = new LYHapticKeyboard();
+	screenspace_renderer->setCollider(haptic_interface);
 
 	glutReportErrors();
 }
@@ -184,13 +185,13 @@ void motion(int x, int y)
 		if (buttonState == 1) {
 			v.x = dx * haptic_interface->getSpeed();
 			v.y = -dy * haptic_interface->getSpeed();
-			r = m_pCamera->getModelView() * v;
+			r = v * m_pCamera->getModelView();
 			p.x += r.x;
 			p.y += r.y;
 			p.z += r.z;
 		} else {
 			v.z = dy * haptic_interface->getSpeed();
-			r = m_pCamera->getModelView() * v;
+			r = v * m_pCamera->getModelView();
 			p.x += r.x;
 			p.y += r.y;
 			p.z += r.z;
@@ -208,6 +209,7 @@ void motion(int x, int y)
 // commented out to remove unused parameter warnings in Linux
 void key(unsigned char key, int /*x*/, int /*y*/)
 {
+	glm::vec3 pos;
 	switch (key)
 	{
 	case ' ':
@@ -227,9 +229,6 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case 'r':
 		displayEnabled = !displayEnabled;
 		break;
-	case 'w':
-		wireframe = !wireframe;
-		break;
 	case '+':
 		pointRadius += 0.001f;
 		break;
@@ -242,14 +241,45 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case GLUT_KEY_DOWN:
 		camera_trans[2] -= 0.5f;
 		break;
-	case 'd':
+	case 'D':
 		screenspace_renderer->dumpIntoPdb("bunny");
 		break;
 	case 'f':
 		space_handler->dump();
 		break;
-	case 'c':
+	case 'v':
 		mouseMode = !mouseMode;
+		break;
+
+	case 'w':
+		// Move collider up
+		pos = haptic_interface->getPosition();
+		haptic_interface->setPosition(pos + glm::vec3(0.0, haptic_interface->getSpeed(), 0.0));
+		break;
+	case 'a':
+		// Move collider left
+		pos = haptic_interface->getPosition();
+		haptic_interface->setPosition(pos + glm::vec3(-haptic_interface->getSpeed(), 0.0, 0.0));
+		break;
+	case 's':
+		// Move collider down
+		pos = haptic_interface->getPosition();
+		haptic_interface->setPosition(pos + glm::vec3(0.0, -haptic_interface->getSpeed(), 0.0));
+		break;
+	case 'd':
+		// Move collider right
+		pos = haptic_interface->getPosition();
+		haptic_interface->setPosition(pos + glm::vec3(haptic_interface->getSpeed(), 0.0, 0.0));
+		break;
+	case 'z':
+		pos = haptic_interface->getPosition();
+		haptic_interface->setPosition(pos + glm::vec3(0.0, 0.0, haptic_interface->getSpeed()));
+		// Move collider in
+		break;
+	case 'c':
+		pos = haptic_interface->getPosition();
+		haptic_interface->setPosition(pos + glm::vec3(0.0, 0.0, -haptic_interface->getSpeed()));
+		// Move collider out
 		break;
 	}
 	glutPostRedisplay();
@@ -274,12 +304,12 @@ int sleep_time = 0;
 void display()
 {
 	LYTimer t(true);
+	Sleep(16);
 	LYTimer spaceHandler_timer(true);
 	// update the simulation
 	if (!bPause)
 	{
 		space_handler->update();
-
 		screenspace_renderer->setPointRadius(pointRadius);
 		spaceHandler_timer.Stop();
 	}

@@ -50,8 +50,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.4;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLM_MESSAGES;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.6;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -63,6 +63,9 @@
     <CudaCompile>
       <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
+      <Defines>GLM_MESSAGES</Defines>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -74,7 +77,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.4;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.6;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -92,6 +95,7 @@
   <ItemGroup>
     <ClCompile Include="LYCamera.cpp" />
     <ClCompile Include="LYCell.cpp" />
+    <ClCompile Include="LYDistanceFieldCollider.cpp" />
     <ClCompile Include="LYHapticKeyboard.cpp" />
     <ClCompile Include="LYOctree.cpp" />
     <ClCompile Include="LYShader.cpp" />
@@ -108,6 +112,8 @@
     <ClInclude Include="LYAbCollisionHandler.h" />
     <ClInclude Include="LYCamera.h" />
     <ClInclude Include="LYCell.h" />
+    <ClInclude Include="LYCollisionHandler.h" />
+    <ClInclude Include="LYDistanceFieldCollider.h" />
     <ClInclude Include="LYHapticInterface.h" />
     <ClInclude Include="LYHapticKeyboard.h" />
     <ClInclude Include="LYOctree.h" />
@@ -122,9 +128,13 @@
     <ClInclude Include="LYTexture.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="LYCudaHelper.cu" />
+    <CudaCompile Include="LYDistanceFieldCollider.cu" />
     <CudaCompile Include="LYSpatialHash.cu">
       <FileType>Document</FileType>
     </CudaCompile>
+    <None Include="LYCudaHelper.cuh" />
+    <None Include="LYDistanceFieldCollider.cuh" />
     <None Include="LYSpatialHash.cuh">
       <FileType>Document</FileType>
     </None>

@@ -10,6 +10,7 @@
 
 #include "LYTimer.h"
 
+#include "LYCudaHelper.cuh"
 #include "LYSpaceHandler.h"
 #include "LYSpatialHash.cuh"
 #include "LYSpatialHash_kernel.cuh"
@@ -56,4 +57,3 @@ private:
 
 	SimParams m_params;
 };
-

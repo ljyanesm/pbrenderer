@@ -49,6 +49,26 @@ LYScreenspaceRenderer::LYScreenspaceRenderer(LYMesh *m, LYCamera *c) :
 
 LYScreenspaceRenderer::~LYScreenspaceRenderer(void)
 {
+	delete depthShader;
+	delete normalShader;
+	delete blurDepthShader;
+	delete totalShader;
+
+	glDeleteTextures(1, &m_depthTexture);
+	glDeleteTextures(1, &m_colorTexture);
+	glDeleteTextures(1, &m_normalTexture);
+	glDeleteTextures(1, &m_positionTexture);
+	glDeleteTextures(1, &m_blurDepthTexture);
+
+	glDeleteFramebuffers(1, &m_FBO);
+	glDeleteFramebuffers(1, &m_normalsFBO);
+	glDeleteFramebuffers(1, &m_blurDepthFBO);
+
+	glDeleteVertexArrays(1, &(m_device_quad.vertex_array));
+	glDeleteBuffers(1,&(m_device_quad.vbo_data));
+	glDeleteBuffers(1,&(m_device_quad.vbo_indices));
+
+
 }
 
 void LYScreenspaceRenderer::_initShaders() 
@@ -249,6 +269,28 @@ void LYScreenspaceRenderer::_initFBO(int w, int h) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void LYScreenspaceRenderer::_drawCollider()
+{
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+		int vbo = m_collider->getVBO();
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+		int ib = m_collider->getIB();
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+		int numIndices = 1;
+		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+
+}
 void LYScreenspaceRenderer::_drawPoints()
 {
 	glEnableVertexAttribArray(0);
@@ -275,7 +317,6 @@ void LYScreenspaceRenderer::_drawPoints()
 		int numIndices = m_mesh->getEntries()->at(i).NumIndices;
 		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	}
-
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
@@ -300,11 +341,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glEnable(GL_DEPTH_TEST);
 
 	depthShader->useShader();
-	GLint pointScale_loc = glGetUniformLocation(depthShader->getProgramId(), "pointScale");
-	GLint pointRadius_loc =  glGetUniformLocation(depthShader->getProgramId(), "pointRadius");
-	GLint u_ModelView_loc = glGetUniformLocation(depthShader->getProgramId(),"u_ModelView");
-	GLint u_Persp_loc = glGetUniformLocation(depthShader->getProgramId(),"u_Persp");
-	GLint u_InvTrans = glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans");
+
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE,&m_camera->getModelView()[0][0]);
@@ -312,6 +349,12 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
 	_drawPoints();
+
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_collider->getSize());
+	
+	_drawCollider();
+
 	glDisable(GL_POINT_SPRITE_ARB);
 
 	glEnable(GL_DEPTH_TEST);
@@ -421,4 +464,24 @@ void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
 	outFile << "END                                                                             " << std::endl;
 	outFile.close();
 
+}
+
+void LYScreenspaceRenderer::setPointRadius( float r )
+{
+	m_pointRadius = r;
+}
+
+void LYScreenspaceRenderer::setMesh( LYMesh *m )
+{
+	m_mesh = m;
+}
+
+void LYScreenspaceRenderer::setCamera( LYCamera *c )
+{
+	m_camera = c;
+}
+
+void LYScreenspaceRenderer::setCollider(LYHapticInterface* haptic)
+{
+	m_collider = haptic;
 }
