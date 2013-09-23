@@ -11,7 +11,6 @@ texture<uint, 1, cudaReadModeElementType> cellStartTex;
 texture<uint, 1, cudaReadModeElementType> cellEndTex;
 #endif
 __constant__ SimParams params;
-
 // calculate position in uniform grid
 __device__ int3 calcGridPos(float3 p)
 {
@@ -107,7 +106,6 @@ __global__
 		// Now use the sorted index to reorder the pos and vel data
 		uint sortedIndex = gridParticleIndex[index];
 		LYVertex pos = FETCH(oldPos, sortedIndex);       // macro does either global read or texture fetch
-
 		sortedPos[index] = pos;
 	}
 

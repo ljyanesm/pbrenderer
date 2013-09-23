@@ -5,7 +5,6 @@ uniform mat4x4 u_Persp;
 uniform mat4x4 u_InvTrans;
 
 uniform float pointRadius;  // point size in world space
-uniform float pointScale;   // scale to calculate size in pixels
 
 in vec4 fs_Position;
 in vec3 fs_PosEye;

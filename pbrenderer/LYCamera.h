@@ -11,7 +11,7 @@ public:
 	~LYCamera(void);
 
 	void setModelView(glm::mat4 mv){ modelview = mv; }
-	glm::mat4 getModelView(){ return modelview; }
+	glm::mat4 getModelView() const { return modelview; }
 	void perspProjection(int w, int h, float fov, float n, float f)
 	{
 		m_fov = fov;
@@ -33,13 +33,13 @@ public:
 		projection = glm::ortho(m_left, m_right, m_bottom, m_up, m_near, m_far);
 	}
 
-	glm::mat4 getProjection() { return projection; }
+	glm::mat4 getProjection() const { return projection; }
 
-	int getWidth() { return m_width; }
-	int getHeight() { return m_height; }
-	float getFOV() { return m_fov; }
-	float getNear() { return m_near; }
-	float getFar() { return m_far; }
+	int getWidth() const { return m_width; }
+	int getHeight() const { return m_height; }
+	float getFOV() const { return m_fov; }
+	float getNear() const { return m_near; }
+	float getFar() const { return m_far; }
 
 private:
 	glm::mat4 modelview;

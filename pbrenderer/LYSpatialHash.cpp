@@ -11,7 +11,7 @@ m_gridSize(gridSize)
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	m_srcVBO		= vbo;
 	m_numVertices	= numVertices;
-	registerGLBufferObject(m_srcVBO, &m_vboRes);
+	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
 	m_params.gridSize = m_gridSize;
 	m_params.numCells = m_numGridCells;
@@ -24,13 +24,13 @@ m_gridSize(gridSize)
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 	
-	allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
 
-	allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
-	allocateArray((void **)&m_pointGridIndex, m_numVertices*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_pointGridIndex, m_numVertices*sizeof(uint));
 
-	allocateArray((void **)&m_cellStart, m_numGridCells*sizeof(uint));
-	allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_cellStart, m_numGridCells*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
 }
 
 
@@ -39,20 +39,20 @@ LYSpatialHash::~LYSpatialHash(void)
 	delete m_hCellEnd;
 	delete m_hCellStart;
 
-	freeArray(m_sorted_points);
-	freeArray(m_pointHash);
-	freeArray(m_pointGridIndex);
-	freeArray(m_cellStart);
-	freeArray(m_cellEnd);
+	LYCudaHelper::freeArray(m_sorted_points);
+	LYCudaHelper::freeArray(m_pointHash);
+	LYCudaHelper::freeArray(m_pointGridIndex);
+	LYCudaHelper::freeArray(m_cellStart);
+	LYCudaHelper::freeArray(m_cellEnd);
 
-	unregisterGLBufferObject(m_vboRes);
+	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
 
 void	LYSpatialHash::update()
 {
 	LYTimer t(true);
 	LYVertex *dPos;
-	dPos = (LYVertex *) mapGLBufferObject(&m_vboRes);
+	dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 
 	// update constants
 	setParameters(&m_params);
@@ -79,7 +79,7 @@ void	LYSpatialHash::update()
 		m_numVertices,
 		m_numGridCells);
 
-	unmapGLBufferObject(m_vboRes);
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
 }
 
 void	LYSpatialHash::clear()
@@ -117,8 +117,8 @@ void
 	LYSpatialHash::dump()
 {
 	// dump grid information
-	copyArrayFromDevice(m_hCellStart, m_cellStart, 0, sizeof(uint)*m_numGridCells);
-	copyArrayFromDevice(m_hCellEnd, m_cellEnd, 0, sizeof(uint)*m_numGridCells);
+	LYCudaHelper::copyArrayFromDevice(m_hCellStart, m_cellStart, 0, sizeof(uint)*m_numGridCells);
+	LYCudaHelper::copyArrayFromDevice(m_hCellEnd, m_cellEnd, 0, sizeof(uint)*m_numGridCells);
 	uint maxCellSize = 0;
 
 	for (uint i=0; i<m_numGridCells; i++)

@@ -37,4 +37,3 @@ LYCell* LYOctree::getNeighboors(glm::vec3 pmin, glm::vec3 pmax)
 {
 	return new LYCell();
 }
-

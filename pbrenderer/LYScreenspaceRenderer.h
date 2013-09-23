@@ -6,6 +6,7 @@
 #include <GL\glew.h>
 #include <GL\freeglut.h>
 
+#include "LYHapticInterface.h"
 #include "LYShader.h"
 #include "LYCamera.h"
 #include "LYMesh.h"
@@ -48,9 +49,10 @@ public:
 
 	void display(DisplayMode mode = DISPLAY_TOTAL);
 
-	void setCamera(LYCamera *c) { m_camera = c; }
-	void setMesh(LYMesh *m) { m_mesh = m; }
-	void setPointRadius(float r) { m_pointRadius = r; }
+	void setCamera(LYCamera *c);
+	void setMesh(LYMesh *m);
+	void setPointRadius(float r);
+	void setCollider(LYHapticInterface* haptic);
 
 	void dumpIntoPdb(std::string o);
 
@@ -60,30 +62,32 @@ protected:
 	void _setTextures();
 	void _bindFBO(GLuint FBO);
 	void _drawPoints();
+	void _drawCollider();
 	void _initShaders();
 
 private:
-	LYshader *mainShader;
-	LYshader *depthShader;		//Point sprites shader to depth and color render targets.
-	LYshader *blurDepthShader;		//Point sprites shader to depth and color render targets.
-	LYshader *normalShader;		//Normals from image space depth and positions.
-	LYshader *diffuseShader;	//Diffuse and specular? lighting from normals.
-	LYshader *totalShader;		//Combination of the previous passes.
+	LYshader	*depthShader;		//Point sprites shader to depth and color render targets.
+	LYshader	*blurDepthShader;	//Point sprites shader to depth and color render targets.
+	LYshader	*normalShader;		//Normals from image space depth and positions.
+	LYshader	*diffuseShader;	//Diffuse and specular? lighting from normals.
+	LYshader	*totalShader;		//Combination of the previous passes.
 
-	LYCamera *m_camera;
-	LYMesh *m_mesh;
+	const LYCamera	*m_camera;
+	LYMesh			*m_mesh;
 
-	GLuint m_depthTexture;
-	GLuint m_colorTexture;
-	GLuint m_positionTexture;
-	GLuint m_normalTexture;
-	GLuint m_blurDepthTexture;
+	GLuint		m_depthTexture;
+	GLuint		m_colorTexture;
+	GLuint		m_positionTexture;
+	GLuint		m_normalTexture;
+	GLuint		m_blurDepthTexture;
 
-	GLuint m_FBO;
-	GLuint m_normalsFBO;
-	GLuint m_blurDepthFBO;
+	GLuint		m_FBO;
+	GLuint		m_normalsFBO;
+	GLuint		m_blurDepthFBO;
 
-	float m_pointRadius;
+	float		m_pointRadius;
 
 	device_mesh2_t m_device_quad;
+
+	LYHapticInterface const* m_collider;
 };

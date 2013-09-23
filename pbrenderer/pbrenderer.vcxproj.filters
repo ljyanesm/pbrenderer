@@ -52,6 +52,9 @@
     <ClCompile Include="LYHapticKeyboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LYDistanceFieldCollider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LYShader.h">
@@ -102,6 +105,12 @@
     <ClInclude Include="LYHapticKeyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LYCollisionHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYDistanceFieldCollider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\blur_pass.frag">
@@ -137,9 +146,21 @@
     <None Include="LYSpatialHash.cuh">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="LYDistanceFieldCollider.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="LYCudaHelper.cuh">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYSpatialHash.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LYDistanceFieldCollider.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LYCudaHelper.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
   </ItemGroup>
