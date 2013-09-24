@@ -1,16 +1,25 @@
 #pragma once
+#include "vector_functions.h"
+#include "vector_types.h"
 #include <glm/glm.hpp>
 
 struct LYVertex
 {
-	glm::vec3	m_pos;
-	glm::vec3	m_normal;
-	glm::vec3	m_color;
-	glm::vec2	m_tex;
+	float3	m_pos;
+	float3	m_normal;
+	float3	m_color;
+	float2	m_tex;
 	int			m_objectID;
 	
-	LYVertex() {}
-	LYVertex(const glm::vec3& pos, const glm::vec2& tex, const glm::vec3& normal, const glm::vec3 color, int id)
+	LYVertex() 
+	{
+		m_pos = float3();
+		m_normal = float3();
+		m_color = float3();
+		m_tex = float2();
+		m_objectID = 0;
+	}
+	LYVertex(const float3& pos, const float2& tex, const float3& normal, const float3 color, int id)
 	{
 		m_pos		= pos;
 		m_normal	= normal;

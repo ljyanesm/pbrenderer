@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <vector_functions.h>
+#include <device_functions.h>
 
 #include <helper_functions.h>
 #include <helper_cuda.h>
@@ -32,6 +34,10 @@ public:
 	LYCell* getNeighboors(glm::vec3 pos, float radius);			// All the cells inside the sphere defined by [p, r]
 	LYCell* getNeighboors(glm::vec3 pmin, glm::vec3 pmax);		// All cells inside the defined AABB by [min, max]
 
+	void	calculateCollisions(float3 pos);
+
+	float3	getForceFeedback(){ return m_forceFeedback; }
+
 	void dump();
 
 private:
@@ -54,6 +60,8 @@ private:
 	uint3	m_gridSize;
 	uint 	m_numGridCells;
 	cudaGraphicsResource *m_vboRes;
+
+	float3 m_forceFeedback;
 
 	SimParams m_params;
 };

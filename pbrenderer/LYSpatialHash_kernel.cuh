@@ -11,6 +11,8 @@
 
 #include "LYVertex.h"
 #include "vector_types.h"
+#include <vector_functions.h>
+#include <device_functions.h>
 typedef unsigned int uint;
 
 // simulation parameters
@@ -36,6 +38,8 @@ struct SimParams
     float shear;
     float attraction;
     float boundaryDamping;
+
+	float3 force;
 };
 
 #endif

@@ -10,6 +10,7 @@ texture<uint, 1, cudaReadModeElementType> gridParticleHashTex;
 texture<uint, 1, cudaReadModeElementType> cellStartTex;
 texture<uint, 1, cudaReadModeElementType> cellEndTex;
 #endif
+
 __constant__ SimParams params;
 // calculate position in uniform grid
 __device__ int3 calcGridPos(float3 p)
@@ -40,7 +41,7 @@ __global__
 	uint index = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	if (index >= numVertices) return;
 
-	volatile glm::vec3 p = pos[index].m_pos;
+	volatile float3 p = pos[index].m_pos;
 
 	// get address in grid
 	int3 gridPos = calcGridPos(make_float3(p.x, p.y, p.z));
@@ -110,4 +111,81 @@ __global__
 	}
 
 	__syncthreads ();
+}
+
+__device__
+float3 collideCell(int3    gridPos,
+                   uint    index,
+                   float3  pos,
+                   LYVertex *oldPos,
+                   uint   *cellStart,
+                   uint   *cellEnd)
+{
+    uint gridHash = calcGridHash(gridPos);
+
+    // get start of bucket for this cell
+    uint startIndex = FETCH(cellStart, gridHash);
+
+    float3 force = make_float3(0.0f, 0.0f, 0.0f);
+	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
+    if (startIndex != 0xffffffff)          // cell is not empty
+    {
+        // iterate over particles in this cell
+        uint endIndex = FETCH(cellEnd, gridHash);
+
+        for (uint j=startIndex; j<endIndex; j++)
+        {
+            if (j != index)                // check not colliding with self
+            {
+                float3 pos2 = FETCH(oldPos, j).m_pos;
+				float3 npos;
+				npos.x = pos.x - pos2.x;
+				npos.y = pos.y - pos2.y;
+				npos.z = pos.z - pos2.z;
+				float dist = npos.x*npos.x + npos.y*npos.y + npos.z*npos.z;
+				if (dist < 1.0f)
+				{
+					total_force.x += 0.1f;
+				}
+            }
+        }
+    }
+
+    return total_force;
+}
+
+__global__
+void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 forceFeedback, uint numVertices)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+    if (index >= numVertices) return;
+
+    // read particle data from sorted arrays
+ 	int3 gridPos = calcGridPos(make_float3(pos.x, pos.y, pos.z));
+
+	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
+
+	float3 force = make_float3(0.0f, 0.0f, 0.0f);
+
+	//TODO:	Calculate the real size of the neighborhood using the different 
+	//		functions for neighbor calculation [square, sphere, point]
+    for (int z=-1; z<=1; z++)
+    {
+        for (int y=-1; y<=1; y++)
+        {
+            for (int x=-1; x<=1; x++)
+            {
+                int3 neighbourPos;
+				neighbourPos.x = gridPos.x + x;
+				neighbourPos.y = gridPos.y + y;
+				neighbourPos.z = gridPos.z + z;
+				force = collideCell(neighbourPos, index, pos, oldPos, cellStart, cellEnd);
+                total_force.x += force.x;
+                total_force.y += force.y;
+                total_force.z += force.z;
+            }
+        }
+    }
+	forceFeedback = total_force;
 }

@@ -105,10 +105,10 @@ void LYMesh::InitMesh(unsigned int Index, const aiMesh* paiMesh)
         const aiVector3D* pTexCoord = paiMesh->HasTextureCoords(0) ? &(paiMesh->mTextureCoords[0][i]) : &Zero3D;
 		const aiColor4D*  pColor	= paiMesh->HasVertexColors(0) ? &(paiMesh->mColors[0][i]) : &aiColor4D();
 
-        LYVertex v(glm::vec3(pPos->x, pPos->y, pPos->z),
-                 glm::vec2(pTexCoord->x, pTexCoord->y),
-                 glm::vec3(pNormal->x, pNormal->y, pNormal->z),
-				 glm::vec3(pColor->r, pColor->g, pColor->b),
+        LYVertex v(make_float3(pPos->x, pPos->y, pPos->z),
+                 make_float2(pTexCoord->x, pTexCoord->y),
+                 make_float3(pNormal->x, pNormal->y, pNormal->z),
+				 make_float3(pColor->r, pColor->g, pColor->b),
 				 int(i));
 
         Vertices.push_back(v);

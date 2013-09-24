@@ -1,5 +1,15 @@
 #include "LYCudaHelper.cuh"
 
+void LYCudaHelper::allocateHostArray(void **devPtr, size_t size, unsigned int flag)
+{
+	checkCudaErrors(cudaHostAlloc(devPtr, size, cudaHostAllocPortable));
+}
+
+void LYCudaHelper::freeHostArray(void *devPtr)
+{
+	checkCudaErrors(cudaFreeHost(devPtr));
+}
+
 void LYCudaHelper::allocateArray(void **devPtr, int size)
 {
 	checkCudaErrors(cudaMalloc(devPtr, size));

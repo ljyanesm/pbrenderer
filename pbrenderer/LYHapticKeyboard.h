@@ -15,9 +15,9 @@ public:
 	LYHapticKeyboard(void);
 	~LYHapticKeyboard(void);
 
-	glm::vec3 getPosition() const;
-	void setPosition(glm::vec3 pos);
-	glm::vec3 getForceFeedback() const;
+	float3 getPosition() const;
+	void setPosition(float3 pos);
+	float3 getForceFeedback() const;
 	float getSpeed() const;
 	float getSize()	const;
 
@@ -26,8 +26,8 @@ public:
 
 private:
 	LYVertex	m_collider;
-	glm::vec3	m_position;
-	glm::vec3	m_direction;
+	float3		m_position;
+	float3		m_direction;
 	float		m_speed;
 	float		m_size;
 

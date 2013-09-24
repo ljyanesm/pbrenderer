@@ -31,6 +31,7 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::allocateArray((void **)&m_cellStart, m_numGridCells*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
+	LYCudaHelper::allocateHostArray((void **) &m_forceFeedback, sizeof(float3));
 }
 
 
@@ -44,6 +45,7 @@ LYSpatialHash::~LYSpatialHash(void)
 	LYCudaHelper::freeArray(m_pointGridIndex);
 	LYCudaHelper::freeArray(m_cellStart);
 	LYCudaHelper::freeArray(m_cellEnd);
+	LYCudaHelper::freeHostArray(&m_forceFeedback);
 
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
@@ -127,7 +129,6 @@ void
 		{
 			uint cellSize = m_hCellEnd[i] - m_hCellStart[i];
 
-			//            printf("cell: %d, %d particles\n", i, cellSize);
 			if (cellSize > maxCellSize)
 			{
 				maxCellSize = cellSize;
@@ -136,4 +137,10 @@ void
 	}
 
 	printf("maximum particles per cell = %d\n", maxCellSize);
+}
+
+void LYSpatialHash::calculateCollisions( float3 pos )
+{
+	m_forceFeedback = float3();
+	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_forceFeedback, m_numVertices);
 }
