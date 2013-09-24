@@ -9,10 +9,10 @@ LYHapticKeyboard::LYHapticKeyboard(void)
 
 	std::vector<LYVertex> Vertices;
 	std::vector<unsigned int> Indices;
-	LYVertex v(glm::vec3(),
-		glm::vec2(),
-		glm::vec3(),
-		glm::vec3(255, 255, 255),
+	LYVertex v(make_float3(0.0, 0.0, 0.0),
+		make_float2(0.0, 0.0),
+		make_float3(0.0, 0.0, 0.0),
+		make_float3(255, 255, 255),
 		int(1));
 
 	Vertices.push_back(v);
@@ -35,10 +35,10 @@ LYHapticKeyboard::~LYHapticKeyboard(void)
 	glDeleteBuffers(1, &ib);
 }
 
-glm::vec3 LYHapticKeyboard::getPosition() const{
+float3 LYHapticKeyboard::getPosition() const{
 	return m_collider.m_pos;
 }
-void LYHapticKeyboard::setPosition(glm::vec3 pos) {
+void LYHapticKeyboard::setPosition(float3 pos) {
 	m_position = pos;
 	m_collider.m_pos = pos;
 	std::vector<LYVertex> Vertices;
@@ -46,8 +46,8 @@ void LYHapticKeyboard::setPosition(glm::vec3 pos) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * 1, &Vertices[0], GL_STATIC_DRAW);
 }
-glm::vec3 LYHapticKeyboard::getForceFeedback() const{
-	return glm::vec3();
+float3 LYHapticKeyboard::getForceFeedback() const{
+	return float3();
 }
 
 float LYHapticKeyboard::getSpeed() const 

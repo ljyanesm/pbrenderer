@@ -17,6 +17,9 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
+#include <vector_functions.h>
+#include <vector_types.h>
+
 #include "LYWorld.h"
 #include "LYMesh.h"
 #include "LYCamera.h"
@@ -180,7 +183,7 @@ void motion(int x, int y)
 		}
 		break;
 	case M_MOVE:
-		glm::vec3 p = haptic_interface->getPosition();
+		float3 p = haptic_interface->getPosition();
 		glm::vec4 r, v;
 		if (buttonState == 1) {
 			v.x = dx * haptic_interface->getSpeed();
@@ -209,7 +212,7 @@ void motion(int x, int y)
 // commented out to remove unused parameter warnings in Linux
 void key(unsigned char key, int /*x*/, int /*y*/)
 {
-	glm::vec3 pos;
+	float3 pos;
 	switch (key)
 	{
 	case ' ':
@@ -254,31 +257,38 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case 'w':
 		// Move collider up
 		pos = haptic_interface->getPosition();
-		haptic_interface->setPosition(pos + glm::vec3(0.0, haptic_interface->getSpeed(), 0.0));
+		pos.y += haptic_interface->getSpeed();
+		haptic_interface->setPosition(pos);
+
 		break;
 	case 'a':
 		// Move collider left
 		pos = haptic_interface->getPosition();
-		haptic_interface->setPosition(pos + glm::vec3(-haptic_interface->getSpeed(), 0.0, 0.0));
+		pos.x -= haptic_interface->getSpeed();
+		haptic_interface->setPosition(pos);
 		break;
 	case 's':
 		// Move collider down
 		pos = haptic_interface->getPosition();
-		haptic_interface->setPosition(pos + glm::vec3(0.0, -haptic_interface->getSpeed(), 0.0));
+		pos.y += -haptic_interface->getSpeed();
+		haptic_interface->setPosition(pos);
 		break;
 	case 'd':
 		// Move collider right
 		pos = haptic_interface->getPosition();
-		haptic_interface->setPosition(pos + glm::vec3(haptic_interface->getSpeed(), 0.0, 0.0));
+		pos.x += haptic_interface->getSpeed();
+		haptic_interface->setPosition(pos);
 		break;
 	case 'z':
 		pos = haptic_interface->getPosition();
-		haptic_interface->setPosition(pos + glm::vec3(0.0, 0.0, haptic_interface->getSpeed()));
+		pos.z += haptic_interface->getSpeed();
+		haptic_interface->setPosition(pos);
 		// Move collider in
 		break;
 	case 'c':
 		pos = haptic_interface->getPosition();
-		haptic_interface->setPosition(pos + glm::vec3(0.0, 0.0, -haptic_interface->getSpeed()));
+		pos.z += -haptic_interface->getSpeed();
+		haptic_interface->setPosition(pos);
 		// Move collider out
 		break;
 	}
@@ -310,6 +320,10 @@ void display()
 	if (!bPause)
 	{
 		space_handler->update();
+		float3 interfacePosition = haptic_interface->getPosition();
+		space_handler->calculateCollisions(interfacePosition);
+		float3 force = space_handler->getForceFeedback();
+		printf("Force: (%5.3f, %5.3f, %5.3f) \n", force.x, force.y, force.z);
 		screenspace_renderer->setPointRadius(pointRadius);
 		spaceHandler_timer.Stop();
 	}
