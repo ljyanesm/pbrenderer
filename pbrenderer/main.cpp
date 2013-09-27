@@ -5,6 +5,7 @@
 #include <cmath>
 
 // CUDA runtime
+#include <cuda.h>
 #include <cuda_runtime.h>
 
 // CUDA utilities and system includes
@@ -19,6 +20,8 @@
 
 #include <vector_functions.h>
 #include <vector_types.h>
+
+#include "LYHapticDevice.h"
 
 #include "LYWorld.h"
 #include "LYMesh.h"
@@ -64,6 +67,7 @@ LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
 LYCamera *m_pCamera;
 LYHapticInterface *haptic_interface;
+LYHapticDevice* haptics;
 ///////////////////////////////////////////////////////
 
 // Timer variables to measure performance
@@ -87,12 +91,13 @@ void cudaInit(int argc, char **argv)
 
 	// use command-line specified CUDA device, otherwise use device with highest Gflops/s
 	devID = findCudaDevice(argc, (const char **)argv);
-
 	if (devID < 0)
 	{
 		printf("No CUDA Capable devices found, exiting...\n");
 		exit(EXIT_SUCCESS);
 	}
+	checkCudaErrors(cudaSetDevice(devID));
+	checkCudaErrors(cudaSetDeviceFlags(cudaDeviceMapHost));
 }
 
 
@@ -123,7 +128,8 @@ void initGL(int *argc, char **argv){
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).NumIndices, make_uint3(256, 256, 256));
-	haptic_interface = new LYHapticKeyboard();
+//	haptic_interface = new LYHapticKeyboard(space_handler);
+	haptic_interface = new LYHapticDevice(space_handler);
 	screenspace_renderer->setCollider(haptic_interface);
 
 	glutReportErrors();
@@ -314,16 +320,16 @@ int sleep_time = 0;
 void display()
 {
 	LYTimer t(true);
-	Sleep(16);
 	LYTimer spaceHandler_timer(true);
 	// update the simulation
 	if (!bPause)
 	{
 		space_handler->update();
-		float3 interfacePosition = haptic_interface->getPosition();
-		space_handler->calculateCollisions(interfacePosition);
-		float3 force = space_handler->getForceFeedback();
-		printf("Force: (%5.3f, %5.3f, %5.3f) \n", force.x, force.y, force.z);
+		haptic_interface->setPosition(haptic_interface->getPosition());
+		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
+			float3 force = haptic_interface->getForceFeedback(haptic_interface->getPosition());
+			printf("F(%5.3f, %5.3f, %5.3f)\n", force.x, force.y, force.z);
+		}
 		screenspace_renderer->setPointRadius(pointRadius);
 		spaceHandler_timer.Stop();
 	}
@@ -348,15 +354,15 @@ void display()
 	glutSwapBuffers();
 	glutReportErrors();
 
-	sprintf(fps_string, "Point-Based Rendering \t FPS: %5.3f \t SpaceHandler FPS: %5.3f", 1000.0f / (t.Elapsed()), 1000.0f / (spaceHandler_timer.Elapsed()));
+	sprintf(fps_string, "Point-Based Rendering \t FPS: %5.3f \t SpaceHandler FPS: %f", 1000.0f / (t.Elapsed()), 1000.0f / (spaceHandler_timer.Elapsed()));
 	glutSetWindowTitle(fps_string);
 
 }
 
 int main(int argc, char **argv)
 {
-	initGL(&argc, argv);
 	initCUDA(argc, argv);
+	initGL(&argc, argv);
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);

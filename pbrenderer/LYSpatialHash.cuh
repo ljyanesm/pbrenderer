@@ -20,5 +20,5 @@ extern "C"
 
 	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numVertices);
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 forceFeedback, uint numVertices);
+	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 *forceFeedback, uint numVertices);
 }

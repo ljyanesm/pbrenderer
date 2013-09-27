@@ -1,8 +1,10 @@
 #include "LYHapticKeyboard.h"
 
 
-LYHapticKeyboard::LYHapticKeyboard(void)
+LYHapticKeyboard::LYHapticKeyboard(LYSpaceHandler *sh)
 {
+	m_spaceHandler = sh;
+	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
 	m_collider =	LYVertex();
 	m_speed =		0.001f;
 	m_size	=		0.05f;
@@ -46,8 +48,8 @@ void LYHapticKeyboard::setPosition(float3 pos) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * 1, &Vertices[0], GL_STATIC_DRAW);
 }
-float3 LYHapticKeyboard::getForceFeedback() const{
-	return float3();
+float3 LYHapticKeyboard::getForceFeedback(float3 pos) const{
+	return m_spaceHandler->getForceFeedback(this->getPosition());
 }
 
 float LYHapticKeyboard::getSpeed() const 
@@ -68,4 +70,9 @@ uint LYHapticKeyboard::getIB() const
 uint LYHapticKeyboard::getVBO() const
 {
 	return vbo;
+}
+
+void LYHapticKeyboard::setSpaceHandler( LYSpaceHandler *sh )
+{
+	m_spaceHandler = sh;
 }

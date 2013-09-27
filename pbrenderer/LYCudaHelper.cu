@@ -2,7 +2,7 @@
 
 void LYCudaHelper::allocateHostArray(void **devPtr, size_t size, unsigned int flag)
 {
-	checkCudaErrors(cudaHostAlloc(devPtr, size, cudaHostAllocPortable));
+	checkCudaErrors(cudaHostAlloc(devPtr, size, cudaHostAllocMapped));
 }
 
 void LYCudaHelper::freeHostArray(void *devPtr)
@@ -67,3 +67,7 @@ struct cudaGraphicsResource **cuda_vbo_resource, int size)
 	}
 }
 
+void LYCudaHelper::getMappedPointer(void **device, void *host, uint flag)
+{
+	checkCudaErrors(cudaHostGetDevicePointer(device, host, flag));
+}
