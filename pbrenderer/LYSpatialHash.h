@@ -16,6 +16,11 @@
 #include "LYSpaceHandler.h"
 #include "LYSpatialHash.cuh"
 #include "LYSpatialHash_kernel.cuh"
+
+// Macro to aligned up to the memory size in question
+#define MEMORY_ALIGNMENT  4096
+#define ALIGN_UP(x,size) ( ((size_t)x+(size-1))&(~(size-1)) )
+
 class LYSpatialHash : public LYSpaceHandler
 {
 
@@ -36,7 +41,7 @@ public:
 
 	void	calculateCollisions(float3 pos);
 
-	float3	getForceFeedback(){ return m_forceFeedback; }
+	float3	getForceFeedback(float3 pos);
 
 	void dump();
 
@@ -61,7 +66,11 @@ private:
 	uint 	m_numGridCells;
 	cudaGraphicsResource *m_vboRes;
 
-	float3 m_forceFeedback;
+	float3 *m_dForceFeedback;
+	float3 *m_uForceFeedback;
+	float3 *m_forceFeedback;
+
+	bool	m_dirtyPos;
 
 	SimParams m_params;
 };

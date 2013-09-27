@@ -23,6 +23,8 @@ m_gridSize(gridSize)
 
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
+
+	m_forceFeedback = new float3[1];
 	
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
 
@@ -31,7 +33,9 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::allocateArray((void **)&m_cellStart, m_numGridCells*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
-	LYCudaHelper::allocateHostArray((void **) &m_forceFeedback, sizeof(float3));
+	LYCudaHelper::allocateArray((void **)&m_dForceFeedback, sizeof(float3));
+
+	m_dirtyPos = true;
 }
 
 
@@ -39,13 +43,14 @@ LYSpatialHash::~LYSpatialHash(void)
 {
 	delete m_hCellEnd;
 	delete m_hCellStart;
+	delete m_forceFeedback;
 
 	LYCudaHelper::freeArray(m_sorted_points);
 	LYCudaHelper::freeArray(m_pointHash);
 	LYCudaHelper::freeArray(m_pointGridIndex);
 	LYCudaHelper::freeArray(m_cellStart);
 	LYCudaHelper::freeArray(m_cellEnd);
-	LYCudaHelper::freeHostArray(&m_forceFeedback);
+	LYCudaHelper::freeArray(m_forceFeedback);
 
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
@@ -54,34 +59,37 @@ void	LYSpatialHash::update()
 {
 	LYTimer t(true);
 	LYVertex *dPos;
-	dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 
 	// update constants
 	setParameters(&m_params);
 
-	// calculate grid hash
-	calcHash(
-		m_pointHash,
-		m_pointGridIndex,
-		dPos,
-		m_numVertices);
+	if (m_dirtyPos) {
+		dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+		// calculate grid hash
+		calcHash(
+			m_pointHash,
+			m_pointGridIndex,
+			dPos,
+			m_numVertices);
 
-	// sort particles based on hash
-	sortParticles(m_pointHash, m_pointGridIndex, m_numVertices);
+		// sort particles based on hash
+		sortParticles(m_pointHash, m_pointGridIndex, m_numVertices);
 
-	// reorder particle arrays into sorted order and
-	// find start and end of each cell
-	reorderDataAndFindCellStart(
-		m_cellStart,
-		m_cellEnd,
-		m_sorted_points,
-		m_pointHash,
-		m_pointGridIndex,
-		dPos,
-		m_numVertices,
-		m_numGridCells);
+		// reorder particle arrays into sorted order and
+		// find start and end of each cell
+		reorderDataAndFindCellStart(
+			m_cellStart,
+			m_cellEnd,
+			m_sorted_points,
+			m_pointHash,
+			m_pointGridIndex,
+			dPos,
+			m_numVertices,
+			m_numGridCells);
 
-	LYCudaHelper::unmapGLBufferObject(m_vboRes);
+		LYCudaHelper::unmapGLBufferObject(m_vboRes);
+		m_dirtyPos = false;
+	}
 }
 
 void	LYSpatialHash::clear()
@@ -141,6 +149,12 @@ void
 
 void LYSpatialHash::calculateCollisions( float3 pos )
 {
-	m_forceFeedback = float3();
-	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_forceFeedback, m_numVertices);
+	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dForceFeedback, m_numVertices);
+	LYCudaHelper::copyArrayFromDevice(m_forceFeedback, m_dForceFeedback, 0, sizeof(float3));
+}
+
+float3 LYSpatialHash::getForceFeedback(float3 pos)
+{
+	calculateCollisions(pos);
+	return *m_forceFeedback;
 }

@@ -11,26 +11,20 @@
 class LYHapticKeyboard :
 	public LYHapticInterface
 {
+private:
+	LYSpaceHandler *m_spaceHandler;
 public:
-	LYHapticKeyboard(void);
+	LYHapticKeyboard(LYSpaceHandler *sh);
 	~LYHapticKeyboard(void);
 
+	void setSpaceHandler(LYSpaceHandler *sh);
 	float3 getPosition() const;
 	void setPosition(float3 pos);
-	float3 getForceFeedback() const;
+	float3 getForceFeedback(float3 pos) const;
 	float getSpeed() const;
 	float getSize()	const;
 
+	LYDEVICE_TYPE getDeviceType() const { return m_deviceType; }
 	uint getVBO() const;
 	uint getIB() const;
-
-private:
-	LYVertex	m_collider;
-	float3		m_position;
-	float3		m_direction;
-	float		m_speed;
-	float		m_size;
-
-	uint vbo;
-	uint ib;
 };

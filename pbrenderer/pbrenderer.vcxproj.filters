@@ -55,6 +55,9 @@
     <ClCompile Include="LYDistanceFieldCollider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LYHapticDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LYShader.h">
@@ -93,9 +96,6 @@
     <ClInclude Include="LYCell.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LYAbCollisionHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LYTimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -109,6 +109,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LYDistanceFieldCollider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYHapticDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYHapticState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

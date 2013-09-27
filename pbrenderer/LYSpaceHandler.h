@@ -20,7 +20,7 @@ public:
 	virtual LYCell* getNeighboors(glm::vec3 pos, int neighborhoodSize) = 0; // All the cells in the neighborhood of the solicited point
 	virtual LYCell* getNeighboors(glm::vec3 pos, float radius) = 0; // All the cells inside the sphere defined by [p, r]
 	virtual LYCell* getNeighboors(glm::vec3 pmin, glm::vec3 pmax) = 0; // All cells inside the defined AABB by [min, max]
-	virtual float3	getForceFeedback() = 0;
+	virtual float3	getForceFeedback(float3 pos) = 0;
 	virtual void	calculateCollisions(float3 pos) = 0;
 
 protected:

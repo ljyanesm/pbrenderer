@@ -51,14 +51,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>GLM_MESSAGES;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.6;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenHaptics\Academic\3.1\utilities\include;C:\OpenHaptics\Academic\3.1\include;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.6;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\OpenHaptics\Academic\3.1\utilities\lib\Win32\DebugAcademicEdition;C:\OpenHaptics\Academic\3.1\lib\Win32\DebugAcademicEdition;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
@@ -77,15 +77,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.6;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenHaptics\Academic\3.1\utilities\include;C:\OpenHaptics\Academic\3.1\include;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;C:\tools\SDL-1.2.15\include;C:\tools\glm-0.9.4.6;C:\Program Files\Assimp\include;C:\tools\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\OpenHaptics\Academic\3.1\utilities\lib\Win32\ReleaseAcademicEdition;C:\OpenHaptics\Academic\3.1\lib\Win32\ReleaseAcademicEdition;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;C:\tools\SDL-1.2.15\lib\x86;C:\Program Files\Assimp\lib\x86;C:\tools\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
@@ -106,10 +106,11 @@
     <ClCompile Include="LYMesh.cpp" />
     <ClCompile Include="LYScreenspaceRenderer.cpp" />
     <ClCompile Include="LYTexture.cpp" />
+    <ClCompile Include="LYHapticDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="defines.h" />
-    <ClInclude Include="LYAbCollisionHandler.h" />
+    <ClInclude Include="LYHapticState.h" />
     <ClInclude Include="LYCamera.h" />
     <ClInclude Include="LYCell.h" />
     <ClInclude Include="LYCollisionHandler.h" />
@@ -126,6 +127,7 @@
     <ClInclude Include="LYMesh.h" />
     <ClInclude Include="LYScreenspaceRenderer.h" />
     <ClInclude Include="LYTexture.h" />
+    <ClInclude Include="LYHapticDevice.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYCudaHelper.cu" />

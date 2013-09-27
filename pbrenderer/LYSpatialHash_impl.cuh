@@ -113,6 +113,12 @@ __global__
 	__syncthreads ();
 }
 
+__device__ float wendlandWeight(float dist)
+{
+	float a = 1-dist;
+	return ( (a*a*a*a) * ((4*a) + 1) );
+}
+
 __device__
 float3 collideCell(int3    gridPos,
                    uint    index,
@@ -126,8 +132,12 @@ float3 collideCell(int3    gridPos,
     // get start of bucket for this cell
     uint startIndex = FETCH(cellStart, gridHash);
 
+	float R = 0.6f;
+	float w_tot = 0.0f;
     float3 force = make_float3(0.0f, 0.0f, 0.0f);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
+	float3 Ax = make_float3(0.0f, 0.0f, 0.0f);
+	float3 Nx = make_float3(0.0f, 0.0f, 0.0f);
     if (startIndex != 0xffffffff)          // cell is not empty
     {
         // iterate over particles in this cell
@@ -138,24 +148,45 @@ float3 collideCell(int3    gridPos,
             if (j != index)                // check not colliding with self
             {
                 float3 pos2 = FETCH(oldPos, j).m_pos;
+				float3 nor2 = FETCH(oldPos, j).m_normal;
 				float3 npos;
 				npos.x = pos.x - pos2.x;
 				npos.y = pos.y - pos2.y;
 				npos.z = pos.z - pos2.z;
 				float dist = npos.x*npos.x + npos.y*npos.y + npos.z*npos.z;
-				if (dist < 1.0f)
+				if (dist < R)
 				{
-					total_force.x += 0.1f;
+					float w = wendlandWeight(R - dist);
+					w_tot += w;
+					Ax.x += w * pos2.x;
+					Ax.y += w * pos2.y;
+					Ax.z += w * pos2.z;
+
+					Nx.x += w * nor2.x;
+					Nx.y += w * nor2.y;
+					Nx.z += w * nor2.z;
 				}
             }
         }
+
+		Ax.x /= w_tot;
+		Ax.y /= w_tot;
+		Ax.z /= w_tot;
+		Nx.x /= w_tot;
+		Nx.y /= w_tot;
+		Nx.z /= w_tot;
+
+		
     }
+	total_force.x = Ax.x;
+	total_force.y = Ax.y;
+	total_force.z = Ax.z;
 
     return total_force;
 }
 
 __global__
-void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 forceFeedback, uint numVertices)
+void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 *forceFeedback, uint numVertices)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
@@ -170,11 +201,12 @@ void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint
 
 	//TODO:	Calculate the real size of the neighborhood using the different 
 	//		functions for neighbor calculation [square, sphere, point]
-    for (int z=-1; z<=1; z++)
+	int maskSize = 3;
+    for (int z=-maskSize; z<=maskSize; z++)
     {
-        for (int y=-1; y<=1; y++)
+        for (int y=-maskSize; y<=maskSize; y++)
         {
-            for (int x=-1; x<=1; x++)
+            for (int x=-maskSize; x<=maskSize; x++)
             {
                 int3 neighbourPos;
 				neighbourPos.x = gridPos.x + x;
@@ -187,5 +219,5 @@ void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint
             }
         }
     }
-	forceFeedback = total_force;
+	*forceFeedback = total_force;
 }
