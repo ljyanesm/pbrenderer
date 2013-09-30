@@ -121,7 +121,7 @@ void LYHapticDevice::touchTool()
 	/* Obtain a thread-safe copy of the current haptic display state. */
 	hdScheduleSynchronous(copyHapticDisplayState, pState,
 		HD_DEFAULT_SCHEDULER_PRIORITY);
-
+	static float3 oldForce = float3();
 	int currentButtons;
 	hduVector3Dd position;
 	hduVector3Dd force( 0,0,0 );
@@ -135,15 +135,23 @@ void LYHapticDevice::touchTool()
 	if(COLLISION_FORCEFEEDBACK)
 	{
 		//calculate the force
-		float pos[3] = {pState->position[0],pState->position[1],pState->position[2]};
-		this->setPosition(make_float3(pState->position[0] * 0.01f, -pState->position[2] * 0.01f ,pState->position[1] *0.01f));
+		float3 pos = make_float3(pState->position[0],pState->position[1],pState->position[2]);
+		float3 vel = make_float3(pState->velocity[0],pState->velocity[1],pState->velocity[2]);
+		pos.x *= 0.01f;
+		pos.y *= 0.01f;
+		pos.z *= 0.01f;
+		this->setPosition(pos);
 		float f[3]={0,0,0};
-		float forceScale = 0.01f;
+		float damping = 0.07f;
+		float forceScale = 0.4f;
 		float3 _force = this->getForceFeedback(m_collider.m_pos);
+
+		force[0] = (_force.x * forceScale) - abs(_force.x - oldForce.x) * damping;
+		force[1] = (_force.y * forceScale) - abs(_force.y - oldForce.y) * damping;
+		force[2] = (_force.z * forceScale) - abs(_force.z - oldForce.z) * damping;
+
+		oldForce = _force;
 		//return the force to the haptic device
-		force[0] = _force.x * forceScale;
-		force[1] = _force.y * forceScale;
-		force[2] = _force.z * forceScale;
 
 		hdSetDoublev(HD_CURRENT_FORCE, force);
 	}
