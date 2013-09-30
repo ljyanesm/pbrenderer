@@ -132,7 +132,7 @@ float3 collideCell(int3    gridPos,
     // get start of bucket for this cell
     uint startIndex = FETCH(cellStart, gridHash);
 
-	float R = 0.6f;
+	float R = 0.5f;
 	float w_tot = 0.0f;
     float3 force = make_float3(0.0f, 0.0f, 0.0f);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
