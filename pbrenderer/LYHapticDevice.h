@@ -34,6 +34,12 @@ public:
 	float getSpeed() const;
 	float getSize() const;
 	
+	void setDamping(float d);
+	float getDamping() const;
+
+	void setForceScale(float d);
+	float getForceScale() const;
+
 	LYDEVICE_TYPE getDeviceType() const { return m_deviceType; }
 	uint getVBO()	const;
 	uint getIB()	const;

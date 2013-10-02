@@ -23,6 +23,11 @@ public:
 	float3 getForceFeedback(float3 pos) const;
 	float getSpeed() const;
 	float getSize()	const;
+	void setDamping(float d);
+	float getDamping() const;
+
+	void setForceScale(float d) { m_forceScale = d;}
+	float getForceScale() const { return m_forceScale; }
 
 	LYDEVICE_TYPE getDeviceType() const { return m_deviceType; }
 	uint getVBO() const;

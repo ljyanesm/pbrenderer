@@ -13,10 +13,19 @@ m_gridSize(gridSize)
 	m_numVertices	= numVertices;
 	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
-	m_params.gridSize = m_gridSize;
-	m_params.numCells = m_numGridCells;
-	m_params.cellSize = make_float3(0.01f, 0.01f, 0.01f);
-	m_params.numBodies = m_numVertices;
+	m_params = new SimParams();
+
+	m_params->gridSize = m_gridSize;
+	m_params->numCells = m_numGridCells;
+	m_params->cellSize = make_float3(0.01f, 0.01f, 0.01f);
+	m_params->numBodies = m_numVertices;
+	m_params->dmin	= 0.75f;
+	m_params->alpha	= 0.01f;
+	m_params->epsilon = 0.01f;
+	m_params->beta = 0.01f;
+	m_params->gamma = 0.01f;
+	m_params->RMAX = 2.0f;
+	m_params->RMIN = 0.2f;
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -24,7 +33,6 @@ m_gridSize(gridSize)
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 
-	m_forceFeedback = new float3[1];
 	
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
 
@@ -33,8 +41,8 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::allocateArray((void **)&m_cellStart, m_numGridCells*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
-	LYCudaHelper::allocateArray((void **)&m_dForceFeedback, sizeof(float3));
-
+	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
+	
 	m_dirtyPos = true;
 }
 
@@ -50,7 +58,7 @@ LYSpatialHash::~LYSpatialHash(void)
 	LYCudaHelper::freeArray(m_pointGridIndex);
 	LYCudaHelper::freeArray(m_cellStart);
 	LYCudaHelper::freeArray(m_cellEnd);
-	LYCudaHelper::freeArray(m_forceFeedback);
+	LYCudaHelper::freeArray(m_dParams);
 
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
@@ -61,9 +69,12 @@ void	LYSpatialHash::update()
 	LYVertex *dPos;
 
 	// update constants
-	setParameters(&m_params);
 
 	if (m_dirtyPos) {
+		setParameters(m_params);
+		printf("Copying the parameters to the device...\n");
+		LYCudaHelper::copyArrayToDevice(&m_dParams, m_params, 0, sizeof(SimParams));
+
 		dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
@@ -89,6 +100,7 @@ void	LYSpatialHash::update()
 
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
 		m_dirtyPos = false;
+		printf("Hash calculated!\n");
 	}
 }
 
@@ -149,12 +161,14 @@ void
 
 void LYSpatialHash::calculateCollisions( float3 pos )
 {
-	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dForceFeedback, m_numVertices);
-	LYCudaHelper::copyArrayFromDevice(m_forceFeedback, m_dForceFeedback, 0, sizeof(float3));
+	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
+	cudaDeviceSynchronize();
+	printf("Copying parameters from the device...\n");
+	LYCudaHelper::copyArrayFromDevice(m_params, m_dParams, 0, sizeof(SimParams));
 }
 
 float3 LYSpatialHash::getForceFeedback(float3 pos)
 {
 	calculateCollisions(pos);
-	return *m_forceFeedback;
+	return m_params->force;
 }

@@ -19,12 +19,12 @@
 #include <helper_cuda_gl.h>
 #include <helper_functions.h>
 
-
 #include "thrust/device_ptr.h"
 #include "thrust/for_each.h"
 #include "thrust/iterator/zip_iterator.h"
 #include "thrust/sort.h"
 
+#include "helper_math.h"
 #include "LYSpatialHash_impl.cuh"
 
 extern "C" {
@@ -34,7 +34,6 @@ extern "C" {
 		// copy parameters to constant memory
 		checkCudaErrors( cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)) );
 	}
-
 
 	//Round a / b to nearest higher integer value
 	uint iDivUp(uint a, uint b)
@@ -110,7 +109,7 @@ extern "C" {
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 *forceFeedback, uint numVertices)
+	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices)
 	{
 #if USE_TEX
         checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numParticles*sizeof(float4)));
@@ -129,7 +128,7 @@ extern "C" {
                                               gridParticleIndex,
                                               cellStart,
                                               cellEnd,
-											  forceFeedback,
+											  dev_params,
                                               numVertices);
 
         // check if kernel invocation generated an error

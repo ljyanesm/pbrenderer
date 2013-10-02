@@ -9,6 +9,10 @@
 #define FETCH(t, i) t[i]
 #endif
 
+#define INF 0x7f800000
+
+#define NINF 0xff800000
+
 #include "LYVertex.h"
 #include "vector_types.h"
 #include <vector_functions.h>
@@ -39,7 +43,19 @@ struct SimParams
     float attraction;
     float boundaryDamping;
 
+	float dmin;
+	float alpha;
+	float epsilon;
+	float beta;
+	float gamma;
+	float phi;
+	float forceSpring;
+
+	float RMAX;
+	float RMIN;
+
 	float3 force;
+	float3 Xc;
 };
 
 #endif

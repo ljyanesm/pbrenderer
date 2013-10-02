@@ -72,5 +72,7 @@ private:
 
 	bool	m_dirtyPos;
 
-	SimParams m_params;
+	SimParams	*m_params;
+	SimParams	*m_uParams;
+	SimParams	*m_dParams;
 };

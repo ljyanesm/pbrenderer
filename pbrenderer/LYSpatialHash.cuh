@@ -1,5 +1,6 @@
 #include "defines.h"
 #include "LYSpatialHash_kernel.cuh"
+#include "helper_math.h"
 extern "C"
 {
 	void setParameters(SimParams *hostParams);
@@ -20,5 +21,5 @@ extern "C"
 
 	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numVertices);
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 *forceFeedback, uint numVertices);
+	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices);
 }
