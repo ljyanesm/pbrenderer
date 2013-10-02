@@ -76,3 +76,13 @@ void LYHapticKeyboard::setSpaceHandler( LYSpaceHandler *sh )
 {
 	m_spaceHandler = sh;
 }
+
+void LYHapticKeyboard::setDamping( float d )
+{
+	m_damping = d;
+}
+
+float LYHapticKeyboard::getDamping() const
+{
+	return m_damping;
+}

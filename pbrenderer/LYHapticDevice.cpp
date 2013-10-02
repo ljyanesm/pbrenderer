@@ -6,6 +6,9 @@ using namespace std;
 LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh)
 {
 
+	m_forceScale = 0.1f;
+	m_damping =	0.03f;
+
 	m_spaceHandler = sh;
 
 	m_deviceType = LYHapticInterface::HAPTIC_DEVICE;
@@ -142,13 +145,11 @@ void LYHapticDevice::touchTool()
 		pos.z *= 0.01f;
 		this->setPosition(pos);
 		float f[3]={0,0,0};
-		float damping = 0.07f;
-		float forceScale = 0.4f;
 		float3 _force = this->getForceFeedback(m_collider.m_pos);
 
-		force[0] = (_force.x * forceScale) - abs(_force.x - oldForce.x) * damping;
-		force[1] = (_force.y * forceScale) - abs(_force.y - oldForce.y) * damping;
-		force[2] = (_force.z * forceScale) - abs(_force.z - oldForce.z) * damping;
+		force[0] = (_force.x * m_forceScale) - abs(_force.x - oldForce.x) * m_damping;
+		force[1] = (_force.y * m_forceScale) - abs(_force.y - oldForce.y) * m_damping;
+		force[2] = (_force.z * m_forceScale) - abs(_force.z - oldForce.z) * m_damping;
 
 		oldForce = _force;
 		//return the force to the haptic device
@@ -175,6 +176,26 @@ bool LYHapticDevice::toggleForces()
 void LYHapticDevice::setSpaceHandler( LYSpaceHandler *sh )
 {
 	m_spaceHandler = sh;
+}
+
+void LYHapticDevice::setDamping( float d )
+{
+	m_damping = d;
+}
+
+float LYHapticDevice::getDamping() const
+{
+	return m_damping;
+}
+
+void LYHapticDevice::setForceScale( float d )
+{
+	m_forceScale = d;
+}
+
+float LYHapticDevice::getForceScale() const
+{
+	return m_forceScale;
 }
 
 /******************** OPEN HAPTICS CALBACK FUNCTIONS **************/

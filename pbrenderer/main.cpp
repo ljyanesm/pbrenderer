@@ -128,8 +128,8 @@ void initGL(int *argc, char **argv){
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).NumIndices, make_uint3(256, 256, 256));
-//	haptic_interface = new LYHapticKeyboard(space_handler);
-	haptic_interface = new LYHapticDevice(space_handler);
+	haptic_interface = new LYHapticKeyboard(space_handler);
+//	haptic_interface = new LYHapticDevice(space_handler);
 	screenspace_renderer->setCollider(haptic_interface);
 
 	glutReportErrors();
@@ -296,6 +296,22 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		pos.z += -haptic_interface->getSpeed();
 		haptic_interface->setPosition(pos);
 		// Move collider out
+		break;
+	case 'j':
+		haptic_interface->setDamping(haptic_interface->getDamping() - 0.001f);
+		printf("damping: %5.3f\n", haptic_interface->getDamping());
+		break;
+	case 'k':
+		haptic_interface->setDamping(haptic_interface->getDamping() + 0.001f);
+		printf("damping: %5.3f\n", haptic_interface->getDamping());
+		break;
+	case 'u':
+		haptic_interface->setForceScale(haptic_interface->getForceScale() - 0.001f);
+		printf("scale: %5.3f\n", haptic_interface->getForceScale());
+		break;
+	case 'i':
+		haptic_interface->setForceScale(haptic_interface->getForceScale() + 0.001f);
+		printf("scale: %5.3f\n", haptic_interface->getForceScale());
 		break;
 	}
 	glutPostRedisplay();
