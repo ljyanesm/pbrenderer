@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "helper_math.h"
 #include <HD/hd.h>
 #include <HDU/hdu.h>
 #include <HDU/hduVector.h>
@@ -30,7 +31,10 @@ public:
 	~LYHapticDevice();
 	float3 getPosition() const;
 	void setPosition(float3 pos);
+	
 	float3 getForceFeedback(float3 pos) const;
+	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
+
 	float getSpeed() const;
 	float getSize() const;
 	

@@ -110,7 +110,7 @@ extern "C" {
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, float3 *forceFeedback, uint numVertices)
+	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices)
 	{
 #if USE_TEX
         checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numParticles*sizeof(float4)));
@@ -124,12 +124,12 @@ extern "C" {
         computeGridSize(numVertices, 64, numBlocks, numThreads);
 		
 		// execute the kernel
-        collisionCheckD<<< numBlocks, numThreads >>>(pos,
+        _collisionCheckD<<< numBlocks, numThreads >>>(pos,
 											(LYVertex *)sortedPos,
                                               gridParticleIndex,
                                               cellStart,
                                               cellEnd,
-											  forceFeedback,
+											  dev_params,
                                               numVertices);
 
         // check if kernel invocation generated an error

@@ -42,6 +42,7 @@ public:
 	void	calculateCollisions(float3 pos);
 
 	float3	getForceFeedback(float3 pos);
+	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
 
 	void dump();
 
@@ -73,4 +74,8 @@ private:
 	bool	m_dirtyPos;
 
 	SimParams m_params;
+
+	SimParams *m_hParams;
+	SimParams *m_dParams;
+
 };

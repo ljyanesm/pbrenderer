@@ -19,8 +19,13 @@ public:
 
 	void setSpaceHandler(LYSpaceHandler *sh);
 	float3 getPosition() const;
+	float3 *getHIP();
 	void setPosition(float3 pos);
 	float3 getForceFeedback(float3 pos) const;
+
+	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
+
+
 	float getSpeed() const;
 	float getSize()	const;
 
