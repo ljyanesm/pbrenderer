@@ -283,7 +283,7 @@ void LYScreenspaceRenderer::_drawCollider()
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
 		int ib = m_collider->getIB();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-		int numIndices = 1;
+		int numIndices = 2;
 		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);

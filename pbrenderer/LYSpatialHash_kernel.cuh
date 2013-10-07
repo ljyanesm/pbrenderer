@@ -9,37 +9,47 @@
 #define FETCH(t, i) t[i]
 #endif
 
+#define INF 0x7f800000
+#define NINF 0xff800000
+
+#include "defines.h"
 #include "LYVertex.h"
 #include "vector_types.h"
+#include "helper_math.h"
 #include <vector_functions.h>
 #include <device_functions.h>
 typedef unsigned int uint;
 
 // simulation parameters
-struct SimParams
+
+typedef struct ALIGN(16) _SimParams
 {
-    float3 colliderPos;
-    float  colliderRadius;
-
-    float3 gravity;
-    float globalDamping;
-    float particleRadius;
-
-    uint3 gridSize;
-    uint numCells;
+	float3 force;
+	float3 colliderPos;
+	float3 Xc;
     float3 worldOrigin;
     float3 cellSize;
+	float3 Ax;
+	float3 Nx;
 
+	uint3 gridSize;
+
+	float dmin;
+	float alpha;
+	float epsilon;
+	float beta;
+	float gamma;
+	float phi;
+	float forceSpring;
+	float RMAX;
+	float RMIN;
+	float colliderRadius;
+    
+	uint numCells;
     uint numBodies;
     uint maxParticlesPerCell;
 
-    float spring;
-    float damping;
-    float shear;
-    float attraction;
-    float boundaryDamping;
-
-	float3 force;
-};
+	
+}SimParams;
 
 #endif

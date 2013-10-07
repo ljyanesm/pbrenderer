@@ -7,7 +7,7 @@ LYHapticKeyboard::LYHapticKeyboard(LYSpaceHandler *sh)
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
 	m_collider =	LYVertex();
 	m_speed =		0.001f;
-	m_size	=		0.05f;
+	m_size	=		0.03f;
 
 	std::vector<LYVertex> Vertices;
 	std::vector<unsigned int> Indices;
@@ -40,6 +40,11 @@ LYHapticKeyboard::~LYHapticKeyboard(void)
 float3 LYHapticKeyboard::getPosition() const{
 	return m_collider.m_pos;
 }
+
+float3 *LYHapticKeyboard::getHIP() {
+	return &(m_collider.m_pos);
+}
+
 void LYHapticKeyboard::setPosition(float3 pos) {
 	m_position = pos;
 	m_collider.m_pos = pos;
@@ -49,6 +54,11 @@ void LYHapticKeyboard::setPosition(float3 pos) {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * 1, &Vertices[0], GL_STATIC_DRAW);
 }
 float3 LYHapticKeyboard::getForceFeedback(float3 pos) const{
+	return m_spaceHandler->getForceFeedback(this->getPosition());
+}
+
+float3 LYHapticKeyboard::calculateFeedbackUpdateProxy(LYVertex *pos)
+{
 	return m_spaceHandler->getForceFeedback(this->getPosition());
 }
 

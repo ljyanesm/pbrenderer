@@ -44,7 +44,7 @@ int ox, oy;
 int buttonState = 0;
 float camera_trans[] = {0, 0, -3};
 float camera_rot[]   = {0, 0, -3};
-float camera_trans_lag[] = {0, 0, 0};
+float camera_trans_lag[] = {0, 0, -3};
 float camera_rot_lag[] = {0, 0, 0};
 
 bool wireframe = false;
@@ -297,6 +297,16 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		haptic_interface->setPosition(pos);
 		// Move collider out
 		break;
+	case 'I':
+		LYHapticInterface *new_interface;
+		if ( haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE)
+			new_interface = new LYHapticDevice(space_handler);
+		else
+			new_interface = new LYHapticKeyboard(space_handler);
+		haptic_interface = new_interface;
+		delete haptic_interface;
+
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -319,6 +329,7 @@ int sleep_time = 0;
 
 void display()
 {
+	Sleep(20);
 	LYTimer t(true);
 	LYTimer spaceHandler_timer(true);
 	// update the simulation
@@ -328,7 +339,6 @@ void display()
 		haptic_interface->setPosition(haptic_interface->getPosition());
 		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
 			float3 force = haptic_interface->getForceFeedback(haptic_interface->getPosition());
-			printf("F(%5.3f, %5.3f, %5.3f)\n", force.x, force.y, force.z);
 		}
 		screenspace_renderer->setPointRadius(pointRadius);
 		spaceHandler_timer.Stop();
