@@ -192,25 +192,86 @@ float3 LYSpatialHash::getForceFeedback(float3 pos)
 
 float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 {
-	float3 orig_pos = pos->m_normal;
-	calculateCollisions(pos->m_normal);
+FILE* fl=fopen("dump.txt", "a+");
+	static float3 tgPlaneNormal = make_float3(0.0f);
+	static float3 Psurface  = make_float3(0.0f);
+	static bool touched = false;
 
-	float3 Ax = m_hParams->Ax;
-	float3 Nx = m_hParams->Nx;
-	float alpha, beta;
-	alpha = 0.01f;
-	beta = alpha * 0.001f;
-	float Fx = dot(Nx, (orig_pos - Ax));
+	float3 P0 = pos->m_pos;
+	float3 Pseed = make_float3(0.0f);
+	float error = 9999.999f;
+	float3 Ax, Nx;
+	float Fx;
+	float3 dPseed;
 
-	if (Fx < 0.0f ){
-		printf("Fx < 0.0f\n");
-			orig_pos = pos->m_normal;
-			pos->m_normal = orig_pos - ((orig_pos - pos->m_pos) * alpha) - (beta * Ax*Nx);
-		return ((pos->m_pos - pos->m_normal) * 3.0f);
+	if (!touched){
+		calculateCollisions(P0);
+		Ax = m_hParams->Ax;
+		Nx = m_hParams->Nx;
+		printf("Ax = %f   %f   %f\n", Ax.x, Ax.y, Ax.z);
+		assert(length(Nx) < 1.0f);
+		Fx = dot(Nx, P0 - Ax);
+		if (Fx < 0.0f){
+			printf("\tFirst contact!\n");
+			touched = true;
+			Pseed = P0;
+			do 
+			{
+				calculateCollisions(Pseed);
+				Ax = m_hParams->Ax;
+				Nx = m_hParams->Nx;
+				assert(length(Nx) < 1.0f);
+				Fx = dot(Nx, Pseed - Ax);
+				float dSp_dSp = 1.0f/dot(Nx, Nx);
+				dPseed = Fx*Nx*dSp_dSp * 0.01f;
+				fprintf(fl, "************ Ax = %f , %f, %f\n", Ax.x, Ax.y, Ax.z);
+				fprintf(fl, "************ Fx = %f\n", Ax.x, Ax.y, Ax.z);
+				Pseed -= dPseed;
+			} while (length(dPseed) < EPS );
+			Psurface = Pseed;
+			pos->m_normal = Psurface;
+			tgPlaneNormal = Nx / length(Nx);
+			return (Psurface - P0) * 0.1f;
+		} else {
+			printf("Outside!\n");
+			pos->m_normal = P0;
+			touched = false;
+			return make_float3(0.0f);
+		}
+	} else {
+		float dist = dot(P0, tgPlaneNormal);
+
+		if (dist > 0.0f)
+		{
+			printf("\t\tStill in Contact!\n");
+			float3 P0p = P0 - Psurface;
+			float dist = dot(P0p, tgPlaneNormal);
+			P0p = P0 - dist*tgPlaneNormal;
+			Pseed = P0p;
+			do 
+			{
+				calculateCollisions(Pseed);
+				Ax = m_hParams->Ax;
+				Nx = m_hParams->Nx;
+				assert(length(Nx) < 1.0f);
+				Fx = dot(Nx, Pseed - Ax);
+				float dSp_dSp = 1.0f/dot(Nx, Nx);
+				dPseed = Fx*Nx*dSp_dSp;
+				Pseed -= dPseed;
+			} while (length(dPseed) < EPS );
+			//Psurface = Pseed;
+			pos->m_normal = Psurface;
+			tgPlaneNormal = Nx / length(Nx);
+			return (Psurface - P0) * 0.1f;
+		} else {
+			printf("\t\t\tLeft the surface!\n");
+			touched = false;
+			pos->m_normal = P0;
+			return make_float3(0.0f);
+		}
 	}
-	else {
-		system("cls");
-		pos->m_normal = pos->m_pos;
-		return make_float3(0.0f);
-	}
+
+fclose(fl);
+
+	return make_float3(0.0f);
 }

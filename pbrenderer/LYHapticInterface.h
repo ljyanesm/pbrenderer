@@ -18,6 +18,7 @@ public:
 	virtual void setPosition(float3 pos) = 0;
 	virtual void setSpaceHandler(LYSpaceHandler *sh) = 0;
 	virtual float3 getForceFeedback(float3 pos) const = 0;
+	virtual float3 calculateFeedbackUpdateProxy() = 0;
 	virtual float getSpeed() const = 0;
 	virtual float getSize() const = 0;
 
