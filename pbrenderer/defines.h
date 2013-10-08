@@ -35,5 +35,7 @@
 
 #endif
 
+#define EPS 0.0001f
+
 typedef unsigned int uint;
 typedef unsigned char uchar;

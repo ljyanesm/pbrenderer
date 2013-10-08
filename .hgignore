@@ -6,3 +6,4 @@ Debug/
 Release/
 pbrenderer.opensdf
 pbrenderer.sdf
+Debug Cuda/*

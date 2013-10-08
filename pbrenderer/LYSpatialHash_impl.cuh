@@ -337,9 +337,8 @@ float3 _collideCell(int3    gridPos,
     // get start of bucket for this cell
     uint startIndex = FETCH(cellStart, gridHash);
 
-	float R = 0.08f;
+	float R = 0.50f;
 	float w_tot = 0.0f;
-	float wn_tot = 0.0f;
     float3 force = make_float3(0.0f, 0.0f, 0.0f);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
 	float3 Ax = make_float3(0.0f, 0.0f, 0.0f);
@@ -363,14 +362,14 @@ float3 _collideCell(int3    gridPos,
 					float w = wendlandWeight(dist/R);
 					w_tot += w;
 					Ax += w * pos2;
-					Nx += w * nor2;
-					wn_tot += length(Nx);
+
+					float3 Ntmp = w * nor2;
+					float norm = length(Ntmp);
+					Nx += Ntmp / norm;
 				}
             }
         }
-
 		Ax /= w_tot;
-		Nx /= wn_tot;
     }
 	*OAx += Ax;
 	*ONx += Nx;
@@ -395,7 +394,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	float3 Nx = make_float3(0.0f);
 	//TODO:	Calculate the real size of the neighborhood using the different 
 	//		functions for neighbor calculation [square, sphere, point]
-	int maskSize = 1;
+	int maskSize = 2;
     for (int z=-maskSize; z<=maskSize; z++)
     {
         for (int y=-maskSize; y<=maskSize; y++)
@@ -403,14 +402,13 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
             for (int x=-maskSize; x<=maskSize; x++)
             {
                 int3 neighbourPos;
-				neighbourPos = gridPos + x;
+				neighbourPos = gridPos + make_int3(x,y,z);
 				force = _collideCell(neighbourPos, index, pos, oldPos, cellStart, cellEnd, &Ax, &Nx);
                 total_force += force;
             }
         }
     }
 
-	//total_force = dev_params->Ax * dot(dev_params->Nx, pos - dev_params->Ax);
 	dev_params->Ax = Ax;
 	dev_params->Nx = Nx;
 	dev_params->force = total_force;

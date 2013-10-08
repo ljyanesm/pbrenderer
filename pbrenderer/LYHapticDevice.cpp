@@ -62,6 +62,7 @@ void LYHapticDevice::setPosition(float3 pos) {
 	std::vector<LYVertex> Vertices;
 	Vertices.push_back(m_collider);
 	LYVertex proxy;
+	proxy.m_color = make_float3(1.0f, 0.0f, 0.0f);
 	proxy.m_pos = m_collider.m_normal;
 	Vertices.push_back(proxy);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -71,9 +72,9 @@ float3 LYHapticDevice::getForceFeedback(float3 pos) const{
 	return m_spaceHandler->getForceFeedback(m_collider.m_pos);
 }
 
-float3 LYHapticDevice::calculateFeedbackUpdateProxy(LYVertex *pos)
+float3 LYHapticDevice::calculateFeedbackUpdateProxy()
 {
-	return m_spaceHandler->calculateFeedbackUpdateProxy(pos);
+	return m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
 }
 
 float LYHapticDevice::getSpeed() const 
@@ -145,22 +146,22 @@ void LYHapticDevice::touchTool()
 
 	if(COLLISION_FORCEFEEDBACK)
 	{
-		//calculate the force
 		float3 pos = make_float3((float) pState->position[0], (float) pState->position[1], (float) pState->position[2]);
-		float3 vel = make_float3((float) pState->velocity[0], (float) pState->velocity[1], (float) pState->velocity[2]);
-		pos.x *= 0.01f;
-		pos.y *= 0.01f;
-		pos.z *= 0.01f;
+		pos.x *= 0.05f;
+		pos.y *= 0.05f;
+		pos.z *= 0.05f;
 		this->setPosition(pos);
 		float f[3]={0,0,0};
 		float damping = 0.2f;
 		float forceScale = 0.1f;
-		float3 _force = this->calculateFeedbackUpdateProxy(&m_collider) * forceScale;
-		oldForce += (_force - oldForce) * damping;
-		force[0] = oldForce.x;
-		force[1] = oldForce.y;
-		force[2] = oldForce.z;
-		//return the force to the haptic device
+		float3 _force = this->calculateFeedbackUpdateProxy() * forceScale;
+		force[0] = _force.x;
+		force[1] = _force.y;
+		force[2] = _force.z;
+		//oldForce += (_force - oldForce) * damping;
+		//force[0] = oldForce.x;
+		//force[1] = oldForce.y;
+		//force[2] = oldForce.z;
 
 		hdSetDoublev(HD_CURRENT_FORCE, force);
 	}

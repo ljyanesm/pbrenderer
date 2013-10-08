@@ -122,7 +122,7 @@ extern "C" {
         // thread per particle
         uint numThreads, numBlocks;
         computeGridSize(numVertices, 64, numBlocks, numThreads);
-		
+
 		// execute the kernel
         _collisionCheckD<<< numBlocks, numThreads >>>(pos,
 											(LYVertex *)sortedPos,

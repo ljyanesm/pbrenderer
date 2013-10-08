@@ -33,7 +33,7 @@ public:
 	void setPosition(float3 pos);
 	
 	float3 getForceFeedback(float3 pos) const;
-	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
+	float3	calculateFeedbackUpdateProxy();
 
 	float getSpeed() const;
 	float getSize() const;

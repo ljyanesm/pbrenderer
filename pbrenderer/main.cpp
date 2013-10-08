@@ -124,12 +124,12 @@ void initGL(int *argc, char **argv){
 	m_pMesh = new LYMesh();
 	m_pCamera = new LYCamera(width, height);
 
-	m_pMesh->LoadMesh("bunny-color.ply");
+	m_pMesh->LoadMesh("example.ply");
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).NumIndices, make_uint3(256, 256, 256));
-//	haptic_interface = new LYHapticKeyboard(space_handler);
-	haptic_interface = new LYHapticDevice(space_handler);
+	haptic_interface = new LYHapticKeyboard(space_handler);
+//	haptic_interface = new LYHapticDevice(space_handler);
 	screenspace_renderer->setCollider(haptic_interface);
 
 	glutReportErrors();
@@ -338,7 +338,7 @@ void display()
 		space_handler->update();
 		haptic_interface->setPosition(haptic_interface->getPosition());
 		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
-			float3 force = haptic_interface->getForceFeedback(haptic_interface->getPosition());
+			float3 force = haptic_interface->calculateFeedbackUpdateProxy();
 		}
 		screenspace_renderer->setPointRadius(pointRadius);
 		spaceHandler_timer.Stop();
