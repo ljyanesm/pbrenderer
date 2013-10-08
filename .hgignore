@@ -7,3 +7,4 @@ Release/
 pbrenderer.opensdf
 pbrenderer.sdf
 Debug Cuda/*
+pbrenderer/dump.txt
