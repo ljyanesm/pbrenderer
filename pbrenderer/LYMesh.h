@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <GL/glew.h>
@@ -34,6 +36,7 @@ class LYMesh
 		GLuint VB;
 		GLuint IB;
 		unsigned int NumIndices;
+		unsigned int numVertices;
 		unsigned int MaterialIndex;
 };
 
@@ -42,7 +45,8 @@ public:
 
     ~LYMesh();
 
-    bool LoadMesh(const std::string& Filename);
+	bool LoadMesh(const std::string& Filename);
+	bool LoadPoints(const std::string& Filename);
 
 	const std::vector<MeshEntry> *getEntries() { return &m_Entries; }
 	const std::vector<LYTexture*>  *getTextures() { return &m_Textures; }

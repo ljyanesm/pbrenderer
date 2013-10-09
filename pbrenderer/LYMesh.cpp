@@ -76,6 +76,38 @@ bool LYMesh::LoadMesh(const std::string& Filename)
     return Ret;
 }
 
+bool LYMesh::LoadPoints(const std::string& Filename)
+{
+	Clear();
+	bool ret = false;
+	std::string currentLine;
+	m_Entries.resize(1);
+
+	std::vector<LYVertex> Vertices;
+	std::vector<unsigned int> Indices;
+	int numVertices(0);
+
+	std::ifstream inputFile(Filename);
+	if (!inputFile.is_open()) return false;
+	do
+	{
+		getline(inputFile, currentLine);
+		std::size_t pos(currentLine.find("element vertex"));
+		if (pos!=std::string::npos)
+		{
+			numVertices = atoi( currentLine.substr(pos).c_str() );
+		}
+	} while (currentLine!="end_header" && !inputFile.eof());
+
+	for ( int i = 0; i < numVertices; i++)
+	{
+		LYVertex v;
+		sscanf(currentLine.c_str(), "%f %f %f %f %f %f %u %u %u", &v.m_pos.x, &v.m_pos.y, &v.m_pos.z, &v.m_normal.x, &v.m_normal.y, &v.m_normal.z, &v.m_color.x, &v.m_color.y, &v.m_color.z);
+		Vertices.push_back(v);
+	}
+
+}
+
 bool LYMesh::InitFromScene(const aiScene* pScene, const std::string& Filename)
 {  
     m_Entries.resize(pScene->mNumMeshes);
@@ -121,7 +153,7 @@ void LYMesh::InitMesh(unsigned int Index, const aiMesh* paiMesh)
         Indices.push_back(Face.mIndices[1]);
         Indices.push_back(Face.mIndices[2]);
     }
-
+	m_Entries[Index].numVertices = Vertices.size();
     m_Entries[Index].Init(Vertices, Indices);
 }
 

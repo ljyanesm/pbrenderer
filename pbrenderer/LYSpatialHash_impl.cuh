@@ -337,7 +337,7 @@ float3 _collideCell(int3    gridPos,
     // get start of bucket for this cell
     uint startIndex = FETCH(cellStart, gridHash);
 
-	float R = 0.50f;
+	float R = 0.2f;
 	float w_tot = 0.0f;
     float3 force = make_float3(0.0f, 0.0f, 0.0f);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
@@ -352,24 +352,23 @@ float3 _collideCell(int3    gridPos,
         {
             if (j != index)                // check not colliding with self
             {
-                float3 pos2 = FETCH(oldPos, j).m_pos;
-				float3 nor2 = FETCH(oldPos, j).m_normal;
+                LYVertex pos2 = FETCH(oldPos, j);
 				float3 npos;
-				npos = pos2 - pos;
+				npos = pos2.m_pos - pos;
 				float dist = length(npos);
 				if (dist < R)
 				{
 					float w = wendlandWeight(dist/R);
 					w_tot += w;
-					Ax += w * pos2;
-
-					float3 Ntmp = w * nor2;
+					Ax += w * pos2.m_pos;
+					float3 Ntmp = w * pos2.m_normal;
 					float norm = length(Ntmp);
 					Nx += Ntmp / norm;
 				}
             }
         }
-		Ax /= w_tot;
+		if (w_tot != 0.0)
+			Ax /= w_tot;
     }
 	*OAx += Ax;
 	*ONx += Nx;
