@@ -95,7 +95,8 @@ bool LYMesh::LoadPoints(const std::string& Filename)
 		std::size_t pos(currentLine.find("element vertex"));
 		if (pos!=std::string::npos)
 		{
-			numVertices = atoi( currentLine.substr(pos).c_str() );
+			std::string numV = currentLine.substr(pos+15);
+			numVertices = atoi( numV.c_str() );
 		}
 	} while (currentLine!="end_header" && !inputFile.eof());
 
