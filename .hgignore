@@ -8,3 +8,5 @@ pbrenderer.opensdf
 pbrenderer.sdf
 Debug Cuda/*
 pbrenderer/dump.txt
+Debug Cuda Release/*
+pbrenderer/Cuda Emulation/*

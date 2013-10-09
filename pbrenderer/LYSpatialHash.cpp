@@ -151,6 +151,9 @@ void
 	// dump grid information
 	LYCudaHelper::copyArrayFromDevice(m_hCellStart, m_cellStart, 0, sizeof(uint)*m_numGridCells);
 	LYCudaHelper::copyArrayFromDevice(m_hCellEnd, m_cellEnd, 0, sizeof(uint)*m_numGridCells);
+	LYVertex *m_hPositions = new LYVertex[m_numVertices];
+	LYCudaHelper::copyArrayFromDevice(m_hPositions, m_sorted_points, 0, sizeof(LYVertex)*m_numVertices);
+
 	uint maxCellSize = 0;
 
 	for (uint i=0; i<m_numGridCells; i++)
@@ -167,6 +170,11 @@ void
 	}
 
 	printf("maximum particles per cell = %d\n", maxCellSize);
+
+	for (uint i = 0; i < m_numVertices; i++)
+	{
+		printf("P(%u) = (%6.3f, %6.3f, %6.3f)\n", i, m_hPositions[i].m_pos.x, m_hPositions[i].m_pos.y, m_hPositions[i].m_pos.z);
+	}
 }
 
 void LYSpatialHash::calculateCollisions( float3 pos )
@@ -208,8 +216,6 @@ FILE* fl=fopen("dump.txt", "a+");
 		calculateCollisions(P0);
 		Ax = m_hParams->Ax;
 		Nx = m_hParams->Nx;
-		printf("Ax = %f   %f   %f\n", Ax.x, Ax.y, Ax.z);
-		assert(length(Nx) < 1.0f);
 		Fx = dot(Nx, P0 - Ax);
 		if (Fx < 0.0f){
 			printf("\tFirst contact!\n");
@@ -220,12 +226,12 @@ FILE* fl=fopen("dump.txt", "a+");
 				calculateCollisions(Pseed);
 				Ax = m_hParams->Ax;
 				Nx = m_hParams->Nx;
-				assert(length(Nx) < 1.0f);
+				Nx /= length(Nx);
 				Fx = dot(Nx, Pseed - Ax);
 				float dSp_dSp = 1.0f/dot(Nx, Nx);
-				dPseed = Fx*Nx*dSp_dSp * 0.01f;
+				dPseed = Fx*Nx*dSp_dSp;
 				fprintf(fl, "************ Ax = %f , %f, %f\n", Ax.x, Ax.y, Ax.z);
-				fprintf(fl, "************ Fx = %f\n", Ax.x, Ax.y, Ax.z);
+				fprintf(fl, "************ Fx = %f\n", Fx);
 				Pseed -= dPseed;
 			} while (length(dPseed) < EPS );
 			Psurface = Pseed;
@@ -240,7 +246,6 @@ FILE* fl=fopen("dump.txt", "a+");
 		}
 	} else {
 		float dist = dot(P0, tgPlaneNormal);
-
 		if (dist > 0.0f)
 		{
 			printf("\t\tStill in Contact!\n");
@@ -248,18 +253,20 @@ FILE* fl=fopen("dump.txt", "a+");
 			float dist = dot(P0p, tgPlaneNormal);
 			P0p = P0 - dist*tgPlaneNormal;
 			Pseed = P0p;
+			fprintf(fl, "************ Contact!\n");
 			do 
 			{
 				calculateCollisions(Pseed);
 				Ax = m_hParams->Ax;
 				Nx = m_hParams->Nx;
-				assert(length(Nx) < 1.0f);
 				Fx = dot(Nx, Pseed - Ax);
+				fprintf(fl, "************ In contact Ax = %f , %f, %f\n", Ax.x, Ax.y, Ax.z);
+				fprintf(fl, "************ In contact Fx = %f\n", Fx);
 				float dSp_dSp = 1.0f/dot(Nx, Nx);
-				dPseed = Fx*Nx*dSp_dSp;
+				dPseed = Nx*dSp_dSp * 0.01f;
 				Pseed -= dPseed;
 			} while (length(dPseed) < EPS );
-			//Psurface = Pseed;
+			Psurface = Pseed;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx / length(Nx);
 			return (Psurface - P0) * 0.1f;

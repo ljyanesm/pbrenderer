@@ -19,7 +19,6 @@
 #include <helper_cuda_gl.h>
 #include <helper_functions.h>
 
-
 #include "thrust/device_ptr.h"
 #include "thrust/for_each.h"
 #include "thrust/iterator/zip_iterator.h"
