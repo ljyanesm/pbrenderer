@@ -408,7 +408,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	float w = 0.0f;
 	npos = pos2.m_pos - pos;
 	float dist = length(npos);
-	float R = 0.2f;
+	float R = 0.5f;
 
 	if (dist < R)
 	{
