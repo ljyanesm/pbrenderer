@@ -16,6 +16,7 @@
 #include "LYVertex.h"
 #include "vector_types.h"
 #include "helper_math.h"
+#include <math_constants.h>
 #include <vector_functions.h>
 #include <device_functions.h>
 typedef unsigned int uint;
@@ -35,7 +36,7 @@ typedef struct ALIGN(16) _SimParams
 	uint3 gridSize;
 
 	float dmin;
-	float alpha;
+	float w_tot;
 	float epsilon;
 	float beta;
 	float gamma;

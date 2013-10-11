@@ -147,13 +147,13 @@ void LYHapticDevice::touchTool()
 	if(COLLISION_FORCEFEEDBACK)
 	{
 		float3 pos = make_float3((float) pState->position[0], (float) pState->position[1], (float) pState->position[2]);
-		pos.x *= 0.05f;
-		pos.y *= 0.05f;
-		pos.z *= 0.05f;
+		pos.x *= 0.01f;
+		pos.y *= 0.01f;
+		pos.z *= 0.01f;
 		this->setPosition(pos);
 		float f[3]={0,0,0};
 		float damping = 0.2f;
-		float forceScale = 0.1f;
+		float forceScale = 3.0f;
 		float3 _force = this->calculateFeedbackUpdateProxy() * forceScale;
 		force[0] = _force.x;
 		force[1] = _force.y;

@@ -27,7 +27,7 @@ m_gridSize(gridSize)
 	m_hParams->numBodies	= m_numVertices;
 
 	m_hParams->dmin			= 0.75f;
-	m_hParams->alpha		= 0.01f;
+	m_hParams->w_tot		= 0.0f;
 	m_hParams->epsilon		= 0.001f;
 	m_hParams->beta			= 0.01f;
 	m_hParams->gamma		= 0.01f;
@@ -114,6 +114,9 @@ void	LYSpatialHash::update()
 	LYVertex *dPos;
 
 	// update constants
+	m_hParams->w_tot = 0.0f;
+	m_hParams->Ax = make_float3(0.0f);
+	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	if (m_dirtyPos) {
 		setParameters(&m_params);
@@ -179,6 +182,11 @@ void
 
 void LYSpatialHash::calculateCollisions( float3 pos )
 {
+	m_hParams->w_tot = 0.0f;
+	m_hParams->Ax = make_float3(0.0f);
+	m_hParams->Nx = make_float3(0.0f);
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+
 	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }
@@ -200,12 +208,11 @@ float3 LYSpatialHash::getForceFeedback(float3 pos)
 
 float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 {
-FILE* fl=fopen("dump.txt", "a+");
 	static float3 tgPlaneNormal = make_float3(0.0f);
 	static float3 Psurface  = make_float3(0.0f);
 	static bool touched = false;
 
-	float3 P0 = pos->m_pos;
+	float3 colliderPos = pos->m_pos;
 	float3 Pseed = make_float3(0.0f);
 	float error = 9999.999f;
 	float3 Ax, Nx;
@@ -213,72 +220,44 @@ FILE* fl=fopen("dump.txt", "a+");
 	float3 dPseed;
 
 	if (!touched){
-		calculateCollisions(P0);
-		Ax = m_hParams->Ax;
-		Nx = m_hParams->Nx;
-		Fx = dot(Nx, P0 - Ax);
+		calculateCollisions(colliderPos);
+		Ax = m_hParams->Ax/m_hParams->w_tot;
+		Nx = m_hParams->Nx/length(m_hParams->Nx);
+
+		Fx = dot(Nx, colliderPos - Ax);
 		if (Fx < 0.0f){
-			printf("\tFirst contact!\n");
 			touched = true;
-			Pseed = P0;
-			do 
-			{
-				calculateCollisions(Pseed);
-				Ax = m_hParams->Ax;
-				Nx = m_hParams->Nx;
-				Nx /= length(Nx);
-				Fx = dot(Nx, Pseed - Ax);
-				float dSp_dSp = 1.0f/dot(Nx, Nx);
-				dPseed = Fx*Nx*dSp_dSp;
-				fprintf(fl, "************ Ax = %f , %f, %f\n", Ax.x, Ax.y, Ax.z);
-				fprintf(fl, "************ Fx = %f\n", Fx);
-				Pseed -= dPseed;
-			} while (length(dPseed) < EPS );
+			Pseed = Ax;
 			Psurface = Pseed;
 			pos->m_normal = Psurface;
-			tgPlaneNormal = Nx / length(Nx);
-			return (Psurface - P0) * 0.1f;
+			tgPlaneNormal = Nx;
+			float3 f = (Psurface - colliderPos);
+			return f;
 		} else {
-			printf("Outside!\n");
-			pos->m_normal = P0;
+			pos->m_normal = colliderPos;
 			touched = false;
-			return make_float3(0.0f);
 		}
 	} else {
-		float dist = dot(P0, tgPlaneNormal);
-		if (dist > 0.0f)
+		float dist = dot(colliderPos - Psurface, tgPlaneNormal);
+		if (dist <= 0.0f)
 		{
-			printf("\t\tStill in Contact!\n");
-			float3 P0p = P0 - Psurface;
+			float3 P0p = colliderPos - Psurface;
 			float dist = dot(P0p, tgPlaneNormal);
-			P0p = P0 - dist*tgPlaneNormal;
+			P0p = colliderPos - dist*tgPlaneNormal;
 			Pseed = P0p;
-			fprintf(fl, "************ Contact!\n");
-			do 
-			{
-				calculateCollisions(Pseed);
-				Ax = m_hParams->Ax;
-				Nx = m_hParams->Nx;
-				Fx = dot(Nx, Pseed - Ax);
-				fprintf(fl, "************ In contact Ax = %f , %f, %f\n", Ax.x, Ax.y, Ax.z);
-				fprintf(fl, "************ In contact Fx = %f\n", Fx);
-				float dSp_dSp = 1.0f/dot(Nx, Nx);
-				dPseed = Nx*dSp_dSp * 0.01f;
-				Pseed -= dPseed;
-			} while (length(dPseed) < EPS );
-			Psurface = Pseed;
+			calculateCollisions(Pseed);
+			Ax = m_hParams->Ax/m_hParams->w_tot;
+			Nx = m_hParams->Nx/length(m_hParams->Nx);
+			Psurface = Ax;
 			pos->m_normal = Psurface;
-			tgPlaneNormal = Nx / length(Nx);
-			return (Psurface - P0) * 0.1f;
+			tgPlaneNormal = Nx;
+			float3 f = (Psurface - colliderPos);
+			return f;
 		} else {
-			printf("\t\t\tLeft the surface!\n");
 			touched = false;
-			pos->m_normal = P0;
-			return make_float3(0.0f);
+			pos->m_normal = colliderPos;
 		}
 	}
-
-fclose(fl);
 
 	return make_float3(0.0f);
 }
