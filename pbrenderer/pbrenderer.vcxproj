@@ -126,7 +126,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;C:\Projects\pbrenderer\pbrenderer\project libraries\freeglut\include;./project libraries\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./project libraries\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;C:\Projects\pbrenderer\pbrenderer\project libraries\freeglut\include;./project libraries\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +137,7 @@
       <AdditionalDependencies>hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
-      <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
+      <Include>./;./project libraries\common\inc</Include>
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>

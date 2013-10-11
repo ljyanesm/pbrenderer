@@ -118,6 +118,18 @@ __device__ float wendlandWeight(float dist)
 	return ( (a*a*a*a) * ((4*a) + 1) );
 }
 
+__device__ inline float KernelQuintic( const float &R, const float &h )
+{
+	float a_d;
+
+	a_d = 7.0f/(4.0f*CUDART_PI_F*h*h);     //2d Normalization constant
+	float tmp (1.0f - R/2.0f);
+	if( R < 2.0f )
+		return a_d * (tmp)*(tmp)*(tmp)*(tmp) * (2.0f*R+1.0f);
+	else
+		return 0.0f;
+}
+
 __device__
 float3 collideCell(int3		gridPos,
                    uint		index,
@@ -274,7 +286,7 @@ void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint
         }
     }
 	uint3 nSize = make_uint3(0);
-	Rp = dev_params->alpha * 1.06 * pow(sd, -1.0f/5.0f);
+//	Rp = dev_params->alpha * 1.06 * pow(sd, -1.0f/5.0f);
 	nSize.x = ceil(Rp / dev_params->cellSize.x);
 	nSize.y = ceil(Rp / dev_params->cellSize.y);
 	nSize.z = ceil(Rp / dev_params->cellSize.z);
@@ -337,7 +349,7 @@ float3 _collideCell(int3    gridPos,
     // get start of bucket for this cell
     uint startIndex = FETCH(cellStart, gridHash);
 
-	float R = 0.2f;
+	float R = 0.4f;
 	float w_tot = 0.0f;
     float3 force = make_float3(0.0f, 0.0f, 0.0f);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
@@ -358,7 +370,7 @@ float3 _collideCell(int3    gridPos,
 				float dist = length(npos);
 				if (dist < R)
 				{
-					float w = wendlandWeight(dist/R);
+					float w = KernelQuintic(R,dist);
 					w_tot += w;
 					Ax += w * pos2.m_pos;
 					float3 Ntmp = w * pos2.m_normal;
@@ -384,31 +396,54 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 
     // read particle data from sorted arrays
  	int3 gridPos = calcGridPos(make_float3(pos.x, pos.y, pos.z));
-
+	LYVertex pos2 = FETCH(oldPos, index);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
 
 	float3 force = make_float3(0.0f, 0.0f, 0.0f);
 
 	float3 Ax = make_float3(0.0f);
 	float3 Nx = make_float3(0.0f);
+
+	float3 npos;
+	float w = 0.0f;
+	npos = pos2.m_pos - pos;
+	float dist = length(npos);
+	float R = 0.2f;
+
+	if (dist < R)
+	{
+		w= KernelQuintic(dist,R);
+		Ax += w * pos2.m_pos;
+		float3 Ntmp = w * pos2.m_normal;
+		Nx += Ntmp;
+	}
+	else {
+		return;
+	}
+
 	//TODO:	Calculate the real size of the neighborhood using the different 
 	//		functions for neighbor calculation [square, sphere, point]
-	int maskSize = 2;
-    for (int z=-maskSize; z<=maskSize; z++)
-    {
-        for (int y=-maskSize; y<=maskSize; y++)
-        {
-            for (int x=-maskSize; x<=maskSize; x++)
-            {
-                int3 neighbourPos;
-				neighbourPos = gridPos + make_int3(x,y,z);
-				force = _collideCell(neighbourPos, index, pos, oldPos, cellStart, cellEnd, &Ax, &Nx);
-                total_force += force;
-            }
-        }
-    }
 
-	dev_params->Ax = Ax;
-	dev_params->Nx = Nx;
-	dev_params->force = total_force;
+//int maskSize = 2;
+//   for (int z=-maskSize; z<=maskSize; z++)
+//   {
+//       for (int y=-maskSize; y<=maskSize; y++)
+//       {
+//           for (int x=-maskSize; x<=maskSize; x++)
+//           {
+//               int3 neighbourPos;
+//			neighbourPos = gridPos + make_int3(x,y,z);
+//			force = _collideCell(neighbourPos, index, pos, oldPos, cellStart, cellEnd, &Ax, &Nx);
+//               total_force += force;
+//           }
+//       }
+//   }
+
+	atomicAdd(&dev_params->Ax.x, Ax.x);
+	atomicAdd(&dev_params->Ax.y, Ax.y);
+	atomicAdd(&dev_params->Ax.z, Ax.z);
+	atomicAdd(&dev_params->Nx.x, Ax.x);
+	atomicAdd(&dev_params->Nx.y, Ax.y);
+	atomicAdd(&dev_params->Nx.z, Ax.z);
+	atomicAdd(&dev_params->w_tot, w);
 }
