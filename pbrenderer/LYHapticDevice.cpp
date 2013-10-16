@@ -5,14 +5,14 @@ using namespace std;
 
 LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh)
 {
+	m_spaceHandler		= sh;
+	m_deviceType		= LYHapticInterface::HAPTIC_DEVICE;
+	m_collider			= LYVertex();
+	m_speed				= 0.001f;
+	m_size				= 0.03f;
+	m_hapticWorkspace	= make_float3(0.3f);
 
-	m_spaceHandler = sh;
-
-	m_deviceType = LYHapticInterface::HAPTIC_DEVICE;
-
-	m_collider =	LYVertex();
-	m_speed =		0.001f;
-	m_size	=		0.03f;
+	m_modelMatrix = glm::mat4();
 
 	LYVertex proxy;
 	proxy.m_pos = m_collider.m_normal;
@@ -147,9 +147,9 @@ void LYHapticDevice::touchTool()
 	if(COLLISION_FORCEFEEDBACK)
 	{
 		float3 pos = make_float3((float) pState->position[0], (float) pState->position[1], (float) pState->position[2]);
-		pos.x *= 0.01f;
-		pos.y *= 0.01f;
-		pos.z *= 0.01f;
+		pos.x *= m_hapticWorkspace.x;
+		pos.y *= m_hapticWorkspace.y;
+		pos.z *= m_hapticWorkspace.z;
 		this->setPosition(pos);
 		float f[3]={0,0,0};
 		float damping = 0.2f;
@@ -185,6 +185,11 @@ bool LYHapticDevice::toggleForces()
 void LYHapticDevice::setSpaceHandler( LYSpaceHandler *sh )
 {
 	m_spaceHandler = sh;
+}
+
+void LYHapticDevice::setSize( float r )
+{
+	m_size = r;
 }
 
 /******************** OPEN HAPTICS CALBACK FUNCTIONS **************/

@@ -11,13 +11,13 @@
 #include <vector_functions.h>
 #include <device_functions.h>
 
-
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
 #include <helper_cuda.h>
 #include <helper_cuda_gl.h>
 #include <helper_functions.h>
+
 
 #include "thrust/device_ptr.h"
 #include "thrust/for_each.h"

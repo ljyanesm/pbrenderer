@@ -30,6 +30,8 @@ LYHapticKeyboard::LYHapticKeyboard(LYSpaceHandler *sh)
 	glGenBuffers(1, &ib);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 2, &Indices[0], GL_STATIC_DRAW);
+
+	m_modelMatrix = glm::mat4();
 }
 
 
@@ -91,4 +93,9 @@ uint LYHapticKeyboard::getVBO() const
 void LYHapticKeyboard::setSpaceHandler( LYSpaceHandler *sh )
 {
 	m_spaceHandler = sh;
+}
+
+void LYHapticKeyboard::setSize( float r )
+{
+	m_size = r;
 }

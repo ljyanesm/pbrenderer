@@ -326,6 +326,7 @@ void LYScreenspaceRenderer::_drawPoints()
 void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 {
 	glm::mat4 inverse_transposed = glm::inverse(m_camera->getModelView());
+	glm::mat4 modelMatrix = glm::mat4();
 	//Render Attributes to Texture
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

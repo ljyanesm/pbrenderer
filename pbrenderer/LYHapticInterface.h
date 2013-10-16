@@ -21,6 +21,7 @@ public:
 	virtual float3 calculateFeedbackUpdateProxy() = 0;
 	virtual float getSpeed() const = 0;
 	virtual float getSize() const = 0;
+	virtual void setSize(float) = 0;
 
 	virtual LYDEVICE_TYPE getDeviceType() const = 0;
 	virtual uint getVBO()	const = 0;
@@ -29,9 +30,12 @@ public:
 protected:
 	LYVertex	m_collider;
 	float3		m_position;
+	float3		m_hapticWorkspace;
 	float3		m_direction;
 	float		m_speed;
 	float		m_size;
+
+	glm::mat4	m_modelMatrix;
 
 	LYDEVICE_TYPE	m_deviceType;
 

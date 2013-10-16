@@ -12,7 +12,7 @@ out vec4 out_Depth;
 //Depth used in the Z buffer is not linearly related to distance from camera
 //This restores linear depth
 float linearizeDepth(float exp_depth, float near, float far) {
-    return	(2 * near) / (far + near -  exp_depth * (far - near)); 
+    return	(2.0 * near) / (far + near -  exp_depth * (far - near)); 
 }
 
 void main()
@@ -20,12 +20,12 @@ void main()
     //Get Depth Information about the Pixel
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
-    float blurRadius = (1.0f/lin_depth) * 0.00002;
-    int windowWidth = 5;
+    float blurRadius = (1.0f/lin_depth) * 0.000001;
+    int windowWidth = 7;
     float sum = 0;
     float wsum = 0;
     
-    if(exp_depth >= 0.999){
+    if(exp_depth >= 0.999999){
 		out_Depth = vec4(exp_depth);
 		return;
     }
@@ -35,14 +35,10 @@ void main()
 			vec2 samp = vec2(fs_Texcoord.s + x*blurRadius, fs_Texcoord.t + y*blurRadius);
 			float sampleDepth = texture(u_Depthtex, samp).r;
 			
-			if(sampleDepth < 0.999){
+			if(sampleDepth < 0.999999){
 				//Spatial
-				float r = length(vec2(x,y)) * 0.001;
+				float r = length(vec2(x,y)) * 0.01;
 				float w = exp(-r*r);
-			
-				//Range
-				float r2 = (sampleDepth-exp_depth) * 200.0;
-				float g = exp(-r2*r2);
 			
 				sum += sampleDepth * w ;
 				wsum += w ;
@@ -55,5 +51,4 @@ void main()
     }
     
     out_Depth = vec4(sum);
-    //out_Depth = vec4(exp_depth);
 }

@@ -24,6 +24,8 @@ public:
 	virtual float3	calculateFeedbackUpdateProxy(LYVertex *pos) = 0;
 	virtual void	calculateCollisions(float3 pos) = 0;
 
+	virtual void	setInfluenceRadius(float r) = 0;
+
 protected:
 	LYCollisionHandler *m_collisionHandler;
 };
