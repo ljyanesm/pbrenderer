@@ -37,11 +37,7 @@ typedef struct ALIGN(16) _SimParams
 
 	float dmin;
 	float w_tot;
-	float epsilon;
-	float beta;
-	float gamma;
-	float phi;
-	float forceSpring;
+	float R;
 	float RMAX;
 	float RMIN;
 	float colliderRadius;

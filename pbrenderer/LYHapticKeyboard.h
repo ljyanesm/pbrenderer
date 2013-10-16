@@ -28,6 +28,7 @@ public:
 
 	float getSpeed() const;
 	float getSize()	const;
+	void setSize(float r);
 
 	LYDEVICE_TYPE getDeviceType() const { return m_deviceType; }
 	uint getVBO() const;

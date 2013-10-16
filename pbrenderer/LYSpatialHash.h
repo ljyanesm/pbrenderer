@@ -29,22 +29,26 @@ public:
 	LYSpatialHash(uint vbo, uint numVertices, uint3 gridSize);
 	~LYSpatialHash(void);
 
-	void update();
-	void clear();
+	void	update();
+	void	clear();
 
-	void setVBO(uint vbo);
-	void setDeviceVertices(LYVertex *hostVertices);
+	void	setVBO(uint vbo);
+	void	setDeviceVertices(LYVertex *hostVertices);
 
 	LYCell* getNeighboors(glm::vec3 pos, int neighborhoodSize); // All the cells in the neighborhood of the solicited point
 	LYCell* getNeighboors(glm::vec3 pos, float radius);			// All the cells inside the sphere defined by [p, r]
 	LYCell* getNeighboors(glm::vec3 pmin, glm::vec3 pmax);		// All cells inside the defined AABB by [min, max]
+
+	void	setInfluenceRadius(float r);
+
+	void	selectVisiblePoints();
 
 	void	calculateCollisions(float3 pos);
 
 	float3	getForceFeedback(float3 pos);
 	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
 
-	void dump();
+	void	dump();
 
 private:
 	LYVertex *m_src_points;			// Source points saved in the GPU

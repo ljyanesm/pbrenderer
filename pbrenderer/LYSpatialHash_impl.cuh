@@ -131,210 +131,6 @@ __device__ inline float KernelQuintic( const float &R, const float &h )
 }
 
 __device__
-float3 collideCell(int3		gridPos,
-                   uint		index,
-				   float	R,
-                   float3	Xp,
-                   LYVertex *oldPos,
-                   uint		*cellStart,
-                   uint		*cellEnd)
-{
-    uint gridHash = calcGridHash(gridPos);
-
-    // get start of bucket for this cell
-    uint startIndex = FETCH(cellStart, gridHash);
-
-	float3 Oi = make_float3(0.0f, 0.0f, 0.0f);
-	uint N = 0;
-	if (startIndex != 0xffffffff)          // cell is not empty
-    {
-        // iterate over particles in this cell
-        uint endIndex = FETCH(cellEnd, gridHash);
-
-        for (uint j=startIndex; j<endIndex; j++)
-        {
-            if (j != index)                // check not colliding with self
-            {
-                float3 Pi = FETCH(oldPos, j).m_pos;
-				float dist = length(Xp - Pi);
-				Oi += (R - dist) * ((Xp - Pi) / dist);
-				N++;
-            }
-        }
-    }
-    return (Oi/N);
-}
-
-__device__
-float3 calcMean(int3 gridPos, uint index, float3 Xp, LYVertex *oldPos, uint *cellStart, uint *cellEnd, float3 *newMin)
-{
-    uint gridHash = calcGridHash(gridPos);
-
-    // get start of bucket for this cell
-    uint startIndex = FETCH(cellStart, gridHash);
-	
-	uint numVert = 0;
-
-	float3 mean = make_float3(0.0f);
-	float3 Xmin = make_float3(INF);
-	float minimum = INF;
-
-    if (startIndex != 0xffffffff)          // cell is not empty
-    {
-        // iterate over particles in this cell
-        uint endIndex = FETCH(cellEnd, gridHash);
-        for (uint j=startIndex; j<endIndex; j++)
-        {
-            if (j != index)                // check not colliding with self
-            {
-				float3 Xi = FETCH(oldPos, j).m_pos;
-				numVert++;
-				mean += Xi;
-				float testVal = length(Xp - Xi);
-				if (  testVal < minimum )
-				{
-					minimum = testVal;
-					*newMin = Xi;
-				}
-            }
-        }
-    }
-    return (mean/numVert);
-}
-
-__device__
-float calcSD(int3 gridPos, uint index, float3 mean, LYVertex *oldPos, uint *cellStart, uint *cellEnd)
-{
-    uint gridHash = calcGridHash(gridPos);
-
-    // get start of bucket for this cell
-    uint startIndex = FETCH(cellStart, gridHash);
-	
-	uint numVert = 0;
-
-	float result = 0.0f;
-    if (startIndex != 0xffffffff)          // cell is not empty
-    {
-        // iterate over particles in this cell
-        uint endIndex = FETCH(cellEnd, gridHash);
-
-        for (uint j=startIndex; j<endIndex; j++)
-        {
-            if (j != index)                // check not colliding with self
-            {
-				float3 Xi = FETCH(oldPos, j).m_pos;
-				numVert++;
-				result += length(Xi - mean);
-            }
-        }
-    }
-    return (result/numVert);
-}
-
-__global__
-void collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices)
-{
-	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-    if (index >= numVertices) return;
-
-    // read particle data from sorted arrays
- 	int3 gridPos = calcGridPos(pos);
-	float3 total_force = make_float3(0.0f);
-	float3 force = make_float3(0.0f);
-	float h = 0.0f;
-	float Rp = dev_params->RMAX;
-	float3 Xh = pos;
-	float sd = 0.0f;
-
-	int maskSize = 1;
-	
-	float3 meanHolder = make_float3(0.0f);
-	float3 Xc = make_float3(INF);
-	float3 Pi = FETCH(oldPos, index).m_pos;
-	for (int z=-maskSize; z<=maskSize; z++)
-    {
-        for (int y=-maskSize; y<=maskSize; y++)
-        {
-            for (int x=-maskSize; x<=maskSize; x++)
-            {
-                int3 neighbourPos;
-				float3 newMin = Xc;
-				neighbourPos.x = gridPos.x + x;
-				neighbourPos.y = gridPos.y + y;
-				neighbourPos.z = gridPos.z + z;
-				meanHolder += calcMean(neighbourPos, index, Pi, oldPos, cellStart, cellEnd, &dev_params->Xc);
-				if ( length(Xc) > length(newMin) ) Xc = newMin;
-            }
-        }
-    }
-
-	dev_params->Xc = Xc;
-
-	for (int z=-maskSize; z<=maskSize; z++)
-    {
-        for (int y=-maskSize; y<=maskSize; y++)
-        {
-            for (int x=-maskSize; x<=maskSize; x++)
-            {
-                int3 neighbourPos;
-				neighbourPos.x = gridPos.x + x;
-				neighbourPos.y = gridPos.y + y;
-				neighbourPos.z = gridPos.z + z;
-				sd += calcSD(neighbourPos, index, meanHolder, oldPos, cellStart, cellEnd);
-            }
-        }
-    }
-	uint3 nSize = make_uint3(0);
-//	Rp = dev_params->alpha * 1.06 * pow(sd, -1.0f/5.0f);
-	nSize.x = ceil(Rp / dev_params->cellSize.x);
-	nSize.y = ceil(Rp / dev_params->cellSize.y);
-	nSize.z = ceil(Rp / dev_params->cellSize.z);
-
-	if ( nSize.x < dev_params->RMIN) nSize.x = dev_params->RMIN;
-	if ( nSize.y < dev_params->RMIN) nSize.y = dev_params->RMIN;
-	if ( nSize.z < dev_params->RMIN) nSize.z = dev_params->RMIN;
-
-	float3 Vn = make_float3(0.0f);
-	for (int z=-maskSize; z<=maskSize; z++)
-    {
-        for (int y=-maskSize; y<=maskSize; y++)
-        {
-            for (int x=-maskSize; x<=maskSize; x++)
-            {
-                int3 neighbourPos;
-				neighbourPos.x = gridPos.x + x;
-				neighbourPos.y = gridPos.y + y;
-				neighbourPos.z = gridPos.z + z;
-				Vn += collideCell(neighbourPos, index, h, pos, oldPos, cellStart, cellEnd);
-            }
-        }
-    }
-	float nlength = length(Vn);
-	float3 N = Vn / nlength;
-
-	float theta = dot(Xc - dev_params->colliderPos, N);
-
-	float error = INF;
-	while ( error > dev_params->epsilon ) {
-		float3 tmp = dev_params->colliderPos - Xc;
-		dev_params->colliderPos.x += -dev_params->gamma * (dev_params->colliderPos.x - Xh.x) - (dev_params->beta*(length(tmp) * cos(theta)) - dev_params->dmin) * ( sin(theta) - sqrt((tmp.x*tmp.x)));
-		dev_params->colliderPos.y += -dev_params->gamma * (dev_params->colliderPos.y - Xh.y) - (dev_params->beta*(length(tmp) * cos(theta)) - dev_params->dmin) * ( sin(theta) - sqrt((tmp.y*tmp.y)));
-		dev_params->colliderPos.z += -dev_params->gamma * (dev_params->colliderPos.z - Xh.z) - (dev_params->beta*(length(tmp) * cos(theta)) - params.dmin) * ( sin(theta) - sqrt((tmp.z*tmp.z)));
-	}
-
-	if ( dot(Vn, N) > 0)
-	{
-		float3 Vh = Xh - params.colliderPos;
-		total_force = -(nlength - params.dmin) * N * dev_params->forceSpring;
-	}
-
-	dev_params->force = total_force;
-	dev_params->colliderRadius = Rp;
-	dev_params->force = make_float3(0.0f);
-}
-
-__device__
 float3 _collideCell(int3    gridPos,
                    uint    index,
                    float3  pos,
@@ -408,7 +204,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	float w = 0.0f;
 	npos = pos2.m_pos - pos;
 	float dist = length(npos);
-	float R = 0.5f;
+	float R = params.R;
 
 	if (dist < R)
 	{
@@ -442,8 +238,8 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	atomicAdd(&dev_params->Ax.x, Ax.x);
 	atomicAdd(&dev_params->Ax.y, Ax.y);
 	atomicAdd(&dev_params->Ax.z, Ax.z);
-	atomicAdd(&dev_params->Nx.x, Ax.x);
-	atomicAdd(&dev_params->Nx.y, Ax.y);
-	atomicAdd(&dev_params->Nx.z, Ax.z);
+	atomicAdd(&dev_params->Nx.x, Nx.x);
+	atomicAdd(&dev_params->Nx.y, Nx.y);
+	atomicAdd(&dev_params->Nx.z, Nx.z);
 	atomicAdd(&dev_params->w_tot, w);
 }

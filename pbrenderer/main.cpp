@@ -35,9 +35,10 @@ int width = 1024;
 int height = 768;
 
 float pointRadius = 0.01f;
+float influenceRadius = 0.2f;
 
-const float NEARP = 0.1f;
-const float FARP = 100.0f;
+const float NEARP = 1.0f;
+const float FARP = 1000.0f;
 
 // view params
 int ox, oy;
@@ -124,7 +125,7 @@ void initGL(int *argc, char **argv){
 	m_pMesh = new LYMesh();
 	m_pCamera = new LYCamera(width, height);
 
-	m_pMesh->LoadMesh("cube-hires.ply");
+	m_pMesh->LoadMesh("cantonesesimplified.ply");
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).numVertices, make_uint3(256, 256, 256));
@@ -250,14 +251,21 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case GLUT_KEY_DOWN:
 		camera_trans[2] -= 0.5f;
 		break;
-	case 'D':
-		screenspace_renderer->dumpIntoPdb("bunny");
-		break;
 	case 'f':
 		space_handler->dump();
 		break;
 	case 'v':
 		mouseMode = !mouseMode;
+		break;
+	case ',':
+		influenceRadius -= 0.01f;
+		space_handler->setInfluenceRadius(influenceRadius);
+		haptic_interface->setSize(influenceRadius);
+		break;
+	case '.':
+		influenceRadius += 0.01f;
+		space_handler->setInfluenceRadius(influenceRadius);
+		haptic_interface->setSize(influenceRadius);
 		break;
 
 	case 'w':

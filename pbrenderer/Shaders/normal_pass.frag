@@ -44,7 +44,7 @@ void main()
 	vec2 texel_y = vec2(0.0, u_Height);
 
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
-	if (exp_depth > 0.99)
+	if (exp_depth > 0.99999)
 	{
 		discard;
 		return;

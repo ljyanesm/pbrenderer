@@ -42,7 +42,7 @@ out vec4 out_Color;
 //This restores linear depth
 
 float linearizeDepth(float exp_depth, float near, float far) {
-    return	(2 * near) / (far + near -  exp_depth * (far - near)); 
+    return	(2.0 * near) / (far + near -  exp_depth * (far - near)); 
 }
 
 vec3 uvToEye(vec2 texCoord, float depth){
@@ -50,12 +50,10 @@ vec3 uvToEye(vec2 texCoord, float depth){
 	float aspect = u_Aspect;
 	float invFocalLenX   = tan(fovy * 0.5) * aspect;
 	float invFocalLenY   = tan(fovy * 0.5);
-	//vec2 uv = (texCoord * vec2(2.0,-2.0) - vec2(1.0,-1.0));
-	//return vec3(uv * vec2(invFocalLenX, invFocalLenY) * depth, depth);
 	
 	float x = texCoord.x * 2.0 - 1.0;
 	float y = texCoord.y * -2.0 + 1.0;
-	vec4 clipPos = vec4(x , y, depth, 1.0f);
+	vec4 clipPos = vec4(x , y, depth, 1.0);
 	vec4 viewPos = u_InvProj * clipPos;
 	return viewPos.xyz / viewPos.w;
 }
@@ -64,8 +62,8 @@ vec3 uvToEye(vec2 texCoord, float depth){
 void main()
 {
 	//Uniform Light Direction (Billboard)
-    vec4 lightDir = vec4(0.7f, 1.0f, 0.0f, 0.0f);
-        
+    vec4 lightDir = vec4(1.4f, 2.0f, 0.0f, 0.0f);
+
     //Get Texture Information about the Pixel
     vec3 N = texture(u_Normaltex,fs_Texcoord).xyz;
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
@@ -85,8 +83,8 @@ void main()
     float diffuse = max(0.0f, dot(incident, N));
     
     //Background Only Pixels
-    if(exp_depth > 0.99f){
-		out_Color = vec4(BackColor.rgb,1.0f);
+    if(exp_depth > 0.99999999){
+		out_Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		return;
 	}
     
