@@ -18,6 +18,8 @@
 
 #include "LYVertex.h"
 #include "LYTexture.h"
+#include "LYPLYLoader.h"
+
 
 class LYMesh
 {
@@ -35,8 +37,8 @@ class LYMesh
 		std::vector<LYVertex> m_Vertices;
 		GLuint VB;
 		GLuint IB;
-		unsigned int NumIndices;
-		unsigned int numVertices;
+		size_t NumIndices;
+		size_t numVertices;
 		unsigned int MaterialIndex;
 };
 
@@ -45,16 +47,16 @@ public:
 
     ~LYMesh();
 
-	bool LoadMesh(const std::string& Filename);
+	//bool LoadMesh(const std::string& Filename);
 	bool LoadPoints(const std::string& Filename);
 
 	const std::vector<MeshEntry> *getEntries() { return &m_Entries; }
 	const std::vector<LYTexture*>  *getTextures() { return &m_Textures; }
 
 private:
-    bool InitFromScene(const aiScene* pScene, const std::string& Filename);
-	void InitMesh(unsigned int Index, const aiMesh* paiMesh);
-    bool InitMaterials(const aiScene* pScene, const std::string& Filename);
+ //   bool InitFromScene(const aiScene* pScene, const std::string& Filename);
+	//void InitMesh(unsigned int Index, const aiMesh* paiMesh);
+ //   bool InitMaterials(const aiScene* pScene, const std::string& Filename);
     void Clear();
 
     std::vector<MeshEntry> m_Entries;
