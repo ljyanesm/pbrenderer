@@ -1,7 +1,6 @@
 #pragma once
 #include "vector_functions.h"
 #include "vector_types.h"
-#include <glm/glm.hpp>
 
 struct LYVertex
 {
