@@ -298,8 +298,8 @@ void LYScreenspaceRenderer::_drawPoints()
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	unsigned int size = m_mesh->getEntries()->size();
-	for (unsigned int i = 0 ; i < size ; i++) {
+	size_t size = m_mesh->getEntries()->size();
+	for (size_t i = 0 ; i < size ; i++) {
 		int vbo = m_mesh->getEntries()->at(i).VB;
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
@@ -314,7 +314,7 @@ void LYScreenspaceRenderer::_drawPoints()
 		if (MaterialIndex < m_mesh->getTextures()->size() && m_mesh->getTextures()->at(MaterialIndex)) {
 			m_mesh->getTextures()->at(MaterialIndex)->Bind(GL_TEXTURE0);
 		}
-		int numIndices = m_mesh->getEntries()->at(i).NumIndices;
+		GLsizei numIndices = m_mesh->getEntries()->at(i).NumIndices;
 		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	}
 	glDisableVertexAttribArray(0);
