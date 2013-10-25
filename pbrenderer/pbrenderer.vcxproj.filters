@@ -49,9 +49,6 @@
     <ClCompile Include="LYTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LYHapticKeyboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LYDistanceFieldCollider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -59,6 +56,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rply.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LYKeyboardDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -105,9 +105,6 @@
     <ClInclude Include="LYHapticInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LYHapticKeyboard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LYCollisionHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -124,6 +121,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LYPLYLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LYKeyboardDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -167,6 +167,7 @@
     <None Include="LYCudaHelper.cuh">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="app.cfg" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYSpatialHash.cu">

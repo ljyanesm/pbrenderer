@@ -9,6 +9,10 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <GL/glew.h>
+
+#include <helper_functions.h>
+#include <helper_math.h>
+
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>       // Output data structure
 #include <assimp/postprocess.h> // Post processing flags
@@ -35,6 +39,8 @@ class LYMesh
 			const std::vector<unsigned int>& Indices);
 
 		std::vector<LYVertex> m_Vertices;
+		glm::mat4	modelMatrix;
+		glm::vec3	modelCentre;
 		GLuint VB;
 		GLuint IB;
 		size_t NumIndices;
@@ -52,6 +58,9 @@ public:
 
 	const std::vector<MeshEntry> *getEntries() { return &m_Entries; }
 	const std::vector<LYTexture*>  *getTextures() { return &m_Textures; }
+
+	glm::mat4 getModelMatrix() { return m_Entries[0].modelMatrix; }
+	glm::vec3 getModelCentre() { return m_Entries[0].modelCentre; }
 
 private:
  //   bool InitFromScene(const aiScene* pScene, const std::string& Filename);

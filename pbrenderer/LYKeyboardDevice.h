@@ -8,14 +8,14 @@
 #include "LYVertex.h"
 #include "LYHapticInterface.h"
 
-class LYHapticKeyboard :
+class LYKeyboardDevice :
 	public LYHapticInterface
 {
 private:
 	LYSpaceHandler *m_spaceHandler;
 public:
-	LYHapticKeyboard(LYSpaceHandler *sh);
-	~LYHapticKeyboard(void);
+	LYKeyboardDevice(LYSpaceHandler *sh);
+	~LYKeyboardDevice(void);
 
 	void setSpaceHandler(LYSpaceHandler *sh);
 	float3 getPosition() const;

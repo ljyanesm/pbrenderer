@@ -36,6 +36,24 @@ void LYMesh::MeshEntry::Init(const std::vector<LYVertex>& Vertices,
     glGenBuffers(1, &IB);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IB);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * NumIndices, &Indices[0], GL_STATIC_DRAW);
+	glm::vec3 max, min;
+	max = glm::vec3(-99999999.9f);
+	min = glm::vec3( 99999999.9f);
+	for (std::vector<LYVertex>::const_iterator i = Vertices.begin(); i != Vertices.end(); ++i){
+		if (max.x < i->m_pos.x) max.x = i->m_pos.x;
+		if (max.y < i->m_pos.y) max.y = i->m_pos.y;
+		if (max.z < i->m_pos.z) max.z = i->m_pos.z;
+
+		if (min.x > i->m_pos.x) min.x = i->m_pos.x;
+		if (min.y > i->m_pos.y) min.y = i->m_pos.y;
+		if (min.z > i->m_pos.z) min.z = i->m_pos.z;
+	}
+
+	modelCentre = (max-min)/2.0f;
+
+	modelMatrix = glm::scale(modelMatrix, 150.0f / (max-min));
+	modelMatrix = glm::translate(glm::mat4(), -modelCentre);
+	//modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 0.0f, -150.0f));
 }
 
 LYMesh::LYMesh()

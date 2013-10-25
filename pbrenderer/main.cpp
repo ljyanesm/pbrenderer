@@ -30,7 +30,7 @@
 #include "LYCamera.h"
 #include "LYScreenspaceRenderer.h"
 #include "LYSpatialHash.h"
-#include "LYHapticKeyboard.h"
+#include "LYKeyboardDevice.h"
 #include "LYTimer.h"
 #include "LYPLYLoader.h"
 
@@ -47,9 +47,9 @@ const float FARP = 1000.0f;
 // view params
 int ox, oy;
 int buttonState = 0;
-float camera_trans[] = {0, 0, -3};
-float camera_rot[]   = {0, 0, -3};
-float camera_trans_lag[] = {0, 0, -3};
+float camera_trans[] = {0, 0, -1};
+float camera_rot[]   = {0, 0, 0};
+float camera_trans_lag[] = {0, 0, -1};
 float camera_rot_lag[] = {0, 0, 0};
 
 bool wireframe = false;
@@ -74,8 +74,12 @@ LYCamera *m_pCamera;
 LYHapticInterface *haptic_interface;
 LYHapticDevice* haptics;
 ///////////////////////////////////////////////////////
-std::string modelFile;
 
+// Variables to load from the cfg file
+///////////////////////////////////////////////////////
+std::string modelFile;
+LYHapticInterface::LYDEVICE_TYPE deviceType;
+///////////////////////////////////////////////////////
 // Timer variables to measure performance
 ///////////////////////////////////////////////////////
 clock_t startTimer;
@@ -134,6 +138,9 @@ void initGL(int *argc, char **argv){
 	{
 		cfg->parse("./app.cfg");
 		modelFile = cfg->lookupString("", "filename");
+		deviceType = (LYHapticInterface::LYDEVICE_TYPE) cfg->lookupInt("", "device");
+		influenceRadius = (float) cfg->lookupFloat("", "influenceRadius");
+		pointRadius = (float) cfg->lookupFloat("", "pointRadius");
 	}
 	catch (const config4cpp::ConfigurationException &e)
 	{
@@ -149,8 +156,8 @@ void initGL(int *argc, char **argv){
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).numVertices, make_uint3(256, 256, 256));
-	haptic_interface = new LYHapticKeyboard(space_handler);
-//	haptic_interface = new LYHapticDevice(space_handler);
+	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) haptic_interface = new LYKeyboardDevice(space_handler);
+	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) haptic_interface = new LYHapticDevice(space_handler);
 	screenspace_renderer->setCollider(haptic_interface);
 
 	glutReportErrors();
@@ -215,13 +222,13 @@ void motion(int x, int y)
 		if (buttonState == 1) {
 			v.x = dx * haptic_interface->getSpeed();
 			v.y = -dy * haptic_interface->getSpeed();
-			r = v * m_pCamera->getModelView();
+			r = v * m_pCamera->getViewMatrix();
 			p.x += r.x;
 			p.y += r.y;
 			p.z += r.z;
 		} else {
 			v.z = dy * haptic_interface->getSpeed();
-			r = v * m_pCamera->getModelView();
+			r = v * m_pCamera->getViewMatrix();
 			p.x += r.x;
 			p.y += r.y;
 			p.z += r.z;
@@ -339,7 +346,7 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		if ( haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE)
 			new_interface = new LYHapticDevice(space_handler);
 		else
-			new_interface = new LYHapticKeyboard(space_handler);
+			new_interface = new LYKeyboardDevice(space_handler);
 		haptic_interface = new_interface;
 		delete haptic_interface;
 

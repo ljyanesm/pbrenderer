@@ -11,7 +11,7 @@ public:
 	~LYCamera(void);
 
 	void setModelView(glm::mat4 mv){ modelview = mv; }
-	glm::mat4 getModelView() const { return modelview; }
+	glm::mat4 getViewMatrix() const { return modelview; }
 	void perspProjection(int w, int h, float fov, float n, float f)
 	{
 		m_fov = fov;

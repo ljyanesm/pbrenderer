@@ -326,8 +326,11 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 
 void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTICLE_POINTS */)
 {
-	glm::mat4 inverse_transposed = glm::inverse(m_camera->getModelView());
-	glm::mat4 modelMatrix = glm::mat4();
+	glm::mat4 modelMatrix =  m_mesh->getModelMatrix();
+	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, 0, 0), m_mesh->getModelCentre(), glm::vec3(0, 1, 0));
+	glm::mat4 modelViewMatrix = modelMatrix * m_camera->getViewMatrix();
+	
+	glm::mat4 inverse_transposed = glm::inverse(modelViewMatrix);
 	//Render Attributes to Texture
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -346,7 +349,7 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE,&m_camera->getModelView()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
@@ -427,7 +430,7 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	glBindTexture(GL_TEXTURE_2D, m_positionTexture);
 	glUniform1i(glGetUniformLocation(totalShader->getProgramId(), "u_Positiontex"),3);
 
-	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &m_camera->getModelView()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_InvTrans"),1,GL_FALSE, &inverse_transposed[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_InvProj"),1,GL_FALSE,&inverse_projectiond[0][0]);
