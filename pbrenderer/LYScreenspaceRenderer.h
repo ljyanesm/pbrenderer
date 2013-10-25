@@ -43,15 +43,16 @@ public:
 		DISPLAY_TOTAL = 11,
 		NUM_DISPLAY_MODES
 	};
-	LYScreenspaceRenderer(LYMesh *m, LYCamera *c);
+	LYScreenspaceRenderer(LYCamera *c);
 	LYScreenspaceRenderer(void);
 	~LYScreenspaceRenderer(void);
 
-	void display(DisplayMode mode = DISPLAY_TOTAL);
+	void display(LYMesh *mesh, DisplayMode mode = DISPLAY_TOTAL);
 
 	void setCamera(LYCamera *c);
 	void setMesh(LYMesh *m);
 	void setPointRadius(float r);
+	void setPointDiv(int d);
 	void setCollider(LYHapticInterface* haptic);
 
 	void dumpIntoPdb(std::string o);
@@ -61,7 +62,7 @@ protected:
 	void _initFBO(int w, int h);
 	void _setTextures();
 	void _bindFBO(GLuint FBO);
-	void _drawPoints();
+	void _drawPoints(LYMesh *mesh);
 	void _drawCollider();
 	void _initShaders();
 
@@ -74,6 +75,8 @@ private:
 
 	const LYCamera	*m_camera;
 	LYMesh			*m_mesh;
+
+	int			m_pointDiv;
 
 	GLuint		m_depthTexture;
 	GLuint		m_colorTexture;

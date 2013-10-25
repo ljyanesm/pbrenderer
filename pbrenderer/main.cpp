@@ -18,6 +18,8 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
+#include <config4cpp/Configuration.h>
+
 #include <vector_functions.h>
 #include <vector_types.h>
 
@@ -34,8 +36,9 @@
 int width = 1024;
 int height = 768;
 
-float pointRadius = 0.01f;
-float influenceRadius = 0.2f;
+float	pointRadius = 0.01f;
+float	influenceRadius = 0.2f;
+int		pointDiv = 0;
 
 const float NEARP = 1.0f;
 const float FARP = 1000.0f;
@@ -70,6 +73,7 @@ LYCamera *m_pCamera;
 LYHapticInterface *haptic_interface;
 LYHapticDevice* haptics;
 ///////////////////////////////////////////////////////
+std::string modelFile;
 
 // Timer variables to measure performance
 ///////////////////////////////////////////////////////
@@ -107,6 +111,7 @@ void initCUDA(int argc, char **argv)
 	cudaInit(argc, argv);
 }
 // initialize OpenGL
+
 void initGL(int *argc, char **argv){
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
@@ -122,15 +127,28 @@ void initGL(int *argc, char **argv){
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.75, 0.75, 0.75, 1);
 
+	setlocale(LC_ALL, "");
+	config4cpp::Configuration *cfg = config4cpp::Configuration::create();
+	try
+	{
+		cfg->parse("./app.cfg");
+		modelFile = cfg->lookupString("", "filename");
+	}
+	catch (const config4cpp::ConfigurationException &e)
+	{
+		printf("%s", e.c_str());
+	}
+	
 	m_pMesh = new LYMesh();
 	m_pCamera = new LYCamera(width, height);
 
-	m_pMesh->LoadMesh("cantonesesimplified.ply");
+	if (modelFile.empty()) modelFile = argv[1];
+	m_pMesh->LoadMesh(modelFile);
 
-	screenspace_renderer = new LYScreenspaceRenderer(m_pMesh, m_pCamera);
+	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).numVertices, make_uint3(256, 256, 256));
-//	haptic_interface = new LYHapticKeyboard(space_handler);
-	haptic_interface = new LYHapticDevice(space_handler);
+	haptic_interface = new LYHapticKeyboard(space_handler);
+//	haptic_interface = new LYHapticDevice(space_handler);
 	screenspace_renderer->setCollider(haptic_interface);
 
 	glutReportErrors();
@@ -231,6 +249,15 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 	case '\033':
 	case 'q':
 		exit(0);
+		break;
+	case '[':
+		pointDiv += 1;
+		screenspace_renderer->setPointDiv(1 << pointDiv);
+		break;
+	case ']':
+		pointDiv -= 1;
+		if (pointDiv < 0) pointDiv = 0;
+		screenspace_renderer->setPointDiv(1 << pointDiv);
 		break;
 	case 'p':
 		mode = (LYScreenspaceRenderer::DisplayMode)
@@ -367,7 +394,7 @@ void display()
 	mv = mv * rotX * rotY;
 	m_pCamera->setModelView(mv);
 
-	screenspace_renderer->display(mode);
+	screenspace_renderer->display(m_pMesh, mode);
 
 	glutSwapBuffers();
 	glutReportErrors();
