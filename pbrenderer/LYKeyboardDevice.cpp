@@ -1,7 +1,7 @@
-#include "LYHapticKeyboard.h"
+#include "LYKeyboardDevice.h"
 
 
-LYHapticKeyboard::LYHapticKeyboard(LYSpaceHandler *sh)
+LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh)
 {
 	m_spaceHandler = sh;
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
@@ -35,21 +35,21 @@ LYHapticKeyboard::LYHapticKeyboard(LYSpaceHandler *sh)
 }
 
 
-LYHapticKeyboard::~LYHapticKeyboard(void)
+LYKeyboardDevice::~LYKeyboardDevice(void)
 {
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ib);
 }
 
-float3 LYHapticKeyboard::getPosition() const{
+float3 LYKeyboardDevice::getPosition() const{
 	return m_collider.m_pos;
 }
 
-float3 *LYHapticKeyboard::getHIP() {
+float3 *LYKeyboardDevice::getHIP() {
 	return &(m_collider.m_pos);
 }
 
-void LYHapticKeyboard::setPosition(float3 pos) {
+void LYKeyboardDevice::setPosition(float3 pos) {
 	m_position = pos;
 	m_collider.m_pos = pos;
 	std::vector<LYVertex> Vertices;
@@ -61,41 +61,41 @@ void LYHapticKeyboard::setPosition(float3 pos) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * 2, &Vertices[0], GL_STATIC_DRAW);
 }
-float3 LYHapticKeyboard::getForceFeedback(float3 pos) const{
+float3 LYKeyboardDevice::getForceFeedback(float3 pos) const{
 	return m_spaceHandler->getForceFeedback(this->getPosition());
 }
 
-float3 LYHapticKeyboard::calculateFeedbackUpdateProxy()
+float3 LYKeyboardDevice::calculateFeedbackUpdateProxy()
 {
 	return m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
 }
 
-float LYHapticKeyboard::getSpeed() const 
+float LYKeyboardDevice::getSpeed() const 
 {
 	return m_speed;
 }
 
-float LYHapticKeyboard::getSize() const 
+float LYKeyboardDevice::getSize() const 
 {
 	return m_size;
 }
 
-uint LYHapticKeyboard::getIB() const
+uint LYKeyboardDevice::getIB() const
 {
 	return ib;
 }
 
-uint LYHapticKeyboard::getVBO() const
+uint LYKeyboardDevice::getVBO() const
 {
 	return vbo;
 }
 
-void LYHapticKeyboard::setSpaceHandler( LYSpaceHandler *sh )
+void LYKeyboardDevice::setSpaceHandler( LYSpaceHandler *sh )
 {
 	m_spaceHandler = sh;
 }
 
-void LYHapticKeyboard::setSize( float r )
+void LYKeyboardDevice::setSize( float r )
 {
 	m_size = r;
 }
