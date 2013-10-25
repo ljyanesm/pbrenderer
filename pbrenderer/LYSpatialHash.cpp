@@ -63,6 +63,7 @@ LYSpatialHash::~LYSpatialHash(void)
 	delete m_hCellEnd;
 	delete m_hCellStart;
 	delete m_forceFeedback;
+	delete m_hParams;
 
 	LYCudaHelper::freeArray(m_sorted_points);
 	LYCudaHelper::freeArray(m_pointHash);
@@ -183,7 +184,6 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-
 	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }

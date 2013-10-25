@@ -32,6 +32,7 @@
 #include "LYSpatialHash.h"
 #include "LYHapticKeyboard.h"
 #include "LYTimer.h"
+#include "LYPLYLoader.h"
 
 int width = 1024;
 int height = 768;
@@ -140,10 +141,11 @@ void initGL(int *argc, char **argv){
 	}
 	
 	m_pMesh = new LYMesh();
+
 	m_pCamera = new LYCamera(width, height);
 
 	if (modelFile.empty()) modelFile = argv[1];
-	m_pMesh->LoadMesh(modelFile);
+	m_pMesh->LoadPoints(modelFile);
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).numVertices, make_uint3(256, 256, 256));
