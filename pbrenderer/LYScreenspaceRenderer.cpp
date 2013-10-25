@@ -299,8 +299,8 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	unsigned int size = m_mesh->getEntries()->size();
-	for (unsigned int i = 0 ; i < size ; i++) {
+	size_t size = m_mesh->getEntries()->size();
+	for (size_t i = 0 ; i < size ; i++) {
 		int vbo = m_mesh->getEntries()->at(i).VB;
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
@@ -315,7 +315,7 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 		if (MaterialIndex < m_mesh->getTextures()->size() && m_mesh->getTextures()->at(MaterialIndex)) {
 			m_mesh->getTextures()->at(MaterialIndex)->Bind(GL_TEXTURE0);
 		}
-		int numIndices = m_mesh->getEntries()->at(i).NumIndices / m_pointDiv;
+		GLsizei numIndices = m_mesh->getEntries()->at(i).NumIndices;
 		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	}
 	glDisableVertexAttribArray(0);
@@ -329,6 +329,8 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	glm::mat4 inverse_transposed = glm::inverse(m_camera->getModelView());
 	glm::mat4 modelMatrix = glm::mat4();
 	//Render Attributes to Texture
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	_setTextures();
 	_bindFBO(m_FBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
