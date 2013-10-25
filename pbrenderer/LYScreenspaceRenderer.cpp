@@ -30,16 +30,17 @@ void checkFramebufferStatus(GLenum framebufferStatus) {
 	}
 }
 
-LYScreenspaceRenderer::LYScreenspaceRenderer()
+LYScreenspaceRenderer::LYScreenspaceRenderer():
+	m_pointDiv(1)
 {
 	_initShaders();
 	_initFBO(m_camera->getWidth(), m_camera->getHeight());
 	_initQuad();
 }
 
-LYScreenspaceRenderer::LYScreenspaceRenderer(LYMesh *m, LYCamera *c) :
-	m_mesh(m), 
-	m_camera(c)
+LYScreenspaceRenderer::LYScreenspaceRenderer(LYCamera *c) :
+	m_camera(c),
+	m_pointDiv(1)
 {
 	_initShaders();
 	_initFBO(m_camera->getWidth(), m_camera->getHeight());
@@ -291,7 +292,7 @@ void LYScreenspaceRenderer::_drawCollider()
 	glDisableVertexAttribArray(3);
 
 }
-void LYScreenspaceRenderer::_drawPoints()
+void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -314,7 +315,7 @@ void LYScreenspaceRenderer::_drawPoints()
 		if (MaterialIndex < m_mesh->getTextures()->size() && m_mesh->getTextures()->at(MaterialIndex)) {
 			m_mesh->getTextures()->at(MaterialIndex)->Bind(GL_TEXTURE0);
 		}
-		int numIndices = m_mesh->getEntries()->at(i).NumIndices;
+		int numIndices = m_mesh->getEntries()->at(i).NumIndices / m_pointDiv;
 		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	}
 	glDisableVertexAttribArray(0);
@@ -323,13 +324,11 @@ void LYScreenspaceRenderer::_drawPoints()
 	glDisableVertexAttribArray(3);
 }
 
-void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
+void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTICLE_POINTS */)
 {
 	glm::mat4 inverse_transposed = glm::inverse(m_camera->getModelView());
 	glm::mat4 modelMatrix = glm::mat4();
 	//Render Attributes to Texture
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	_setTextures();
 	_bindFBO(m_FBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -349,7 +348,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
-	_drawPoints();
+	_drawPoints(m_mesh);
 
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_collider->getSize());
@@ -358,7 +357,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
 
 	glDisable(GL_POINT_SPRITE_ARB);
 
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 
 	//Blur Depth Texture
 	_setTextures();
@@ -485,4 +484,9 @@ void LYScreenspaceRenderer::setCamera( LYCamera *c )
 void LYScreenspaceRenderer::setCollider(LYHapticInterface* haptic)
 {
 	m_collider = haptic;
+}
+
+void LYScreenspaceRenderer::setPointDiv( int d )
+{
+	m_pointDiv = d;
 }
