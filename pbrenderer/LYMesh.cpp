@@ -49,10 +49,12 @@ void LYMesh::MeshEntry::Init(const std::vector<LYVertex>& Vertices,
 		if (min.z > i->m_pos.z) min.z = i->m_pos.z;
 	}
 
-	modelCentre = (max-min)/2.0f;
-
-	modelMatrix = glm::scale(modelMatrix, 150.0f / (max-min));
-	modelMatrix = glm::translate(glm::mat4(), -modelCentre);
+	modelCentre = (max+min)*0.5f;
+	modelMatrix = glm::mat4();
+	//modelMatrix = glm::scale(modelMatrix, 1.5f / (max-min));
+	float factor = 15.f / glm::length(max-min);
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(factor));
+	modelMatrix = glm::translate(modelMatrix, -modelCentre);
 	//modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 0.0f, -150.0f));
 }
 

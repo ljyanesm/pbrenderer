@@ -61,7 +61,7 @@ const float inertia = 0.1f;
 LYScreenspaceRenderer::DisplayMode mode = LYScreenspaceRenderer::DISPLAY_DIFFUSE_SPEC;
 bool mouseMode = 0;
 
-glm::mat4 mv;
+glm::mat4 viewMatrix;
 glm::mat4 p;
 
 LYWorld m_pWorld;
@@ -203,17 +203,17 @@ void motion(int x, int y)
 	case M_VIEW:
 		if (buttonState == 3) {
 			// left+middle = zoom
-			camera_trans[2] += (dy / 100.0f) * 0.5f * fabs(camera_trans[2]);
+			camera_trans[2] += (dy * 0.1f);
 		}
 		else if (buttonState & 2) {
 			// middle = translate
-			camera_trans[0] += dx / 100.0f;
-			camera_trans[1] -= dy / 100.0f;
+			camera_trans[0] += dx * 0.1f;
+			camera_trans[1] -= dy * 0.1f;
 		}
 		else if (buttonState & 1) {
 			// left = rotate
-			camera_rot[0] += dy / 5.0f;
-			camera_rot[1] += dx / 5.0f;
+			camera_rot[0] += dy * 0.2f;
+			camera_rot[1] += dx * 0.2f;
 		}
 		break;
 	case M_MOVE:
@@ -390,18 +390,23 @@ void display()
 
 	// render
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	mv = glm::mat4();
+	viewMatrix = glm::mat4();
 	// view transform
 	for (int c = 0; c < 3; ++c)
 	{
 		camera_trans_lag[c] += (camera_trans[c] - camera_trans_lag[c]) * inertia;
 		camera_rot_lag[c] += (camera_rot[c] - camera_rot_lag[c]) * inertia;
 	}
-	mv = glm::translate(glm::mat4(), camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
-	glm::mat4 rotX = glm::rotate(camera_rot_lag[0], 1.0f, 0.0f, 0.0f);
-	glm::mat4 rotY = glm::rotate(camera_rot_lag[1], 0.0f, 1.0f, 0.0f);
-	mv = mv * rotX * rotY;
-	m_pCamera->setModelView(mv);
+	//viewMatrix = glm::translate(glm::mat4(), camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	//glm::mat4 rotX = glm::rotate(camera_rot_lag[0], 1.0f, 0.0f, 0.0f);
+	//glm::mat4 rotY = glm::rotate(camera_rot_lag[1], 0.0f, 1.0f, 0.0f);
+	//viewMatrix = viewMatrix * rotX * rotY;
+	glm::vec4 position = glm::vec4(camera_trans_lag[0],camera_trans_lag[1],camera_trans_lag[2],1);
+	//position = glm::rotate(camera_rot[0], glm::vec3(1,0,0)) * position;
+	position = glm::rotate(camera_rot[1], glm::vec3(0,1,0)) * position;
+	
+	viewMatrix = glm::lookAt(glm::vec3(position), m_pMesh->getEntries()->at(0).modelCentre, glm::vec3(0,1,0));
+	m_pCamera->setViewMatrix(viewMatrix);
 
 	screenspace_renderer->display(m_pMesh, mode);
 
