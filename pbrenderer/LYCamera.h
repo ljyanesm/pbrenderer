@@ -10,8 +10,8 @@ public:
 	LYCamera(void);
 	~LYCamera(void);
 
-	void setModelView(glm::mat4 mv){ modelview = mv; }
-	glm::mat4 getViewMatrix() const { return modelview; }
+	void setViewMatrix(glm::mat4 v){ view = v; }
+	glm::mat4 getViewMatrix() const { return view; }
 	void perspProjection(int w, int h, float fov, float n, float f)
 	{
 		m_fov = fov;
@@ -42,7 +42,7 @@ public:
 	float getFar() const { return m_far; }
 
 private:
-	glm::mat4 modelview;
+	glm::mat4 view;
 	glm::mat4 projection;
 	float m_fov;
 	float m_near;
