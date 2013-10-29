@@ -57,10 +57,13 @@ float3 LYHapticDevice::getPosition() const{
 	return m_collider.m_pos;
 }
 void LYHapticDevice::setPosition(float3 pos) {
+	// Multiply 
+
 	m_position = pos;
 	m_collider.m_pos = pos;
 	std::vector<LYVertex> Vertices;
 	Vertices.push_back(m_collider);
+	
 	LYVertex proxy;
 	proxy.m_color = make_float3(1.0f, 0.0f, 0.0f);
 	proxy.m_pos = m_collider.m_normal;
@@ -68,6 +71,7 @@ void LYHapticDevice::setPosition(float3 pos) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * 2, &Vertices[0], GL_STATIC_DRAW);
 }
+
 float3 LYHapticDevice::getForceFeedback(float3 pos) const{
 	return m_spaceHandler->getForceFeedback(m_collider.m_pos);
 }
@@ -150,6 +154,9 @@ void LYHapticDevice::touchTool()
 		pos.x *= m_hapticWorkspace.x;
 		pos.y *= m_hapticWorkspace.y;
 		pos.z *= m_hapticWorkspace.z;
+		// Find current model
+		// int model = this->findCurrentModel(pos);
+		// this->setPosition(pos, m_mesh->at(model)->getModelMatrix());
 		this->setPosition(pos);
 		float f[3]={0,0,0};
 		float damping = 0.2f;
