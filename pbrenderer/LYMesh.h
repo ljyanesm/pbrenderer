@@ -13,10 +13,6 @@
 #include <helper_functions.h>
 #include <helper_math.h>
 
-#include <assimp/Importer.hpp>      // C++ importer interface
-#include <assimp/scene.h>       // Output data structure
-#include <assimp/postprocess.h> // Post processing flags
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 

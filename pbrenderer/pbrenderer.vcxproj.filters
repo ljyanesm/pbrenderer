@@ -146,12 +146,6 @@
     <None Include="Shaders\normal_pass.vs">
       <Filter>shaders</Filter>
     </None>
-    <None Include="Shaders\shader.frag">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="Shaders\shader.vs">
-      <Filter>shaders</Filter>
-    </None>
     <None Include="LYSpatialHash_impl.cuh">
       <Filter>Header Files</Filter>
     </None>
@@ -168,6 +162,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="app.cfg" />
+    <None Include="Shaders\mainShader.vs" />
+    <None Include="Shaders\mainShader.frag" />
+    <None Include="Shaders\shader.vs" />
+    <None Include="Shaders\shader.frag" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYSpatialHash.cu">
