@@ -93,6 +93,24 @@ const int FRAMES_PER_SECOND = 30;
 const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 ///////////////////////////////////////////////////////
 
+
+///////////////////////////////////////////////////////
+// GLUT navigation variables
+///////////////////////////////////////////////////////
+static int GLUTmouse[2] = { 0, 0 };
+static int GLUTbutton[3] = { 0, 0, 0 };
+static int GLUTmodifiers = 0;
+// Display variables
+static int scaling = 0;
+static int translating = 0;
+static int rotating = 0;
+static float scale = 1.0;
+static float viewScale = 1.0;
+static float center[3] = { 0.0, 0.0, 0.0 };
+static float rotation[3] = { 0.0, 0.0, 0.0 };
+static float translation[3] = { 0.0, 0.0, -30.0 };
+///////////////////////////////////////////////////////
+
 enum {M_VIEW = 0, M_MOVE};
 
 void cudaInit(int argc, char **argv)
@@ -155,7 +173,7 @@ void initGL(int *argc, char **argv){
 	m_pMesh->LoadPoints(modelFile);
 
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
-	space_handler = new LYSpatialHash(m_pMesh->getEntries()->at(0).VB, m_pMesh->getEntries()->at(0).numVertices, make_uint3(256, 256, 256));
+	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(256, 256, 256));
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) haptic_interface = new LYKeyboardDevice(space_handler);
 	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) haptic_interface = new LYHapticDevice(space_handler);
 	screenspace_renderer->setCollider(haptic_interface);
@@ -174,77 +192,58 @@ void reshape(int w, int h)
 
 void mouse(int button, int state, int x, int y)
 {
-	int mods;
+	// Invert y coordinate
+	y = height - y;
 
-	if (state == GLUT_DOWN)
-		buttonState |= 1<<button;
-	else if (state == GLUT_UP)
-		buttonState = 0;
+	// Process mouse button event
+	rotating = (button == GLUT_LEFT_BUTTON);
+	scaling = (button == GLUT_MIDDLE_BUTTON);
+	translating = (button == GLUT_RIGHT_BUTTON);
 
-	mods = glutGetModifiers();
-	if (mods & GLUT_ACTIVE_SHIFT) {
-		buttonState = 2;
-	} else if (mods & GLUT_ACTIVE_CTRL) {
-		buttonState = 3;
-	}
+	// Remember button state 
+	int b = (button == GLUT_LEFT_BUTTON) ? 0 : ((button == GLUT_MIDDLE_BUTTON) ? 1 : 2);
+	GLUTbutton[b] = (state == GLUT_DOWN) ? 1 : 0;
 
-	ox = x; oy = y;
+	// Remember modifiers 
+	GLUTmodifiers = glutGetModifiers();
+
+	// Remember mouse position 
+	GLUTmouse[0] = x;
+	GLUTmouse[1] = y;
 
 	glutPostRedisplay();
 }
 
 void motion(int x, int y)
 {
-	float dx, dy;
-	dx = (float)(x - ox);
-	dy = (float)(y - oy);
+	// Invert y coordinate
+	y = height - y;
 
-	switch (mouseMode){
-	case M_VIEW:
-		if (buttonState == 3) {
-			// left+middle = zoom
-			camera_trans[2] += (dy * 0.1f);
-		}
-		else if (buttonState & 2) {
-			// middle = translate
-			camera_trans[0] += dx * 0.1f;
-			camera_trans[1] -= dy * 0.1f;
-		}
-		else if (buttonState & 1) {
-			// left = rotate
-			camera_rot[0] += dy * 0.2f;
-			camera_rot[1] += dx * 0.2f;
-		}
-		break;
-	case M_MOVE:
-		float3 p = haptic_interface->getPosition();
-		glm::vec4 r, v;
-		if (buttonState == 1) {
-			v.x = dx * haptic_interface->getSpeed();
-			v.y = -dy * haptic_interface->getSpeed();
-			r = v * m_pCamera->getViewMatrix();
-			p.x += r.x;
-			p.y += r.y;
-			p.z += r.z;
-		} else {
-			v.z = dy * haptic_interface->getSpeed();
-			r = v * m_pCamera->getViewMatrix();
-			p.x += r.x;
-			p.y += r.y;
-			p.z += r.z;
-		}
-
-		haptic_interface->setPosition(p);
-		break;
+	// Process mouse motion event
+	if (rotating) {
+		// Rotate model
+		rotation[0] += -0.5f * (y - GLUTmouse[1]);
+		rotation[2] +=  0.5f * (x - GLUTmouse[0]);
+	}
+	else if (scaling) {
+		// Scale window
+		scale *= exp(2.0f * (float) (y - GLUTmouse[1]) / (float) height);
+	}
+	else if (translating) {
+		// Translate window
+		translation[0] += 10.0f * (float) (x - GLUTmouse[0]) / (float) width;
+		translation[1] += 10.0f * (float) (y - GLUTmouse[1]) / (float) height;
 	}
 
-	ox = x; oy = y;
-
+	// Remember mouse position 
+	GLUTmouse[0] = x;
+	GLUTmouse[1] = y;
+	
 	glutPostRedisplay();
 }
 
 // commented out to remove unused parameter warnings in Linux
-void key(unsigned char key, int /*x*/, int /*y*/)
+void key(unsigned char key, int x, int y)
 {
 	float3 pos;
 	switch (key)
@@ -306,10 +305,7 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 
 	case 'w':
 		// Move collider up
-		pos = haptic_interface->getPosition();
-		pos.y += haptic_interface->getSpeed();
-		haptic_interface->setPosition(pos);
-
+		translation[3] += 1.0f;
 		break;
 	case 'a':
 		// Move collider left
@@ -318,10 +314,7 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		haptic_interface->setPosition(pos);
 		break;
 	case 's':
-		// Move collider down
-		pos = haptic_interface->getPosition();
-		pos.y += -haptic_interface->getSpeed();
-		haptic_interface->setPosition(pos);
+		translation[3] -= 1.0f;
 		break;
 	case 'd':
 		// Move collider right
@@ -330,16 +323,10 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		haptic_interface->setPosition(pos);
 		break;
 	case 'z':
-		pos = haptic_interface->getPosition();
-		pos.z += haptic_interface->getSpeed();
-		haptic_interface->setPosition(pos);
-		// Move collider in
+		viewScale += 0.01f;
 		break;
 	case 'c':
-		pos = haptic_interface->getPosition();
-		pos.z += -haptic_interface->getSpeed();
-		haptic_interface->setPosition(pos);
-		// Move collider out
+		viewScale -= 0.01f;
 		break;
 	case 'I':
 		LYHapticInterface *new_interface;
@@ -352,6 +339,14 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 
 		break;
 	}
+
+	// Remember mouse position 
+	GLUTmouse[0] = x;
+	GLUTmouse[1] = height - y;
+
+	// Remember modifiers 
+	GLUTmodifiers = glutGetModifiers();
+
 	glutPostRedisplay();
 }
 
@@ -391,23 +386,19 @@ void display()
 	// render
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewMatrix = glm::mat4();
-	// view transform
-	for (int c = 0; c < 3; ++c)
-	{
-		camera_trans_lag[c] += (camera_trans[c] - camera_trans_lag[c]) * inertia;
-		camera_rot_lag[c] += (camera_rot[c] - camera_rot_lag[c]) * inertia;
-	}
-	//viewMatrix = glm::translate(glm::mat4(), camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
-	//glm::mat4 rotX = glm::rotate(camera_rot_lag[0], 1.0f, 0.0f, 0.0f);
-	//glm::mat4 rotY = glm::rotate(camera_rot_lag[1], 0.0f, 1.0f, 0.0f);
-	//viewMatrix = viewMatrix * rotX * rotY;
-	glm::vec4 position = glm::vec4(camera_trans_lag[0],camera_trans_lag[1],camera_trans_lag[2],1);
-	//position = glm::rotate(camera_rot[0], glm::vec3(1,0,0)) * position;
-	position = glm::rotate(camera_rot[1], glm::vec3(0,1,0)) * position;
-	
-	viewMatrix = glm::lookAt(glm::vec3(position), m_pMesh->getEntries()->at(0).modelCentre, glm::vec3(0,1,0));
+	viewMatrix = glm::scale(viewMatrix, glm::vec3(viewScale));
+	viewMatrix = glm::translate(viewMatrix, glm::vec3(translation[0], translation[1], 0.0f));
+
 	m_pCamera->setViewMatrix(viewMatrix);
 
+	glm::mat4 modelMatrix = glm::mat4();
+	modelMatrix = glm::translate(modelMatrix,  glm::vec3(translation[0], translation[1], translation[2]));
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
+	modelMatrix = glm::rotate(modelMatrix, rotation[0], glm::vec3(1,0,0));
+	modelMatrix = glm::rotate(modelMatrix, rotation[1], glm::vec3(0,1,0));
+	modelMatrix = glm::rotate(modelMatrix, rotation[2], glm::vec3(0,0,1));
+	modelMatrix = glm::translate(modelMatrix, -m_pMesh->getModelCentre());
+	m_pMesh->setModelMatrix(modelMatrix);
 	screenspace_renderer->display(m_pMesh, mode);
 
 	glutSwapBuffers();

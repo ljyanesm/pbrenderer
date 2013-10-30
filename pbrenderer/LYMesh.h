@@ -26,46 +26,38 @@ class LYMesh
 #define INVALID_OGL_VALUE	0xFFFFFFFF
 #define INVALID_MATERIAL	0xFFFFFFFF
 
-	struct MeshEntry {
-		MeshEntry();
-
-		~MeshEntry();
-
-		void Init(const std::vector<LYVertex>& Vertices,
-			const std::vector<unsigned int>& Indices);
-
-		std::vector<LYVertex> m_Vertices;
-		glm::mat4	modelMatrix;
-		glm::vec3	modelCentre;
-		GLuint VB;
-		GLuint IB;
-		size_t NumIndices;
-		size_t numVertices;
-		unsigned int MaterialIndex;
-};
-
 public:
     LYMesh();
 
     ~LYMesh();
 
-	//bool LoadMesh(const std::string& Filename);
 	bool LoadPoints(const std::string& Filename);
 
-	const std::vector<MeshEntry> *getEntries() { return &m_Entries; }
-	const std::vector<LYTexture*>  *getTextures() { return &m_Textures; }
+	glm::mat4	getModelMatrix() { return modelMatrix; }
+	glm::vec3	getModelCentre() { return modelCentre; }
+	float		getScale() { return modelScale; }
+	GLuint		getVBO() { return VB; }
+	GLuint		getIB() { return IB; }
+	size_t		getNumIndices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
+	size_t		getNumVertices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
 
-	glm::mat4 getModelMatrix() { return m_Entries[0].modelMatrix; }
-	glm::vec3 getModelCentre() { return m_Entries[0].modelCentre; }
+	std::vector<LYVertex> *getVertices() { return &m_Vertices; }
+	void setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
 
 private:
- //   bool InitFromScene(const aiScene* pScene, const std::string& Filename);
-	//void InitMesh(unsigned int Index, const aiMesh* paiMesh);
- //   bool InitMaterials(const aiScene* pScene, const std::string& Filename);
+ 	void Init(const std::vector<LYVertex>& Vertices,
+		const std::vector<unsigned int>& Indices);
     void Clear();
 
-    std::vector<MeshEntry> m_Entries;
-    std::vector<LYTexture*> m_Textures;
+    std::vector<LYVertex> m_Vertices;
+	glm::mat4	modelMatrix;
+	glm::vec3	modelCentre;
+	float		modelScale;
+	GLuint VB;
+	GLuint IB;
+	size_t NumIndices;
+	size_t numVertices;
+	unsigned int MaterialIndex;
 };
 
 
