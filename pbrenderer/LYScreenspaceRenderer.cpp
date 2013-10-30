@@ -299,25 +299,17 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	size_t size = m_mesh->getEntries()->size();
-	for (size_t i = 0 ; i < size ; i++) {
-		int vbo = m_mesh->getEntries()->at(i).VB;
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
-		int ib = m_mesh->getEntries()->at(i).IB;
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+	int vbo = m_mesh->getVBO();
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	int ib = m_mesh->getIB();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
-		const unsigned int MaterialIndex = m_mesh->getEntries()->at(i).MaterialIndex;
-
-		if (MaterialIndex < m_mesh->getTextures()->size() && m_mesh->getTextures()->at(MaterialIndex)) {
-			m_mesh->getTextures()->at(MaterialIndex)->Bind(GL_TEXTURE0);
-		}
-		GLsizei numIndices = m_mesh->getEntries()->at(i).NumIndices;
-		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
-	}
+	GLsizei numIndices = m_mesh->getNumIndices();
+	glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
@@ -460,10 +452,10 @@ void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
 {
 	std::ofstream outFile;
 	outFile.open((outputFilename+".pdb").c_str());
-	std::vector<LYVertex> vertices = m_mesh->getEntries()->at(0).m_Vertices;
-	for(unsigned int i=0; i< vertices.size(); i++)
+	std::vector<LYVertex> *vertices = m_mesh->getVertices();
+	for(unsigned int i=0; i< vertices->size(); i++)
 	{
-		float localSCP[3] = {vertices.at(i).m_pos.x, vertices.at(i).m_pos.y, vertices.at(i).m_pos.z}; //get centre values of points
+		float localSCP[3] = {vertices->at(i).m_pos.x, vertices->at(i).m_pos.y, vertices->at(i).m_pos.z}; //get centre values of points
 
 		outFile << "ATOM "<<std::setw(6)<<i+1<<" O   HOH     1    ";
 		outFile << std::setw(8);

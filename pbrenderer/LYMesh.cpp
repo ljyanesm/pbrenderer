@@ -2,31 +2,9 @@
 
 #include "LYMesh.h"
 
-LYMesh::MeshEntry::MeshEntry()
-{
-    VB = INVALID_OGL_VALUE;
-    IB = INVALID_OGL_VALUE;
-    NumIndices  = 0;
-    MaterialIndex = INVALID_MATERIAL;
-};
-
-LYMesh::MeshEntry::~MeshEntry()
-{
-    if (VB != INVALID_OGL_VALUE)
-    {
-        glDeleteBuffers(1, &VB);
-    }
-
-    if (IB != INVALID_OGL_VALUE)
-    {
-        glDeleteBuffers(1, &IB);
-    }
-}
-
-void LYMesh::MeshEntry::Init(const std::vector<LYVertex>& Vertices,
+void LYMesh::Init(const std::vector<LYVertex>& Vertices,
                           const std::vector<unsigned int>& Indices)
 {
-	m_Vertices = Vertices;
     NumIndices = Indices.size();
 
     glGenBuffers(1, &VB);
@@ -51,15 +29,18 @@ void LYMesh::MeshEntry::Init(const std::vector<LYVertex>& Vertices,
 
 	modelCentre = (max+min)*0.5f;
 	modelMatrix = glm::mat4();
-	//modelMatrix = glm::scale(modelMatrix, 1.5f / (max-min));
-	float factor = 15.f / glm::length(max-min);
+	float factor = 5.f / glm::length(max-min);
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(factor));
+	modelScale = factor;
 	modelMatrix = glm::translate(modelMatrix, -modelCentre);
-	//modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 0.0f, -150.0f));
 }
 
 LYMesh::LYMesh()
 {
+	VB = INVALID_OGL_VALUE;
+	IB = INVALID_OGL_VALUE;
+	NumIndices  = 0;
+	MaterialIndex = INVALID_MATERIAL;
 }
 
 
@@ -71,9 +52,15 @@ LYMesh::~LYMesh()
 
 void LYMesh::Clear()
 {
-    for (unsigned int i = 0 ; i < m_Textures.size() ; i++) {
-		if (m_Textures[i]) delete m_Textures[i];
-    }
+	if (VB != INVALID_OGL_VALUE)
+	{
+		glDeleteBuffers(1, &VB);
+	}
+
+	if (IB != INVALID_OGL_VALUE)
+	{
+		glDeleteBuffers(1, &IB);
+	}
 }
 
 static int vertex_x(p_ply_argument argument) {
@@ -136,15 +123,42 @@ static int vertex_nz(p_ply_argument argument) {
 	return 1;
 }
 
+static int vertex_r(p_ply_argument argument) {
+	long eol;
+	static unsigned long index = 0;
+	std::vector<LYVertex> *Vertices;
+	ply_get_argument_user_data(argument, (void**) &Vertices, &eol);
+	Vertices->at(index).m_color.x = (float) ply_get_argument_value(argument) / 255.f;
+	index++;
+	return 1;
+}
+
+static int vertex_g(p_ply_argument argument) {
+	long eol;
+	static unsigned long index = 0;
+	std::vector<LYVertex> *Vertices;
+	ply_get_argument_user_data(argument, (void**) &Vertices, &eol);
+	Vertices->at(index).m_color.y = (float) ply_get_argument_value(argument) / 255.f;
+	index++;
+	return 1;
+}
+
+static int vertex_b(p_ply_argument argument) {
+	long eol;
+	static unsigned long index = 0;
+	std::vector<LYVertex> *Vertices;
+	ply_get_argument_user_data(argument, (void**) &Vertices, &eol);
+	float b = (float) ply_get_argument_value(argument) / 255.f;
+	Vertices->at(index).m_color.z = b;
+	index++;
+	return 1;
+}
+
 bool LYMesh::LoadPoints(const std::string& Filename)
 {
 	Clear();
 	bool ret = false;
 	std::string currentLine;
-	m_Entries.resize(1);
-
-	std::vector<LYVertex> Vertices;
-	std::vector<unsigned int> Indices;
 	unsigned long numVertices(0);
 
 	unsigned long nvertices;
@@ -153,139 +167,27 @@ bool LYMesh::LoadPoints(const std::string& Filename)
 	if (!ply_read_header(ply)) return 1;
 	
 	nvertices = 
-	ply_set_read_cb(ply, "vertex", "x", vertex_x,(void *) &Vertices, 0);
-	ply_set_read_cb(ply, "vertex", "y", vertex_y,(void *) &Vertices, 1);
-	ply_set_read_cb(ply, "vertex", "z", vertex_z,(void *) &Vertices, 2);
-	ply_set_read_cb(ply, "vertex", "nx", vertex_nx,(void *) &Vertices, 3);
-	ply_set_read_cb(ply, "vertex", "ny", vertex_ny,(void *) &Vertices, 4);
-	ply_set_read_cb(ply, "vertex", "nz", vertex_nz,(void *) &Vertices, 5);
+	ply_set_read_cb(ply, "vertex", "x", vertex_x,(void *) &m_Vertices, 0);
+	ply_set_read_cb(ply, "vertex", "y", vertex_y,(void *) &m_Vertices, 1);
+	ply_set_read_cb(ply, "vertex", "z", vertex_z,(void *) &m_Vertices, 2);
+	ply_set_read_cb(ply, "vertex", "nx", vertex_nx,(void *) &m_Vertices, 3);
+	ply_set_read_cb(ply, "vertex", "ny", vertex_ny,(void *) &m_Vertices, 4);
+	ply_set_read_cb(ply, "vertex", "nz", vertex_nz,(void *) &m_Vertices, 5);
+	ply_set_read_cb(ply, "vertex", "red", vertex_r,(void *) &m_Vertices, 6);
+	ply_set_read_cb(ply, "vertex", "green", vertex_g,(void *) &m_Vertices, 7);
+	ply_set_read_cb(ply, "vertex", "blue", vertex_b,(void *) &m_Vertices, 8);
 
-	Vertices.resize(nvertices);
+	m_Vertices.resize(nvertices);
 
 	if (!ply_read(ply)) return 1;
 	ply_close(ply);
+
+	std::vector<unsigned int> Indices;
 	for (unsigned long i = 0; i < nvertices; i++)
 	{
 		Indices.push_back(i);
 	}
-	m_Entries[0].numVertices = Vertices.size();
-	m_Entries[0].Init(Vertices, Indices);
+	numVertices = m_Vertices.size();
+	this->Init(m_Vertices, Indices);
 	return 0;
 }
-
-//bool LYMesh::LoadMesh(const std::string& Filename)
-//{
-//	// Release the previously loaded mesh (if it exists)
-//	Clear();
-//	bool Ret = false;
-//	Assimp::Importer Importer;
-//	std::string filename(Filename);
-//	const aiScene* pScene = Importer.ReadFile(filename.c_str(), aiProcess_FlipUVs);
-//
-//	if (pScene) {
-//		Ret = InitFromScene(pScene, filename);
-//	}
-//	else {
-//		printf("Error parsing '%s': '%s'\n", Filename.c_str(), Importer.GetErrorString());
-//	}
-//	printf("The model has been loaded correctly\n");
-//	return Ret;
-//}
-//
-//bool LYMesh::InitFromScene(const aiScene* pScene, const std::string& Filename)
-//{  
-//    m_Entries.resize(pScene->mNumMeshes);
-//    m_Textures.resize(pScene->mNumMaterials);
-//
-//    // Initialize the meshes in the scene one by one
-//    for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
-//        const aiMesh* paiMesh = pScene->mMeshes[i];
-//        InitMesh(i, paiMesh);
-//    }
-//
-//    return InitMaterials(pScene, Filename);
-//}
-//
-//void LYMesh::InitMesh(unsigned int Index, const aiMesh* paiMesh)
-//{
-//    m_Entries[Index].MaterialIndex = paiMesh->mMaterialIndex;
-//    
-//    std::vector<LYVertex> Vertices;
-//    std::vector<unsigned int> Indices;
-//    const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
-//
-//    for (unsigned int i = 0 ; i < paiMesh->mNumVertices ; i++) {
-//        const aiVector3D* pPos      = &(paiMesh->mVertices[i]);
-//        const aiVector3D* pNormal   = &(paiMesh->mNormals[i]);
-//        const aiVector3D* pTexCoord = paiMesh->HasTextureCoords(0) ? &(paiMesh->mTextureCoords[0][i]) : &Zero3D;
-//		const aiColor4D*  pColor	= paiMesh->HasVertexColors(0) ? &(paiMesh->mColors[0][i]) : &aiColor4D();
-//
-//        LYVertex v(make_float3(pPos->x, pPos->y, pPos->z),
-//                 make_float2(pTexCoord->x, pTexCoord->y),
-//                 make_float3(pNormal->x, pNormal->y, pNormal->z),
-//				 make_float3(pColor->r, pColor->g, pColor->b),
-//				 int(i));
-//
-//        Vertices.push_back(v);
-//    }
-//
-//    for (unsigned int i = 0 ; i < paiMesh->mNumVertices ; i++) {
-//        Indices.push_back(i);
-//    }
-//	m_Entries[Index].numVertices = Vertices.size();
-//    m_Entries[Index].Init(Vertices, Indices);
-//}
-//
-//bool LYMesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
-//{
-//    // Extract the directory part from the file name
-//    std::string::size_type SlashIndex = Filename.find_last_of("/");
-//    std::string Dir;
-//
-//    if (SlashIndex == std::string::npos) {
-//        Dir = ".";
-//    }
-//    else if (SlashIndex == 0) {
-//        Dir = "/";
-//    }
-//    else {
-//        Dir = Filename.substr(0, SlashIndex);
-//    }
-//
-//    bool Ret = true;
-//
-//    // Initialize the materials
-//    for (unsigned int i = 0 ; i < pScene->mNumMaterials ; i++) {
-//        const aiMaterial* pMaterial = pScene->mMaterials[i];
-//
-//        m_Textures[i] = NULL;
-//
-//        if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
-//            aiString Path;
-//
-//            if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
-//                std::string FullPath = Dir + "/" + Path.data;
-//                m_Textures[i] = new LYTexture(GL_TEXTURE_2D, FullPath.c_str());
-//
-//                if (!m_Textures[i]->Load()) {
-//                    printf("Error loading texture '%s'\n", FullPath.c_str());
-//                    delete m_Textures[i];
-//                    m_Textures[i] = NULL;
-//                    Ret = false;
-//                }
-//                else {
-//                    printf("Loaded texture '%s'\n", FullPath.c_str());
-//                }
-//            }
-//        }
-//
-//        // Load a white texture in case the model does not include its own texture
-//        if (!m_Textures[i]) {
-//            m_Textures[i] = new LYTexture(GL_TEXTURE_2D, "./white.png");
-//
-//            Ret = m_Textures[i]->Load();
-//        }
-//    }
-//
-//    return Ret;
-//}

@@ -235,8 +235,6 @@
     <None Include="Shaders\blur_pass.vs" />
     <None Include="Shaders\depth_pass.frag" />
     <None Include="Shaders\depth_pass.vs" />
-    <None Include="Shaders\mainShader.frag" />
-    <None Include="Shaders\mainShader.vs" />
     <None Include="Shaders\normal_pass.frag" />
     <None Include="Shaders\normal_pass.vs" />
     <None Include="Shaders\shader.frag" />
