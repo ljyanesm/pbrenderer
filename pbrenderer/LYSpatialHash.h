@@ -34,7 +34,6 @@ public:
 
 	void	setVBO(uint vbo);
 	void	setDeviceVertices(LYVertex *hostVertices);
-
 	LYCell* getNeighboors(glm::vec3 pos, int neighborhoodSize); // All the cells in the neighborhood of the solicited point
 	LYCell* getNeighboors(glm::vec3 pos, float radius);			// All the cells inside the sphere defined by [p, r]
 	LYCell* getNeighboors(glm::vec3 pmin, glm::vec3 pmax);		// All cells inside the defined AABB by [min, max]
@@ -44,8 +43,6 @@ public:
 	void	selectVisiblePoints();
 
 	void	calculateCollisions(float3 pos);
-
-	float3	getForceFeedback(float3 pos);
 	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
 
 	void	dump();

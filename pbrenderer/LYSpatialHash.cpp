@@ -188,21 +188,6 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }
 
-float3 LYSpatialHash::getForceFeedback(float3 pos)
-{
-	calculateCollisions(pos);
-	float3 Ax = m_hParams->Ax;
-	float3 Nx = m_hParams->Nx;
-	float Fx = dot(Nx, (pos - Ax));
-	if (Fx < 0.0f ){
-
-
-
-		return -Nx * Fx;
-	}
-	return make_float3(0.0f);
-}
-
 float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 {
 	static float3 tgPlaneNormal = make_float3(0.0f);

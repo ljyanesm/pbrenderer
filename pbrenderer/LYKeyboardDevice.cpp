@@ -31,7 +31,7 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 2, &Indices[0], GL_STATIC_DRAW);
 
-	m_modelMatrix = glm::mat4();
+	m_HIPMatrix = glm::mat4();
 }
 
 
@@ -50,24 +50,22 @@ float3 *LYKeyboardDevice::getHIP() {
 }
 
 void LYKeyboardDevice::setPosition(float3 pos) {
-	m_position = pos;
-	m_collider.m_pos = pos;
-	std::vector<LYVertex> Vertices;
-	Vertices.push_back(m_collider);
-	LYVertex proxy;
-	proxy.m_color = make_float3(1.0f, 0.0f, 0.0f);
-	proxy.m_pos = m_collider.m_normal;
-	Vertices.push_back(proxy);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * 2, &Vertices[0], GL_STATIC_DRAW);
-}
-float3 LYKeyboardDevice::getForceFeedback(float3 pos) const{
-	return m_spaceHandler->getForceFeedback(this->getPosition());
+	// Haptics only
+	glm::mat4 inverseTransformation = glm::inverse(this->m_CameraMatrix);
+	glm::vec3 p = glm::vec3(inverseTransformation * glm::vec4(pos.x, pos.y, pos.z, 1));
+	m_collider.m_pos = make_float3(p.x, p.y, p.z);
+
+	// Graphics only
+	glm::mat4 finalTransformation = glm::translate(this->m_CameraMatrix, p);
+	m_HIPMatrix = finalTransformation;
+	finalTransformation = glm::translate(this->m_CameraMatrix, glm::vec3(m_collider.m_normal.x, m_collider.m_normal.y, m_collider.m_normal.z));
+	m_ProxyMatrix = finalTransformation;
 }
 
 float3 LYKeyboardDevice::calculateFeedbackUpdateProxy()
 {
-	return m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
+	float3 force = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
+	return force;
 }
 
 float LYKeyboardDevice::getSpeed() const 
