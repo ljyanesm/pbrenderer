@@ -29,8 +29,15 @@ void LYMesh::Init(const std::vector<LYVertex>& Vertices,
 
 	modelCentre = (max+min)*0.5f;
 	modelMatrix = glm::mat4();
-	float factor = 5.f / glm::length(max-min);
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(factor));
+	float maxDist = -1.0f;
+	float dX, dY, dZ;
+	dX = abs(max.x - min.x);
+	dY = abs(max.y - min.y);
+	dZ = abs(max.z - min.z);
+	if (maxDist < dX) maxDist = dX;
+	if (maxDist < dY) maxDist = dY;
+	if (maxDist < dZ) maxDist = dZ;
+	float factor = maxDist;
 	modelScale = factor;
 	modelMatrix = glm::translate(modelMatrix, -modelCentre);
 }
@@ -42,6 +49,12 @@ LYMesh::LYMesh()
 	NumIndices  = 0;
 	MaterialIndex = INVALID_MATERIAL;
 }
+
+LYMesh::LYMesh( const std::string &Filename )
+{
+	LoadPoints(Filename);
+}
+
 
 
 LYMesh::~LYMesh()
@@ -63,7 +76,7 @@ void LYMesh::Clear()
 	}
 }
 
-static int vertex_x(p_ply_argument argument) {
+int LYMesh::vertex_x(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -73,7 +86,7 @@ static int vertex_x(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_y(p_ply_argument argument) {
+int LYMesh::vertex_y(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -83,7 +96,7 @@ static int vertex_y(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_z(p_ply_argument argument) {
+int LYMesh::vertex_z(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -93,7 +106,7 @@ static int vertex_z(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_nx(p_ply_argument argument) {
+int LYMesh::vertex_nx(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -103,7 +116,7 @@ static int vertex_nx(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_ny(p_ply_argument argument) {
+int LYMesh::vertex_ny(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -113,7 +126,7 @@ static int vertex_ny(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_nz(p_ply_argument argument) {
+int LYMesh::vertex_nz(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -123,7 +136,7 @@ static int vertex_nz(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_r(p_ply_argument argument) {
+int LYMesh::vertex_r(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -133,7 +146,7 @@ static int vertex_r(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_g(p_ply_argument argument) {
+int LYMesh::vertex_g(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;
@@ -143,7 +156,7 @@ static int vertex_g(p_ply_argument argument) {
 	return 1;
 }
 
-static int vertex_b(p_ply_argument argument) {
+int LYMesh::vertex_b(p_ply_argument argument) {
 	long eol;
 	static unsigned long index = 0;
 	std::vector<LYVertex> *Vertices;

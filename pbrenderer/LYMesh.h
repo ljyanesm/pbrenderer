@@ -28,7 +28,7 @@ class LYMesh
 
 public:
     LYMesh();
-
+	LYMesh(const std::string &Filename);
     ~LYMesh();
 
 	bool LoadPoints(const std::string& Filename);
@@ -49,6 +49,16 @@ private:
 		const std::vector<unsigned int>& Indices);
     void Clear();
 
+	static int vertex_x(p_ply_argument argument);
+	static int vertex_y(p_ply_argument argument);
+	static int vertex_z(p_ply_argument argument);
+	static int vertex_nx(p_ply_argument argument);
+	static int vertex_ny(p_ply_argument argument);
+	static int vertex_nz(p_ply_argument argument);
+	static int vertex_r(p_ply_argument argument);
+	static int vertex_g(p_ply_argument argument);
+	static int vertex_b(p_ply_argument argument);
+
     std::vector<LYVertex> m_Vertices;
 	glm::mat4	modelMatrix;
 	glm::vec3	modelCentre;
@@ -58,6 +68,10 @@ private:
 	size_t NumIndices;
 	size_t numVertices;
 	unsigned int MaterialIndex;
+
+	uint nX, nY, nZ;
+	uint nNX, nNY, nNZ;
+	uint nR, nG, nB;
 };
 
 

@@ -334,11 +334,25 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 
 	depthShader->useShader();
 
-	glm::mat4 modelMatrix =  m_mesh->getModelMatrix();
-	glm::mat4 modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
-	glm::mat4 inverse_transposed = glm::inverse(modelViewMatrix);
+	glm::mat4 modelMatrix = glm::mat4();
+	glm::mat4 modelViewMatrix = glm::mat4();
+	glm::mat4 inverse_transposed = glm::mat4();
+
+	modelMatrix = m_collider->getHIPMatrix();
+	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
+	inverse_transposed = glm::inverse(modelViewMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_collider->getSize());
+
+	_drawCollider();
+
+	modelMatrix = m_collider->getProxyMatrix();
+	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
+	inverse_transposed = glm::inverse(modelViewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);

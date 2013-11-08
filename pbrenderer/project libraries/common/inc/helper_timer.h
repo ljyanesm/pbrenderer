@@ -454,7 +454,7 @@ sdkResetTimer(StopWatchInterface **timer_interface)
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Return the average time for timer execution as the total time
-//! for the timer dividied by the number of completed (stopped) runs the timer
+//! for the timer divided by the number of completed (stopped) runs the timer
 //! has made.
 //! Excludes the current running time if the timer is currently running.
 //! @param name  name of the timer to return the time of
