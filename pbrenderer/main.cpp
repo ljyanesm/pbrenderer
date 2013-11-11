@@ -2,6 +2,7 @@
 #include <GL/freeglut.h>
 #include <cstdio>
 #include <cstdlib>
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 // CUDA runtime
@@ -38,6 +39,7 @@ int width = 1600;
 int height = 900;
 
 float	pointRadius = 0.01f;
+float	pointScale = 0.01f;
 float	influenceRadius = 0.2f;
 int		pointDiv = 0;
 
@@ -182,7 +184,8 @@ void reshape(int w, int h)
 	m_pCamera->perspProjection(width, height, 60.0f, NEARP, FARP);
 	p = glm::mat4();
 	p = glm::perspective(60.0f, (float) width/ (float) height, NEARP, FARP);
-
+	pointScale = m_pCamera->getHeight() / tanf(m_pCamera->getFOV()*0.5f*(float)M_PI/180.0f) ;
+	screenspace_renderer->setPointScale(pointScale);
 	glViewport(0, 0, width, height);
 }
 
@@ -325,6 +328,14 @@ void key(unsigned char key, int x, int y)
 		pointRadius -= 0.001f;
 		screenspace_renderer->setPointRadius(pointRadius);
 		break;
+	case '>':
+		pointScale *= 1.1f;
+		screenspace_renderer->setPointScale(pointScale);
+		break;
+	case '<':
+		pointScale *= 0.9f;
+		screenspace_renderer->setPointScale(pointScale);
+		break;
 	case GLUT_KEY_UP:
 		camera_trans[2] += 0.5f;
 		break;
@@ -434,13 +445,13 @@ void display()
 	modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	modelMatrix *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	modelMatrix *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
-	modelMatrix *= glm::scale(glm::vec3(1));
 	m_pMesh->setModelMatrix(modelMatrix);
 	haptic_interface->setCameraMatrix(modelMatrix);
 
 	haptic_interface->setWorkspaceScale(make_float3(0.05f, 0.05f, 0.05f));
-	glm::mat4 viewMat = glm::scale(glm::mat4(), glm::vec3(15./m_pMesh->getScale()));
-	viewMat = glm::translate(viewMat, glm::vec3(0,0,-15));
+	glm::mat4 viewMat = glm::mat4();
+
+	viewMat = glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
 	m_pCamera->setViewMatrix(viewMat);
 
 	screenspace_renderer->display(m_pMesh, mode);
@@ -448,7 +459,7 @@ void display()
 	glutSwapBuffers();
 	glutReportErrors();
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
-	sprintf(fps_string, "Point-Based Rendering \t FPS: %5.3f \t SpaceHandler ms: %f", 1000.0f / (t.Elapsed()), averageTime);
+	sprintf(fps_string, "Point-Based Graphic FPS: %5.3f        Haptic FPS: %f", 1000.0f / (t.Elapsed()), 1000.0f / averageTime);
 	static int measureNum = 0;
 
 	if (print_to_file){

@@ -52,6 +52,7 @@ public:
 	void setCamera(LYCamera *c);
 	void setMesh(LYMesh *m);
 	void setPointRadius(float r);
+	void setPointScale(float s);
 	void setPointDiv(int d);
 	void setCollider(LYHapticInterface* haptic);
 
@@ -89,6 +90,7 @@ private:
 	GLuint		m_blurDepthFBO;
 
 	float		m_pointRadius;
+	float		m_pointScale;
 
 	device_mesh2_t m_device_quad;
 

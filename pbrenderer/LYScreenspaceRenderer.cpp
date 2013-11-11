@@ -365,7 +365,7 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	modelMatrix =  m_mesh->getModelMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
 	inverse_transposed = glm::inverse(modelViewMatrix);
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
@@ -507,4 +507,9 @@ void LYScreenspaceRenderer::setCollider(LYHapticInterface* haptic)
 void LYScreenspaceRenderer::setPointDiv( int d )
 {
 	m_pointDiv = d;
+}
+
+void LYScreenspaceRenderer::setPointScale( float s )
+{
+	m_pointScale = s;
 }
