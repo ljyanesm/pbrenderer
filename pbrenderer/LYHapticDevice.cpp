@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh)
+LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh)
 {
 	m_spaceHandler		= sh;
 	m_deviceType		= LYHapticInterface::HAPTIC_DEVICE;
@@ -13,8 +13,8 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh)
 	m_workspaceScale	= make_float3(0.3f);
 	m_relativePosition	= make_float3(0.0f);
 
-	//m_ProxyObject	= new LYMesh("proxy.ply");
-	//m_HIPObject		= new LYMesh("hip.ply");
+	m_ProxyObject	= proxyMesh;
+	m_HIPObject		= hipMesh;
 
 	m_HIPMatrix = glm::mat4();
 	m_ProxyMatrix = glm::mat4();

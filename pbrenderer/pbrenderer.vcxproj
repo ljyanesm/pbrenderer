@@ -65,12 +65,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\tools\boost_1_53_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\tools\boost_1_53_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -88,8 +92,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>.\project libraries\config4cpp\lib;./project libraries/common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\DebugAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\DebugAcademicEdition;./project libraries/SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>config4cpp.lib;hdu.lib;hl.lib;hlu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\tools\boost_1_53_0\stage\lib;.\project libraries\config4cpp\lib;./project libraries/common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\DebugAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\DebugAcademicEdition;./project libraries/SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libboost_filesystem-vc100-mt-gd-1_53.lib;config4cpp.lib;hdu.lib;hl.lib;hlu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>

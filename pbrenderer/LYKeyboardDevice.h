@@ -7,6 +7,7 @@
 
 #include "LYVertex.h"
 #include "LYHapticInterface.h"
+#include "LYPLYLoader.h"
 
 class LYKeyboardDevice :
 	public LYHapticInterface

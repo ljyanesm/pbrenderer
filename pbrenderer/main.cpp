@@ -1,3 +1,6 @@
+#define BOOST_FILESYSTEM_VERSION 3
+#define BOOST_FILESYSTEM_NO_DEPRECATED 
+#include <boost/filesystem.hpp>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <cstdio>
@@ -33,8 +36,18 @@
 #include "LYSpatialHash.h"
 #include "LYKeyboardDevice.h"
 #include "LYTimer.h"
+///////////////////////////////////////////////////////
 #include "LYPLYLoader.h"
-
+uint LYPLYLoader::nX = 0;
+uint LYPLYLoader::nY = 0;
+uint LYPLYLoader::nZ = 0;
+uint LYPLYLoader::nNX = 0; 
+uint LYPLYLoader::nNY = 0; 
+uint LYPLYLoader::nNZ = 0;
+uint LYPLYLoader::nR = 0; 
+uint LYPLYLoader::nG = 0; 
+uint LYPLYLoader::nB = 0;
+///////////////////////////////////////////////////////
 int width = 1600;
 int height = 900;
 
@@ -70,6 +83,7 @@ glm::mat4 p;
 LYWorld m_pWorld;
 // Information below this line has to move to LYWorld.
 ///////////////////////////////////////////////////////
+LYPLYLoader *m_plyLoader;
 LYScreenspaceRenderer *screenspace_renderer;
 LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
@@ -104,6 +118,31 @@ enum {M_VIEW = 0, M_MOVE};
 
 FILE* performanceFile = NULL;
 bool print_to_file = false;
+
+namespace fs = ::boost::filesystem;
+std::vector<fs::path> modelFiles;
+
+// return the filenames of all files that have the specified extension
+// in the specified directory and all subdirectories
+void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>& ret)
+{  
+	if (!fs::exists(root)) return;
+
+	if (fs::is_directory(root))
+	{
+		fs::recursive_directory_iterator it(root);
+		fs::recursive_directory_iterator endit;
+		while(it != endit)
+		{
+			if (fs::is_regular_file(*it) && it->path().extension() == ext && it->path().filename() != "proxy.ply" && it->path().filename() != "hip.ply")
+			{
+
+				ret.push_back(it->path().filename());
+			}
+			++it;
+		}
+	}
+}
 
 void cudaInit(int argc, char **argv)
 {    
@@ -159,19 +198,24 @@ void initGL(int *argc, char **argv){
 		printf("%s", e.c_str());
 	}
 	
-
 	m_pCamera = new LYCamera(width, height);
-
+	get_all(".", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
-	m_pMesh = new LYMesh(modelFile);
-
-	glm::vec3 centre = -m_pMesh->getModelCentre();
+	
+	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
 
 	//scale = m_pMesh->getScale();
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(256, 256, 256));
-	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) haptic_interface = new LYKeyboardDevice(space_handler);
-	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) haptic_interface = new LYHapticDevice(space_handler);
+	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
+		haptic_interface = new LYKeyboardDevice(space_handler);
+	
+	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) 
+		haptic_interface = new LYHapticDevice(space_handler, 
+		m_plyLoader->getInstance().readFile("proxy.ply"), 
+		m_plyLoader->getInstance().readFile("hip.ply"));
+
+
 	screenspace_renderer->setCollider(haptic_interface);
 	screenspace_renderer->setPointRadius(pointRadius);
 	haptic_interface->setTimer(hapticTimer);
@@ -286,10 +330,14 @@ void motion(int x, int y)
 
 	glutPostRedisplay();
 }
-// commented out to remove unused parameter warnings in Linux
+
+
 float3 devPosition;
+int loadedModel = 0;
 void key(unsigned char key, int x, int y)
 {
+	LYMesh *tmpModel = m_pMesh;
+	LYSpaceHandler *tmpSpace = space_handler;
 	float3 pos = make_float3(0.0);
 	switch (key)
 	{
@@ -305,13 +353,18 @@ void key(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case '[':
-		pointDiv += 1;
-		screenspace_renderer->setPointDiv(1 << pointDiv);
+		loadedModel = loadedModel--%modelFiles.size();
+		m_pMesh = m_plyLoader->getInstance().readFile(modelFiles.at(loadedModel).string());
+		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
+		delete tmpSpace;
+		delete tmpModel;
 		break;
 	case ']':
-		pointDiv -= 1;
-		if (pointDiv < 0) pointDiv = 0;
-		screenspace_renderer->setPointDiv(1 << pointDiv);
+		loadedModel = loadedModel++%modelFiles.size();
+		m_pMesh = m_plyLoader->getInstance().readFile(modelFiles.at(loadedModel).string());
+		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
+		delete tmpSpace;
+		delete tmpModel;
 		break;
 	case 'p':
 		mode = (LYScreenspaceRenderer::DisplayMode)
@@ -382,16 +435,6 @@ void key(unsigned char key, int x, int y)
 		break;
 	case 'c':
 		pos.z -= haptic_interface->getSpeed();
-		break;
-	case 'I':
-		LYHapticInterface *new_interface;
-		if ( haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE)
-			new_interface = new LYHapticDevice(space_handler);
-		else
-			new_interface = new LYKeyboardDevice(space_handler);
-		haptic_interface = new_interface;
-		delete haptic_interface;
-
 		break;
 	}
 	devPosition += pos;
