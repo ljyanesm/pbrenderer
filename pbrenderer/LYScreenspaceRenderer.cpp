@@ -348,7 +348,7 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_collider->getSize());
 
-	_drawCollider();
+	_drawPoints(m_collider->getHIPObject());
 
 	modelMatrix = m_collider->getProxyMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
@@ -360,7 +360,7 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_collider->getSize());
 
-	_drawCollider();
+	_drawPoints(m_collider->getProxyObject());
 
 	modelMatrix =  m_mesh->getModelMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;

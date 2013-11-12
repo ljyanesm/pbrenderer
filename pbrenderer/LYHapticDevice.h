@@ -13,6 +13,7 @@
 #include <HDU/hduVector.h>
 #include <HLU/hlu.h>
 
+#include "LYPLYLoader.h"
 #include "LYSpaceHandler.h"
 #include "LYHapticInterface.h"
 #include "LYHapticState.h"
@@ -31,7 +32,7 @@ private:
 public:
 	bool COLLISION_FORCEFEEDBACK;
 	
-	LYHapticDevice(LYSpaceHandler *sh);
+	LYHapticDevice(LYSpaceHandler *sh, LYMesh *p, LYMesh *h);
 	~LYHapticDevice();
 
 	void setPosition(float3 pos);

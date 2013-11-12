@@ -18,8 +18,6 @@
 
 #include "LYVertex.h"
 #include "LYTexture.h"
-#include "LYPLYLoader.h"
-
 
 class LYMesh
 {
@@ -28,10 +26,9 @@ class LYMesh
 
 public:
     LYMesh();
-	LYMesh(const std::string &Filename);
+	LYMesh(const std::vector<LYVertex>& Vertices,
+		const std::vector<unsigned int>& Indices);
     ~LYMesh();
-
-	bool LoadPoints(const std::string& Filename);
 
 	glm::mat4	getModelMatrix() { return modelMatrix; }
 	glm::vec3	getModelCentre() { return modelCentre; }
@@ -45,19 +42,7 @@ public:
 	void setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
 
 private:
- 	void Init(const std::vector<LYVertex>& Vertices,
-		const std::vector<unsigned int>& Indices);
     void Clear();
-
-	static int vertex_x(p_ply_argument argument);
-	static int vertex_y(p_ply_argument argument);
-	static int vertex_z(p_ply_argument argument);
-	static int vertex_nx(p_ply_argument argument);
-	static int vertex_ny(p_ply_argument argument);
-	static int vertex_nz(p_ply_argument argument);
-	static int vertex_r(p_ply_argument argument);
-	static int vertex_g(p_ply_argument argument);
-	static int vertex_b(p_ply_argument argument);
 
     std::vector<LYVertex> m_Vertices;
 	glm::mat4	modelMatrix;

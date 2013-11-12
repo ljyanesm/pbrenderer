@@ -1,6 +1,6 @@
 #pragma once
 #include "defines.h"
-#include "LYMesh.h"
+#include "LYPLYLoader.h"
 #include "LYSpaceHandler.h"
 #include "vector_functions.h"
 #include "vector_types.h"
