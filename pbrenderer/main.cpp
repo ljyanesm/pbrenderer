@@ -343,7 +343,7 @@ void key(unsigned char key, int x, int y)
 	{
 	case ' ':
 		bPause = !bPause;
-		haptic_interface->toggleForces();
+		haptic_interface->toggleForces(bPause);
 		break;
 	case 13:		// ENTER key
 
@@ -355,13 +355,17 @@ void key(unsigned char key, int x, int y)
 	case '[':
 		loadedModel = loadedModel--%modelFiles.size();
 		m_pMesh = m_plyLoader->getInstance().readFile(modelFiles.at(loadedModel).string());
+		haptic_interface->pause();
 		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
+		haptic_interface->start();
 		delete tmpSpace;
 		delete tmpModel;
 		break;
 	case ']':
 		loadedModel = loadedModel++%modelFiles.size();
+		haptic_interface->pause();
 		m_pMesh = m_plyLoader->getInstance().readFile(modelFiles.at(loadedModel).string());
+		haptic_interface->start();
 		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
 		delete tmpSpace;
 		delete tmpModel;
@@ -465,7 +469,7 @@ void display()
 	LYTimer t(true);
 	Sleep(20);
 	// update the simulation
-	haptic_interface->pause(bPause);
+	haptic_interface->toggleForces(bPause);
 	if (!bPause)
 	{
 		space_handler->update();

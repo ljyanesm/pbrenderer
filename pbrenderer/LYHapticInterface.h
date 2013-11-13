@@ -22,8 +22,9 @@ public:
 	virtual float3 calculateFeedbackUpdateProxy() = 0;
 	virtual void setSize(float) = 0;
 	virtual void setRelativePosition(float3 pos) = 0;
-	virtual void pause(bool pause) = 0;
-	virtual bool toggleForces() = 0;
+	virtual void pause() = 0;
+	virtual void start() = 0;
+	virtual bool toggleForces(bool p = true) = 0;
 	virtual void	setTimer(StopWatchInterface *timer) = 0;
 
 
@@ -44,7 +45,7 @@ public:
 	virtual uint getHIPVBO() const = 0;
 	virtual uint getHIPIB() const = 0;
 	virtual uint getHIPNumVertices() const = 0;
-
+	virtual bool isEnabled() const = 0;
 
 protected:
 	LYVertex	m_collider;

@@ -14,16 +14,26 @@ class LYKeyboardDevice :
 {
 private:
 	LYSpaceHandler *m_spaceHandler;
+	bool COLLISION_FORCEFEEDBACK;
 public:
 	LYKeyboardDevice(LYSpaceHandler *sh);
 	~LYKeyboardDevice(void);
+
+	void pause() 
+	{ 
+		COLLISION_FORCEFEEDBACK = false;
+	}
+	void start()
+	{
+		COLLISION_FORCEFEEDBACK = true;
+	}
 
 	void setSpaceHandler(LYSpaceHandler *sh);
 	void setWorkspaceScale(float3 dim) { m_workspaceScale = dim; }
 	void setRelativePosition(float3 pos) { m_relativePosition = pos; }
 	void setCameraMatrix(glm::mat4 t) { m_CameraMatrix = t; }
 	void pause(bool p) { bPause = p; }
-	bool toggleForces() { return false;}
+	bool toggleForces(bool p = true) { return false;}
 
 	glm::mat4 getHIPMatrix() const { return m_HIPMatrix; }
 	glm::mat4 getProxyMatrix() const { return m_ProxyMatrix; }
@@ -53,5 +63,7 @@ public:
 	uint getHIPNumVertices() const { return m_HIPObject->getNumVertices(); }
 
 	void	setTimer(StopWatchInterface *timer) { m_timer = timer; }
+	bool isEnabled() const { return COLLISION_FORCEFEEDBACK; }
+
 
 };

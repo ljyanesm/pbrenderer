@@ -60,6 +60,7 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 
 LYHapticDevice::~LYHapticDevice(void)
 {
+	delete pState;
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ib);
 }
@@ -194,9 +195,9 @@ void LYHapticDevice::touchTool()
 	sdkStopTimer(&m_timer);
 }
 
-bool LYHapticDevice::toggleForces()
+bool LYHapticDevice::toggleForces(bool p)
 {
-	COLLISION_FORCEFEEDBACK = !COLLISION_FORCEFEEDBACK;
+	COLLISION_FORCEFEEDBACK = p;
 
 	return COLLISION_FORCEFEEDBACK;
 }
@@ -228,8 +229,7 @@ HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData)
 HDCallbackCode HDCALLBACK touchMesh(void *pUserData)
 {
 	LYHapticDevice* haptic = (LYHapticDevice*) pUserData;
-
-	haptic->touchTool();
+	if(haptic->isEnabled()) haptic->touchTool();
 
 	return HD_CALLBACK_CONTINUE;
 }

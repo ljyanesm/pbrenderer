@@ -18,6 +18,9 @@
 #include "LYHapticInterface.h"
 #include "LYHapticState.h"
 
+//OpenHaptics callback functions
+HDCallbackCode HDCALLBACK touchMesh(void *pUserData);
+HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData);
 class LYHapticDevice : public LYHapticInterface
 {
 private:
@@ -41,11 +44,15 @@ public:
 	void setWorkspaceScale(float3 dim) { m_workspaceScale = dim; }
 	void setRelativePosition(float3 pos) { m_relativePosition = pos; }
 	void setCameraMatrix(glm::mat4 t) { m_CameraMatrix = t; }
-	void pause(bool p) 
+	void pause() 
 	{ 
-		bPause = p;
-		if (p != bPause) 
-			(p != true) ? hdStopScheduler() : hdStartScheduler(); 
+		COLLISION_FORCEFEEDBACK = false;
+		hdUnschedule(hUpdateDeviceCallback);
+	}
+	void start()
+	{
+		COLLISION_FORCEFEEDBACK = true;
+		hUpdateDeviceCallback = hdScheduleAsynchronous(touchMesh, this, HD_MAX_SCHEDULER_PRIORITY);
 	}
 
 	glm::mat4 getHIPMatrix() const { return m_HIPMatrix; }
@@ -63,8 +70,8 @@ public:
 	uint getHIPVBO() const { return m_HIPObject->getVBO(); }
 	uint getHIPIB() const { return m_HIPObject->getIB(); }
 	uint getHIPNumVertices() const { return m_HIPObject->getNumVertices(); }
-	virtual LYMesh* getHIPObject() const {return m_HIPObject;}
-	virtual LYMesh* getProxyObject() const {return m_ProxyObject;}
+	LYMesh* getHIPObject() const {return m_HIPObject;}
+	LYMesh* getProxyObject() const {return m_ProxyObject;}
 
 	void setSpaceHandler(LYSpaceHandler *sh);
 
@@ -73,15 +80,11 @@ public:
 	void loadDevices();
 	void touchTool();
 	void setForces(bool c);
-	bool toggleForces();
+	bool toggleForces(bool p = true);
+	bool isEnabled() const { return COLLISION_FORCEFEEDBACK; }
 	void drawEndPoints();
 
 	void	setTimer(StopWatchInterface *timer) { m_timer = timer; }
 
 };
-
-//OpenHaptics callback functions
-HDCallbackCode HDCALLBACK touchMesh(void *pUserData);
-HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData);
-	
 #endif _OPEN_HAPTICS_H
