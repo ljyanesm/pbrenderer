@@ -47,12 +47,10 @@ public:
 	void pause() 
 	{ 
 		COLLISION_FORCEFEEDBACK = false;
-		hdUnschedule(hUpdateDeviceCallback);
 	}
 	void start()
 	{
 		COLLISION_FORCEFEEDBACK = true;
-		hUpdateDeviceCallback = hdScheduleAsynchronous(touchMesh, this, HD_MAX_SCHEDULER_PRIORITY);
 	}
 
 	glm::mat4 getHIPMatrix() const { return m_HIPMatrix; }

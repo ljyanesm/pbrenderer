@@ -5,6 +5,8 @@ using namespace std;
 
 LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh)
 {
+	
+	COLLISION_FORCEFEEDBACK = true;
 	m_spaceHandler		= sh;
 	m_deviceType		= LYHapticInterface::HAPTIC_DEVICE;
 	m_collider			= LYVertex();
@@ -55,7 +57,6 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 	pState = new LYHapticState();
 
 	initHD();
-	COLLISION_FORCEFEEDBACK = true;
 }
 
 LYHapticDevice::~LYHapticDevice(void)
@@ -229,7 +230,8 @@ HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData)
 HDCallbackCode HDCALLBACK touchMesh(void *pUserData)
 {
 	LYHapticDevice* haptic = (LYHapticDevice*) pUserData;
-	if(haptic->isEnabled()) haptic->touchTool();
+	bool enabled = haptic->isEnabled();
+	if(enabled) haptic->touchTool();
 
 	return HD_CALLBACK_CONTINUE;
 }
