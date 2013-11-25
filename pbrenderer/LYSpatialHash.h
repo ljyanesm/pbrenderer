@@ -17,10 +17,6 @@
 #include "LYSpatialHash.cuh"
 #include "LYSpatialHash_kernel.cuh"
 
-// Macro to aligned up to the memory size in question
-#define MEMORY_ALIGNMENT  4096
-#define ALIGN_UP(x,size) ( ((size_t)x+(size-1))&(~(size-1)) )
-
 class LYSpatialHash : public LYSpaceHandler
 {
 
@@ -40,43 +36,39 @@ public:
 
 	void	setInfluenceRadius(float r);
 
-	void	selectVisiblePoints();
-
 	void	calculateCollisions(float3 pos);
 	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
 
 	void	dump();
 
 private:
-	LYVertex *m_src_points;			// Source points saved in the GPU
-	LYVertex *m_sorted_points;		// Sorted points saved in the GPU
-
-
-	uint	*m_hCellStart;
-	uint	*m_hCellEnd;
-
-	uint	*m_cellStart;
-	uint	*m_cellEnd;
-	uint	*m_pointHash;
-	uint	*m_pointGridIndex;
-	uint	m_gridSortBits;
-
-	uint	m_srcVBO;
-	uint	m_numVertices;
-
-	uint3	m_gridSize;
-	uint 	m_numGridCells;
 	cudaGraphicsResource *m_vboRes;
 
-	float3 *m_dForceFeedback;
-	float3 *m_uForceFeedback;
-	float3 *m_forceFeedback;
+	LYVertex	*m_src_points;			// Source points saved in the GPU
+	LYVertex	*m_sorted_points;		// Sorted points saved in the GPU
 
-	bool	m_dirtyPos;
+	uint		*m_hCellStart;
+	uint		*m_hCellEnd;
 
-	SimParams m_params;
+	uint		*m_cellStart;
+	uint		*m_cellEnd;
+	uint		*m_pointHash;
+	uint		*m_pointGridIndex;
+	uint		m_gridSortBits;
 
-	SimParams *m_hParams;
-	SimParams *m_dParams;
+	uint		m_srcVBO;
+	uint		m_numVertices;
 
+	uint3		m_gridSize;
+	uint 		m_numGridCells;
+
+	float3		*m_dForceFeedback;
+	float3		*m_uForceFeedback;
+	float3		*m_forceFeedback;
+
+	bool		m_dirtyPos;
+
+	SimParams	m_params;
+	SimParams	*m_hParams;
+	SimParams	*m_dParams;
 };

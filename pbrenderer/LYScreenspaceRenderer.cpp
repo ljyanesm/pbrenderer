@@ -97,10 +97,10 @@ void LYScreenspaceRenderer::_bindFBO(GLuint FBO) {
 
 void LYScreenspaceRenderer::_initQuad() {
 	float size = 1.0f;
-	vertex2_t verts [] = {  {glm::vec3(-size,size,-0.2f),glm::vec2(0,1)},
-	{glm::vec3(-size,-size,-0.2f),glm::vec2(0,0)},
-	{glm::vec3(size,-size,-0.2f),glm::vec2(1,0)},
-	{glm::vec3(size,size,-0.2f),glm::vec2(1,1)}
+	vertex2_t verts [] = {  {glm::vec3(-size,size,0.0f),glm::vec2(0,1)},
+	{glm::vec3(-size,-size,0.0f),glm::vec2(0,0)},
+	{glm::vec3(size,-size,0.0f),glm::vec2(1,0)},
+	{glm::vec3(size,size,0.0f),glm::vec2(1,1)}
 	};
 
 	unsigned short indices[] = { 0,1,2,0,2,3};

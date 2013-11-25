@@ -6,7 +6,9 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
                           const std::vector<unsigned int>& Indices)
 {
     this->numVertices = NumIndices = Indices.size();
-	this->m_Vertices = Vertices;
+	m_Vertices = Vertices;
+
+	printf("This mesh requeres: %d bytes\n", sizeof(LYVertex) * Vertices.size() + sizeof(unsigned int) * NumIndices);
     glGenBuffers(1, &VB);
   	glBindBuffer(GL_ARRAY_BUFFER, VB);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * Vertices.size(), &Vertices[0], GL_STATIC_DRAW);

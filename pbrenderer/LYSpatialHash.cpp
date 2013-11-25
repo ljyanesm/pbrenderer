@@ -43,6 +43,8 @@ m_gridSize(gridSize)
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 	
+	printf("This class requires: %d bytes\n", m_numVertices*sizeof(LYVertex) + m_numVertices*sizeof(uint)*2 + m_numGridCells*sizeof(uint)*2);
+
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
 
 	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
@@ -71,7 +73,7 @@ LYSpatialHash::~LYSpatialHash(void)
 	LYCudaHelper::freeArray(m_cellStart);
 	LYCudaHelper::freeArray(m_cellEnd);
 	LYCudaHelper::freeArray(m_forceFeedback);
-
+	LYCudaHelper::freeArray(m_dParams);
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
 
@@ -147,13 +149,6 @@ void	LYSpatialHash::update()
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
 		m_dirtyPos = false;
 	}
-
-	selectVisiblePoints();
-}
-
-void LYSpatialHash::selectVisiblePoints()
-{
-
 }
 
 void LYSpatialHash::dump()
