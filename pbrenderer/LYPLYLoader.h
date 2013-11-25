@@ -129,7 +129,10 @@ public:
 
 		m_Vertices.resize(nvertices);
 
-		if (!ply_read(ply)) return 0;
+		if (!ply_read(ply))
+		{
+			throw 1;
+		}
 		ply_close(ply);
 
 		std::vector<unsigned int> Indices;
@@ -148,7 +151,8 @@ public:
 		LYPLYLoader::nR = 0; 
 		LYPLYLoader::nG = 0; 
 		LYPLYLoader::nB = 0;
-		
+		m_Vertices.resize(0);
+		Indices.resize(0);
 		return ret;
 	}
 
