@@ -113,6 +113,9 @@ const int FRAMES_PER_SECOND = 30;
 const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 ///////////////////////////////////////////////////////
 
+float3 devPosition;
+int loadedModel = 0;
+float objectScale = 0.0;
 enum {M_VIEW = 0, M_MOVE};
 
 
@@ -197,14 +200,14 @@ void initGL(int *argc, char **argv){
 	{
 		printf("%s", e.c_str());
 	}
-	
+	loadedModel = 7;
 	m_pCamera = new LYCamera(width, height);
 	get_all(".", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
-	
+	if (!modelFiles.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
+
 	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
 
-	//scale = m_pMesh->getScale();
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(256, 256, 256));
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
@@ -275,7 +278,8 @@ void motion(int x, int y)
 		if (buttonState == 3)
 		{
 			// left+middle = zoom
-			camera_trans[2] += (dy / 100.0f) * 0.5f * fabs(camera_trans[2]);
+			objectScale += (dy / 100.0f) * 0.5f * fabs(camera_trans[2]);
+			//camera_trans[2] += (dy / 100.0f) * 0.5f * fabs(camera_trans[2]);
 		}
 		else if (buttonState & 2)
 		{
@@ -331,9 +335,6 @@ void motion(int x, int y)
 	glutPostRedisplay();
 }
 
-
-float3 devPosition;
-int loadedModel = 0;
 void key(unsigned char key, int x, int y)
 {
 	LYMesh *tmpModel = m_pMesh;
@@ -353,20 +354,48 @@ void key(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case '[':
-		loadedModel = loadedModel--%modelFiles.size();
-		m_pMesh = m_plyLoader->getInstance().readFile(modelFiles.at(loadedModel).string());
 		haptic_interface->pause();
+		loadedModel = loadedModel--%modelFiles.size();
+		modelFile = modelFiles.at(loadedModel).string();
+		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
+		while (true)
+		{
+			try{
+				m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+				break;	// Exit the loop
+			}
+			catch (int e){
+				printf("The object %d - %s could not be loaded, loading next model...\n", loadedModel, modelFile.c_str());
+				loadedModel = loadedModel--%modelFiles.size();
+				modelFile = modelFiles.at(loadedModel).string();
+			}
+		}
 		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
+		haptic_interface->setSpaceHandler(space_handler);
 		haptic_interface->start();
 		delete tmpSpace;
 		delete tmpModel;
 		break;
 	case ']':
-		loadedModel = loadedModel++%modelFiles.size();
 		haptic_interface->pause();
-		m_pMesh = m_plyLoader->getInstance().readFile(modelFiles.at(loadedModel).string());
-		haptic_interface->start();
+		loadedModel = ++loadedModel%modelFiles.size();
+		modelFile = modelFiles.at(loadedModel).string();
+		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
+		while (true)
+		{
+			try{
+				m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+				break;
+			}
+			catch (int e){
+				printf("The object %d - %s could not be loaded, loading next model...\n", loadedModel, modelFile.c_str());
+				loadedModel = ++loadedModel%modelFiles.size();
+				modelFile = modelFiles.at(loadedModel).string();
+			}
+		}
 		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
+		haptic_interface->setSpaceHandler(space_handler);
+		haptic_interface->start();
 		delete tmpSpace;
 		delete tmpModel;
 		break;
@@ -453,6 +482,13 @@ void cleanup()
 {
 	sdkDeleteTimer(&graphicsTimer);
 	sdkDeleteTimer(&hapticTimer);
+	delete m_plyLoader;
+	delete screenspace_renderer;
+	delete space_handler;
+	delete m_pMesh;
+	delete m_pCamera;
+	delete haptic_interface;
+	delete haptics;
 	fclose(performanceFile);
 }
 
@@ -506,7 +542,7 @@ void display()
 	glutSwapBuffers();
 	glutReportErrors();
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
-	sprintf(fps_string, "Point-Based Graphic FPS: %5.3f        Haptic FPS: %f", 1000.0f / (t.Elapsed()), 1000.0f / averageTime);
+	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f", modelFile.c_str(), 1000.0f / (t.Elapsed()), 1000.0f / averageTime);
 	static int measureNum = 0;
 
 	if (print_to_file){
