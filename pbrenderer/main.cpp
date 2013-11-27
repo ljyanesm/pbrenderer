@@ -200,11 +200,11 @@ void initGL(int *argc, char **argv){
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 7;
+	loadedModel = 5;
 	m_pCamera = new LYCamera(width, height);
 	get_all(".", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
-	if (!modelFiles.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
+	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 
 	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
 
@@ -524,18 +524,37 @@ void display()
 		camera_rot_lag[c] += (camera_rot[c] - camera_rot_lag[c]) * inertia;
 	}
 
-	glm::mat4 modelMatrix = glm::mat4();
-	modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	/*/////////////////////////////////////////////////////////////////////////////////////////
+	Setup the model matrix
+	/////////////////////////////////////////////////////////////////////////////////////////*/
+	glm::vec3 modelCentre(m_pMesh->getModelCentre());
+
+	glm::mat4 modelMatrix;
+	modelMatrix *= glm::scale(glm::vec3(10.0/m_pMesh->getScale()));
 	modelMatrix *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	modelMatrix *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
+	//modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	modelMatrix *= glm::translate(-modelCentre);
 	m_pMesh->setModelMatrix(modelMatrix);
-	haptic_interface->setCameraMatrix(modelMatrix);
+	//////////////////////////////////////////////////////////////////////////////////////////
 
+	/*/////////////////////////////////////////////////////////////////////////////////////////
+	Setup the haptic dimensions for collision detection and force response:
+	Find the object that is closest to the HIP and use it for the cameraMatrix computation.
+	/////////////////////////////////////////////////////////////////////////////////////////*/
+	float3 devicePosition = haptic_interface->getPosition();
+	haptic_interface->setCameraMatrix(modelMatrix);		// Camera matrix is the final transformation of the screen!
 	haptic_interface->setWorkspaceScale(make_float3(0.05f, 0.05f, 0.05f));
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	/*/////////////////////////////////////////////////////////////////////////////////////////
+	Setup the view matrix
+	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewMat = glm::mat4();
 
 	viewMat = glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
 	m_pCamera->setViewMatrix(viewMat);
+	//////////////////////////////////////////////////////////////////////////////////////////
 
 	screenspace_renderer->display(m_pMesh, mode);
 

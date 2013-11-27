@@ -17,7 +17,7 @@ namespace LYCudaHelper
 {
 	void allocateHostArray(void **devPtr, size_t size, unsigned int flag = cudaHostAllocPortable);
 	void freeHostArray(void *devPtr);
-	void allocateArray(void **devPtr, int size);
+	void allocateArray(void **devPtr, size_t size);
 	void freeArray(void *devPtr);
 	void *mapGLBufferObject(struct cudaGraphicsResource **cuda_vbo_resource);
 	void unmapGLBufferObject(struct cudaGraphicsResource *cuda_vbo_resource);

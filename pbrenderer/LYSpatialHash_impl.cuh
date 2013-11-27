@@ -35,7 +35,7 @@ __global__
 	void calcHashD(uint*   gridParticleHash,  // output
 	uint*   gridParticleIndex, // output
 	LYVertex* pos,               // input: positions
-	uint    numVertices)
+	size_t    numVertices)
 {
 	uint index = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	if (index >= numVertices) return;
@@ -60,7 +60,7 @@ __global__
 	uint *  gridParticleHash, // input: sorted grid hashes
 	uint *  gridParticleIndex,// input: sorted particle indices
 	LYVertex* oldPos,           // input: sorted position array
-	uint    numVertices)
+	size_t    numVertices)
 {
 	extern __shared__ uint sharedHash[];    // blockSize + 1 elements
 	uint index = __umul24(blockIdx.x,blockDim.x) + threadIdx.x;
@@ -184,7 +184,7 @@ float3 _collideCell(int3    gridPos,
 }
 
 __global__
-void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices)
+void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 

@@ -43,7 +43,7 @@ typedef struct ALIGN(16) _SimParams
 	float colliderRadius;
     
 	uint numCells;
-    uint numBodies;
+    size_t numBodies;
     uint maxParticlesPerCell;
 
 	

@@ -66,18 +66,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\tools\boost_1_53_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\tools\boost_1_53_0\lib\win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\tools\boost_1_53_0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\tools\boost_1_53_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\tools\boost_1_53_0\lib\win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\tools\boost_1_53_0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -92,11 +96,11 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\tools\boost_1_53_0\stage\lib;.\project libraries\config4cpp\lib;./project libraries/common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\DebugAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\DebugAcademicEdition;./project libraries/SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\project libraries\config4cpp\lib\win32;./project libraries/common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\DebugAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\DebugAcademicEdition;./project libraries/SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libboost_filesystem-vc100-mt-gd-1_53.lib;config4cpp.lib;hdu.lib;hl.lib;hlu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
-      <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
+      <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
       <Defines>
       </Defines>
@@ -117,11 +121,11 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\DebugAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\DebugAcademicEdition;./project libraries/SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x86;.\project libraries\config4cpp\lib;./project libraries\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew64.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>.\project libraries\x64;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\DebugAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\DebugAcademicEdition;./project libraries/SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x64;.\project libraries\config4cpp\lib\x64;./project libraries\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut64.lib;glew64.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
-      <Include>./;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\inc</Include>
+      <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
       <Defines>
       </Defines>
@@ -146,11 +150,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;./project libraries\glew-1.9.0\lib;C:\Projects\pbrenderer\pbrenderer\project libraries\config4cpp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;./project libraries\glew-1.9.0\lib;C:\Projects\pbrenderer\pbrenderer\project libraries\config4cpp\lib;.\project libraries\config4cpp\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
-      <Include>./;./project libraries\common\inc</Include>
+      <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -163,7 +167,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./project libraries\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;C:\Projects\pbrenderer\pbrenderer\project libraries\freeglut\include;./project libraries\Assimp\include;C:\Projects\pbrenderer\pbrenderer\project libraries\config4cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./project libraries\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;.\project libraries\freeglut\include;./project libraries\Assimp\include;.\project libraries\config4cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -171,11 +175,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v5.0\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;./project libraries\glew-1.9.0\lib;./project libraries\Assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x64;.\project libraries\x64;.\project libraries\config4cpp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut64.lib;glew64.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
-      <Include>./;./project libraries\common\inc</Include>
+      <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
