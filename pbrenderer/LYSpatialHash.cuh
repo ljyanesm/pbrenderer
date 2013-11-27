@@ -7,7 +7,7 @@ extern "C"
 	void calcHash(uint  *gridParticleHash,
 		uint  *gridParticleIndex,
 		LYVertex *pos,
-		int    numVertices);
+		size_t    numVertices);
 
 	void reorderDataAndFindCellStart(uint  *cellStart,
 		uint  *cellEnd,
@@ -15,11 +15,11 @@ extern "C"
 		uint  *gridParticleHash,
 		uint  *gridParticleIndex,
 		LYVertex *oldPos,
-		uint   numVertices,
+		size_t   numVertices,
 		uint   numCells);
 
-	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numVertices);
+	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices);
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices);
-	void _collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices);
+	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
+	void _collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 }

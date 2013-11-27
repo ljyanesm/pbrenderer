@@ -42,16 +42,16 @@ extern "C" {
 	}
 
 	// compute grid and thread block size for a given number of elements
-	void computeGridSize(uint n, uint blockSize, uint &numBlocks, uint &numThreads)
+	void computeGridSize(size_t n, uint blockSize, uint &numBlocks, uint &numThreads)
 	{
-		numThreads = min(blockSize, n);
+		numThreads = min(blockSize, static_cast<uint>(n));
 		numBlocks = iDivUp(n, numThreads);
 	}
 
 	void calcHash(uint  *gridParticleHash,
 		uint  *gridParticleIndex,
 		LYVertex *pos,
-		int    numVertices)
+		size_t    numVertices)
 	{
 		uint numThreads, numBlocks;
 		computeGridSize(numVertices, 256, numBlocks, numThreads);
@@ -72,7 +72,7 @@ extern "C" {
 		uint  *gridParticleHash,
 		uint  *gridParticleIndex,
 		LYVertex *oldPos,
-		uint   numVertices,
+		size_t   numVertices,
 		uint   numCells)
 	{
 		uint numThreads, numBlocks;
@@ -102,14 +102,14 @@ extern "C" {
 #endif
 	}
 
-	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numVertices)
+	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices)
 	{
 		thrust::sort_by_key(thrust::device_ptr<uint>(dGridParticleHash),
 			thrust::device_ptr<uint>(dGridParticleHash + numVertices),
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, uint numVertices)
+	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 	{
 #if USE_TEX
         checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numParticles*sizeof(float4)));
@@ -120,7 +120,7 @@ extern "C" {
 
         // thread per particle
         uint numThreads, numBlocks;
-        computeGridSize(numVertices, 64, numBlocks, numThreads);
+        computeGridSize(numVertices, 640, numBlocks, numThreads);
 
 		// execute the kernel
         _collisionCheckD<<< numBlocks, numThreads >>>(pos,

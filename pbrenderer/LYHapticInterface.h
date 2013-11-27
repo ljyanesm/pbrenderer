@@ -41,10 +41,10 @@ public:
 	virtual LYMesh* getProxyObject() const = 0;
 	virtual uint getProxyVBO() const = 0;
 	virtual uint getProxyIB() const = 0;
-	virtual uint getProxyNumVertices() const = 0;
+	virtual size_t getProxyNumVertices() const = 0;
 	virtual uint getHIPVBO() const = 0;
 	virtual uint getHIPIB() const = 0;
-	virtual uint getHIPNumVertices() const = 0;
+	virtual size_t getHIPNumVertices() const = 0;
 	virtual bool isEnabled() const = 0;
 
 protected:

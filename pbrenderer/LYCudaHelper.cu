@@ -10,7 +10,7 @@ void LYCudaHelper::freeHostArray(void *devPtr)
 	checkCudaErrors(cudaFreeHost(devPtr));
 }
 
-void LYCudaHelper::allocateArray(void **devPtr, int size)
+void LYCudaHelper::allocateArray(void **devPtr, size_t size)
 {
 	checkCudaErrors(cudaMalloc(devPtr, size));
 }

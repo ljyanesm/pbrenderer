@@ -22,7 +22,7 @@ class LYSpatialHash : public LYSpaceHandler
 
 public:
 	LYSpatialHash(void);
-	LYSpatialHash(uint vbo, uint numVertices, uint3 gridSize);
+	LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize);
 	~LYSpatialHash(void);
 
 	void	update();
@@ -57,7 +57,7 @@ private:
 	uint		m_gridSortBits;
 
 	uint		m_srcVBO;
-	uint		m_numVertices;
+	size_t		m_numVertices;
 
 	uint3		m_gridSize;
 	uint 		m_numGridCells;

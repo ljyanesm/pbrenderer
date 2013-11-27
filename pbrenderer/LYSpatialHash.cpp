@@ -5,7 +5,7 @@ LYSpatialHash::LYSpatialHash(void)
 {
 }
 
-LYSpatialHash::LYSpatialHash(uint vbo, uint numVertices, uint3 gridSize) :
+LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 m_gridSize(gridSize)
 {
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;

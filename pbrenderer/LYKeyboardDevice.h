@@ -57,10 +57,10 @@ public:
 
 	uint getProxyVBO() const { return m_ProxyObject->getVBO(); }
 	uint getProxyIB() const { return m_ProxyObject->getIB(); }
-	uint getProxyNumVertices() const { return m_ProxyObject->getNumVertices(); }
+	size_t getProxyNumVertices() const { return m_ProxyObject->getNumVertices(); }
 	uint getHIPVBO() const { return m_HIPObject->getVBO(); }
 	uint getHIPIB() const { return m_HIPObject->getIB(); }
-	uint getHIPNumVertices() const { return m_HIPObject->getNumVertices(); }
+	size_t getHIPNumVertices() const { return m_HIPObject->getNumVertices(); }
 
 	void	setTimer(StopWatchInterface *timer) { m_timer = timer; }
 	bool isEnabled() const { return COLLISION_FORCEFEEDBACK; }

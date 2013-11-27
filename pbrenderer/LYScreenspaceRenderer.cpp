@@ -308,7 +308,7 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 	int ib = m_mesh->getIB();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
-	GLsizei numIndices = m_mesh->getNumIndices();
+	size_t numIndices = m_mesh->getNumIndices();
 	glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
