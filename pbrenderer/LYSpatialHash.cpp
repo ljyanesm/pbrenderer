@@ -109,6 +109,9 @@ LYCell* LYSpatialHash::getNeighboors(glm::vec3 pmin, glm::vec3 pmax)
 
 void LYSpatialHash::setInfluenceRadius(float r){
 	m_params.R = r;
+	this->m_hParams->R = r;
+	setParameters(&m_params);
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 }
 
 void	LYSpatialHash::update()

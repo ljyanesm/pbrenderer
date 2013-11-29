@@ -206,6 +206,10 @@ bool LYHapticDevice::toggleForces(bool p)
 void LYHapticDevice::setSpaceHandler( LYSpaceHandler *sh )
 {
 	m_spaceHandler = sh;
+	m_HIPMatrix = glm::mat4();
+	m_ProxyMatrix = glm::mat4();
+	m_CameraMatrix = glm::mat4();
+
 }
 
 void LYHapticDevice::setSize( float r )

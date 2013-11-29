@@ -47,10 +47,12 @@ public:
 	void pause() 
 	{ 
 		COLLISION_FORCEFEEDBACK = false;
+		//hdStopScheduler();
 	}
 	void start()
 	{
 		COLLISION_FORCEFEEDBACK = true;
+		//hdStartScheduler();
 	}
 
 	glm::mat4 getHIPMatrix() const { return m_HIPMatrix; }
