@@ -338,6 +338,17 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	glm::mat4 modelViewMatrix = glm::mat4();
 	glm::mat4 inverse_transposed = glm::mat4();
 
+	modelMatrix =  m_mesh->getModelMatrix();
+	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
+	inverse_transposed = glm::inverse(modelViewMatrix);
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+
+	_drawPoints(m_mesh);
+
 	modelMatrix = m_collider->getHIPMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
 	inverse_transposed = glm::inverse(modelViewMatrix);
@@ -361,17 +372,6 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_collider->getSize());
 
 	_drawPoints(m_collider->getProxyObject());
-
-	modelMatrix =  m_mesh->getModelMatrix();
-	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
-	inverse_transposed = glm::inverse(modelViewMatrix);
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
-
-	_drawPoints(m_mesh);
 
 	glDisable(GL_POINT_SPRITE_ARB);
 

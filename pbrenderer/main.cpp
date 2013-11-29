@@ -62,9 +62,9 @@ const float FARP = 1000.0f;
 // view params
 int ox, oy;
 int buttonState = 0;
-float camera_trans[] = {0, 0, -1};
+float camera_trans[] = {0, 0, 0};
 float camera_rot[]   = {0, 0, 0};
-float camera_trans_lag[] = {0, 0, -1};
+float camera_trans_lag[] = {0, 0, 0};
 float camera_rot_lag[] = {0, 0, 0};
 
 bool wireframe = false;
@@ -112,6 +112,10 @@ StopWatchInterface *graphicsTimer = NULL;
 const int FRAMES_PER_SECOND = 30;
 const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 ///////////////////////////////////////////////////////
+
+
+float global_point_scale = 0.01;
+float local_point_scale = 0.01;
 
 float3 devPosition;
 int loadedModel = 0;
@@ -200,16 +204,19 @@ void initGL(int *argc, char **argv){
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 5;
-	m_pCamera = new LYCamera(width, height);
+	loadedModel = 2;
 	get_all(".", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 
-	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
-
+	m_pCamera = new LYCamera(width, height);
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
+
+
+	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+	global_point_scale = m_pMesh->getScale();
 	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(256, 256, 256));
+
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler);
 	
@@ -217,8 +224,7 @@ void initGL(int *argc, char **argv){
 		haptic_interface = new LYHapticDevice(space_handler, 
 		m_plyLoader->getInstance().readFile("proxy.ply"), 
 		m_plyLoader->getInstance().readFile("hip.ply"));
-
-
+	
 	screenspace_renderer->setCollider(haptic_interface);
 	screenspace_renderer->setPointRadius(pointRadius);
 	haptic_interface->setTimer(hapticTimer);
@@ -362,6 +368,7 @@ void key(unsigned char key, int x, int y)
 		{
 			try{
 				m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+				global_point_scale = m_pMesh->getScale();
 				break;	// Exit the loop
 			}
 			catch (int e){
@@ -373,8 +380,8 @@ void key(unsigned char key, int x, int y)
 		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
 		haptic_interface->setSpaceHandler(space_handler);
 		haptic_interface->start();
-		delete tmpSpace;
 		delete tmpModel;
+		delete tmpSpace;
 		break;
 	case ']':
 		haptic_interface->pause();
@@ -385,6 +392,7 @@ void key(unsigned char key, int x, int y)
 		{
 			try{
 				m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+				global_point_scale = m_pMesh->getScale();
 				break;
 			}
 			catch (int e){
@@ -396,8 +404,8 @@ void key(unsigned char key, int x, int y)
 		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
 		haptic_interface->setSpaceHandler(space_handler);
 		haptic_interface->start();
-		delete tmpSpace;
 		delete tmpModel;
+		delete tmpSpace;
 		break;
 	case 'p':
 		mode = (LYScreenspaceRenderer::DisplayMode)
@@ -405,22 +413,6 @@ void key(unsigned char key, int x, int y)
 		break;
 	case 'r':
 		displayEnabled = !displayEnabled;
-		break;
-	case '+':
-		pointRadius += 0.001f;
-		screenspace_renderer->setPointRadius(pointRadius);
-		break;
-	case '-':
-		pointRadius -= 0.001f;
-		screenspace_renderer->setPointRadius(pointRadius);
-		break;
-	case '>':
-		pointScale *= 1.1f;
-		screenspace_renderer->setPointScale(pointScale);
-		break;
-	case '<':
-		pointScale *= 0.9f;
-		screenspace_renderer->setPointScale(pointScale);
 		break;
 	case GLUT_KEY_UP:
 		camera_trans[2] += 0.5f;
@@ -433,16 +425,6 @@ void key(unsigned char key, int x, int y)
 		break;
 	case 'v':
 		mouseMode = !mouseMode;
-		break;
-	case ',':
-		influenceRadius -= 0.01f;
-		space_handler->setInfluenceRadius(influenceRadius);
-		haptic_interface->setSize(influenceRadius);
-		break;
-	case '.':
-		influenceRadius += 0.01f;
-		space_handler->setInfluenceRadius(influenceRadius);
-		haptic_interface->setSize(influenceRadius);
 		break;
 	case '/':
 		print_to_file = !print_to_file;
@@ -468,6 +450,49 @@ void key(unsigned char key, int x, int y)
 		break;
 	case 'c':
 		pos.z -= haptic_interface->getSpeed();
+		break;
+
+	case '+':
+		pointRadius += 0.001f;
+		screenspace_renderer->setPointRadius(pointRadius);
+		break;
+	case '-':
+		pointRadius -= 0.001f;
+		screenspace_renderer->setPointRadius(pointRadius);
+		break;
+	case '>':
+		pointScale *= 1.1f;
+		screenspace_renderer->setPointScale(pointScale);
+		break;
+	case '<':
+		pointScale *= 0.9f;
+		screenspace_renderer->setPointScale(pointScale);
+		break;
+	case ',':
+		// Make the radius 10% bigger
+		influenceRadius *= 1.1f;
+		space_handler->setInfluenceRadius(influenceRadius);
+		haptic_interface->setSize(influenceRadius);
+		std::cout << "Influence Radius: " << influenceRadius << std::endl;
+		break;
+	case '.':
+		// Make the radius  10% smaller
+		influenceRadius *= 0.9f;
+		space_handler->setInfluenceRadius(influenceRadius);
+		haptic_interface->setSize(influenceRadius);
+		std::cout << "Influence Radius: " << influenceRadius << std::endl;
+		break;
+	case ':':
+		global_point_scale += 0.01;
+		break;
+	case '@':
+		global_point_scale -= 0.01;
+		break;
+	case ';':
+		local_point_scale += 0.1;
+		break;
+	case '\'':
+		local_point_scale -= 0.1;
 		break;
 	}
 	devPosition += pos;
@@ -530,10 +555,10 @@ void display()
 	glm::vec3 modelCentre(m_pMesh->getModelCentre());
 
 	glm::mat4 modelMatrix;
-	modelMatrix *= glm::scale(glm::vec3(10.0/m_pMesh->getScale()));
+	modelMatrix *= glm::scale(glm::vec3(global_point_scale));
+	//modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	modelMatrix *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	modelMatrix *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
-	//modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	modelMatrix *= glm::translate(-modelCentre);
 	m_pMesh->setModelMatrix(modelMatrix);
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -552,7 +577,8 @@ void display()
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewMat = glm::mat4();
 
-	viewMat = glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewMat *= glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewMat *= glm::scale(glm::vec3(local_point_scale));
 	m_pCamera->setViewMatrix(viewMat);
 	//////////////////////////////////////////////////////////////////////////////////////////
 

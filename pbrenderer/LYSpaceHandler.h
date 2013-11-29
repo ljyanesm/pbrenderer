@@ -13,6 +13,7 @@
 class LYSpaceHandler
 {
 public:
+	virtual ~LYSpaceHandler() {};
 	virtual void update() = 0;
 	virtual void clear() = 0;
 	virtual void dump() = 0;
