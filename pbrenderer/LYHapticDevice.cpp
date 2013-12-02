@@ -177,9 +177,9 @@ void LYHapticDevice::touchTool()
 		tmpForce = make_float3(p.x, p.y, p.z);
 
 		float f[3]={0,0,0};
-		float damping = 0.2f;
-		float forceScale = 3.0f;
-		float3 _force = tmpForce * forceScale;
+		float damping = 0.1f;
+		float3 _force;
+		_force = tmpForce;
 		force[0] = _force.x;
 		force[1] = _force.y;
 		force[2] = _force.z;

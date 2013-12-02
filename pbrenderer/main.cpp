@@ -73,6 +73,17 @@ LYWorld m_pWorld;
 // Information below this line has to move to LYWorld.
 ///////////////////////////////////////////////////////
 LYPLYLoader *m_plyLoader;
+uint LYPLYLoader::nX = 0;
+uint LYPLYLoader::nY = 0;
+uint LYPLYLoader::nZ = 0;
+uint LYPLYLoader::nNX = 0; 
+uint LYPLYLoader::nNY = 0; 
+uint LYPLYLoader::nNZ = 0;
+uint LYPLYLoader::nR = 0; 
+uint LYPLYLoader::nG = 0; 
+uint LYPLYLoader::nB = 0;
+///////////////////////////////////////////////////////
+
 LYScreenspaceRenderer *screenspace_renderer;
 LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
@@ -516,9 +527,10 @@ int sleep_time = 0;
 static int hapticFPS = 0;
 void display()
 {
-	LYTimer t(true);
+	sdkResetTimer(&graphicsTimer);
 	Sleep(20);
 	// update the simulation
+	glutSolidCube(5.0f);
 	haptic_interface->toggleForces(bPause);
 	if (!bPause)
 	{
@@ -545,7 +557,7 @@ void display()
 
 	glm::mat4 modelMatrix;
 	modelMatrix *= glm::scale(glm::vec3(global_point_scale));
-	//modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	modelMatrix *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	modelMatrix *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
 	modelMatrix *= glm::translate(-modelCentre);
@@ -572,11 +584,11 @@ void display()
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	screenspace_renderer->display(m_pMesh, mode);
-
+	float displayTimer = sdkGetTimerValue(&graphicsTimer);
 	glutSwapBuffers();
 	glutReportErrors();
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
-	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f", modelFile.c_str(), 1000.0f / (t.Elapsed()), 1000.0f / averageTime);
+	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f", modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime);
 	static int measureNum = 0;
 
 	if (print_to_file){

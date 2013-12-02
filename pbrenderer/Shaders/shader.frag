@@ -62,7 +62,7 @@ vec3 uvToEye(vec2 texCoord, float depth){
 void main()
 {
 	//Uniform Light Direction (Billboard)
-    vec4 lightDir = vec4(1.4f, 2.0f, 0.0f, 0.0f);
+    vec4 lightDir = vec4(2.4f, 4.0f, 0.0f, 0.0f);
 
     //Get Texture Information about the Pixel
     vec3 N = texture(u_Normaltex,fs_Texcoord).xyz;
@@ -84,7 +84,7 @@ void main()
     
     //Background Only Pixels
     if(exp_depth > 0.99999999){
-		out_Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		out_Color = vec4(1.0f, 1.0f, 1.0f, 0.0f);
 		return;
 	}
     
@@ -94,7 +94,7 @@ void main()
     
     //Cube Map Reflection Values
     vec3 reflect = reflect(-viewer,N);
-    vec4 refl_color = vec4(0.75, 0.75, 0.75, 1.0);//texture(u_Cubemaptex, reflect);
+    vec4 refl_color = vec4(0.75, 0.75, 0.75, 0.0);//texture(u_Cubemaptex, reflect);
     
     //Color Attenuation from Thickness
     //(Beer's Law)
@@ -104,7 +104,7 @@ void main()
     vec3 color_atten = vec3( exp(-k_r*thickness), exp(-k_g*thickness), exp(-k_b*thickness));
     
     //Background Refraction
-    vec4 refrac_color = vec4(0.75, 0.75, 0.75, 1.0);//texture(u_Backgroundtex, fs_Texcoord + N.xy*thickness);
+    vec4 refrac_color = vec4(0.75, 0.75, 0.75, 0.0);//texture(u_Backgroundtex, fs_Texcoord + N.xy*thickness);
     
     //Final Real Color Mix
     float transparency = 1-thickness;
