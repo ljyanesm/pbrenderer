@@ -92,21 +92,6 @@ void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
 
 }
 
-LYCell* LYSpatialHash::getNeighboors(glm::vec3 pos, int neighborhoodSize)
-{ 
-	return new LYCell();
-}
-
-LYCell* LYSpatialHash::getNeighboors(glm::vec3 pos, float radius)
-{
-	return new LYCell();
-}
-
-LYCell* LYSpatialHash::getNeighboors(glm::vec3 pmin, glm::vec3 pmax)
-{
-	return new LYCell();
-}
-
 void LYSpatialHash::setInfluenceRadius(float r){
 	m_params.R = r;
 	this->m_hParams->R = r;
@@ -116,7 +101,6 @@ void LYSpatialHash::setInfluenceRadius(float r){
 
 void	LYSpatialHash::update()
 {
-	LYTimer t(true);
 	LYVertex *dPos;
 
 	// update constants

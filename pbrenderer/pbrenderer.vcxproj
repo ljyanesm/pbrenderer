@@ -185,13 +185,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="LYCamera.cpp" />
-    <ClCompile Include="LYCell.cpp" />
-    <ClCompile Include="LYDistanceFieldCollider.cpp" />
     <ClCompile Include="LYKeyboardDevice.cpp" />
     <ClCompile Include="LYOctree.cpp" />
     <ClCompile Include="LYShader.cpp" />
     <ClCompile Include="LYSpatialHash.cpp" />
-    <ClCompile Include="LYTimer.cpp" />
     <ClCompile Include="LYWorld.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="LYMesh.cpp" />
@@ -204,9 +201,6 @@
     <ClInclude Include="defines.h" />
     <ClInclude Include="LYHapticState.h" />
     <ClInclude Include="LYCamera.h" />
-    <ClInclude Include="LYCell.h" />
-    <ClInclude Include="LYCollisionHandler.h" />
-    <ClInclude Include="LYDistanceFieldCollider.h" />
     <ClInclude Include="LYHapticInterface.h" />
     <ClInclude Include="LYKeyboardDevice.h" />
     <ClInclude Include="LYOctree.h" />
@@ -214,7 +208,6 @@
     <ClInclude Include="LYSpaceHandler.h" />
     <ClInclude Include="LYShader.h" />
     <ClInclude Include="LYSpatialHash.h" />
-    <ClInclude Include="LYTimer.h" />
     <ClInclude Include="LYVertex.h" />
     <ClInclude Include="LYWorld.h" />
     <ClInclude Include="LYMesh.h" />
@@ -225,7 +218,6 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYCudaHelper.cu" />
-    <CudaCompile Include="LYDistanceFieldCollider.cu" />
     <CudaCompile Include="LYSpatialHash.cu">
       <FileType>Document</FileType>
     </CudaCompile>
@@ -233,7 +225,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="LYCudaHelper.cuh" />
-    <None Include="LYDistanceFieldCollider.cuh" />
     <None Include="LYSpatialHash.cuh">
       <FileType>Document</FileType>
     </None>
