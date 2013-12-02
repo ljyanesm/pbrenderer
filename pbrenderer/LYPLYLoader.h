@@ -157,13 +157,3 @@ public:
 	}
 
 };
-
-uint LYPLYLoader::nX = 0;
-uint LYPLYLoader::nY = 0;
-uint LYPLYLoader::nZ = 0;
-uint LYPLYLoader::nNX = 0; 
-uint LYPLYLoader::nNY = 0; 
-uint LYPLYLoader::nNZ = 0;
-uint LYPLYLoader::nR = 0; 
-uint LYPLYLoader::nG = 0; 
-uint LYPLYLoader::nB = 0;

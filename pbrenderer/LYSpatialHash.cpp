@@ -68,12 +68,19 @@ LYSpatialHash::~LYSpatialHash(void)
 	delete m_hParams;
 
 	LYCudaHelper::freeArray(m_sorted_points);
+	std::cout << "m_sorted_points" << std::endl;
 	LYCudaHelper::freeArray(m_pointHash);
+	std::cout << "m_pointHash" << std::endl;
 	LYCudaHelper::freeArray(m_pointGridIndex);
+	std::cout << "m_pointGridIndex" << std::endl;
 	LYCudaHelper::freeArray(m_cellStart);
+	std::cout << "m_cellStart" << std::endl;
 	LYCudaHelper::freeArray(m_cellEnd);
+	std::cout << "m_cellEnd" << std::endl;
 	LYCudaHelper::freeArray(m_forceFeedback);
+	std::cout << "m_forceFeedback" << std::endl;
 	LYCudaHelper::freeArray(m_dParams);
+	std::cout << "m_dParams" << std::endl;
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
 
@@ -178,6 +185,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 
 	float3 colliderPos = pos->m_pos;
 	float3 Pseed = make_float3(0.0f);
+	float3 dP = make_float3(0.0f);
 	float error = 9999.999f;
 	float3 Ax, Nx;
 	float Fx;
@@ -195,7 +203,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 			Psurface = Pseed;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx;
-			float3 f = (Psurface - colliderPos);
+			float3 f = (Psurface - colliderPos)*0.000001*pow(1./this->m_hParams->R, 5);
 			return f;
 		} else {
 			pos->m_normal = colliderPos;
@@ -203,19 +211,23 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 		}
 	} else {
 		float dist = dot(colliderPos - Psurface, tgPlaneNormal);
-		if (dist <= 0.0f)
+		if (dist <= 0)
 		{
 			float3 P0p = colliderPos - Psurface;
 			float dist = dot(P0p, tgPlaneNormal);
 			P0p = colliderPos - dist*tgPlaneNormal;
 			Pseed = P0p;
-			calculateCollisions(Pseed);
-			Ax = m_hParams->Ax/m_hParams->w_tot;
-			Nx = m_hParams->Nx/length(m_hParams->Nx);
+			do{
+				calculateCollisions(Pseed);
+				Ax = m_hParams->Ax/m_hParams->w_tot;
+				Nx = m_hParams->Nx/length(m_hParams->Nx);
+				dP = - (Ax*Nx)/(Nx*Nx);
+				Pseed += dP;
+			} while (length(dP) < 0.001);
 			Psurface = Ax;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx;
-			float3 f = (Psurface - colliderPos);
+			float3 f = (Psurface - colliderPos)*0.0000001*pow(1./this->m_hParams->R, 5);
 			return f;
 		} else {
 			touched = false;
