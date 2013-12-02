@@ -9,175 +9,189 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
+    <Filter Include="Space Partitioning">
+      <UniqueIdentifier>{b939e516-d7ee-4357-8a46-69a794b6204b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Space Partitioning\Header">
+      <UniqueIdentifier>{9b4a9926-a42b-4705-94cb-eb6ff477d4f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Space Partitioning\Source">
+      <UniqueIdentifier>{238fe6e9-5c18-4532-bf5f-a9ecd506d289}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{534cb64e-3b14-4a11-b883-2a7026940b93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IODevices">
+      <UniqueIdentifier>{ab5d2065-5f1c-4fd1-ae1b-6f402551538e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IODevices\Source">
+      <UniqueIdentifier>{758a05ef-1514-4796-b142-88a5928e5238}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IODevices\Header">
+      <UniqueIdentifier>{76950e44-467d-4c25-a3bb-767b05d12b65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer">
+      <UniqueIdentifier>{a41ce26e-5c62-42e8-8e87-03f470c22e21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer\Mesh">
+      <UniqueIdentifier>{223e6c8f-61ce-4dde-bd44-56731f431c73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer\Mesh\Header">
+      <UniqueIdentifier>{3c0f86f3-47e8-4428-b45e-8db3a757a64b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer\Mesh\Source">
+      <UniqueIdentifier>{72ac7e43-4c97-46b5-be59-d50915051b3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer\Camera">
+      <UniqueIdentifier>{a8ecdd03-c53d-4605-a914-4fbc9216f020}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer\Screenspace Renderer">
+      <UniqueIdentifier>{7ac0a39a-1d7a-4759-91ed-bad703c5f9c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File Loaders">
+      <UniqueIdentifier>{3e7f7c23-0a3f-449c-8571-ff51fb38cd36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Config Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{534cb64e-3b14-4a11-b883-2a7026940b93}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LYShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LYCamera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LYMesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LYWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LYTexture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LYScreenspaceRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="LYOctree.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYSpatialHash.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="LYCell.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LYTimer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LYDistanceFieldCollider.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYHapticDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rply.c">
-      <Filter>Source Files</Filter>
+      <Filter>IODevices\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYKeyboardDevice.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>IODevices\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LYScreenspaceRenderer.cpp">
+      <Filter>OpenGL Renderer\Screenspace Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="LYMesh.cpp">
+      <Filter>OpenGL Renderer\Mesh\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LYShader.cpp">
+      <Filter>OpenGL Renderer\Mesh\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LYTexture.cpp">
+      <Filter>OpenGL Renderer\Mesh\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LYCamera.cpp">
+      <Filter>OpenGL Renderer\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="rply.c">
+      <Filter>File Loaders</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LYShader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYCamera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYMesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LYWorld.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYTexture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYScreenspaceRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYSpaceHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYSpatialHash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYOctree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYVertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LYCell.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="LYOctree.h">
+      <Filter>Space Partitioning\Header</Filter>
     </ClInclude>
-    <ClInclude Include="LYTimer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="LYSpaceHandler.h">
+      <Filter>Space Partitioning\Header</Filter>
     </ClInclude>
-    <ClInclude Include="LYHapticInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYCollisionHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYDistanceFieldCollider.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="LYSpatialHash.h">
+      <Filter>Space Partitioning\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYHapticDevice.h">
-      <Filter>Header Files</Filter>
+      <Filter>IODevices\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LYHapticInterface.h">
+      <Filter>IODevices\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYHapticState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rply.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LYPLYLoader.h">
-      <Filter>Header Files</Filter>
+      <Filter>IODevices\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYKeyboardDevice.h">
-      <Filter>Header Files</Filter>
+      <Filter>IODevices\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LYMesh.h">
+      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LYTexture.h">
+      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LYVertex.h">
+      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LYCamera.h">
+      <Filter>OpenGL Renderer\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="LYShader.h">
+      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="LYScreenspaceRenderer.h">
+      <Filter>OpenGL Renderer\Screenspace Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="rply.h">
+      <Filter>File Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="LYPLYLoader.h">
+      <Filter>File Loaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\blur_pass.frag">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\blur_pass.vs">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\depth_pass.frag">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\depth_pass.vs">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\normal_pass.frag">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\normal_pass.vs">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="LYSpatialHash_impl.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="LYSpatialHash_kernel.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="LYSpatialHash.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="LYDistanceFieldCollider.cuh">
-      <Filter>Header Files</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="LYCudaHelper.cuh">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="app.cfg" />
     <None Include="Shaders\shader.vs">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\shader.frag">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="LYSpatialHash_impl.cuh">
+      <Filter>Space Partitioning\Source</Filter>
+    </None>
+    <None Include="LYSpatialHash_kernel.cuh">
+      <Filter>Space Partitioning\Header</Filter>
+    </None>
+    <None Include="LYSpatialHash.cuh">
+      <Filter>Space Partitioning\Header</Filter>
+    </None>
+    <None Include="app.cfg">
+      <Filter>Config Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="LYSpatialHash.cu">
-      <Filter>Source Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="LYDistanceFieldCollider.cu">
-      <Filter>Source Files</Filter>
-    </CudaCompile>
     <CudaCompile Include="LYCudaHelper.cu">
       <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LYSpatialHash.cu">
+      <Filter>Space Partitioning\Source</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

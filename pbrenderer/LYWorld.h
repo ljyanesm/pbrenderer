@@ -13,6 +13,5 @@ public:
 private:
 	std::vector<LYMesh> m_objects;
 	std::vector<LYCamera> m_cameras;
-	LYSpaceHandler* m_collisionHandler;
 };
 
