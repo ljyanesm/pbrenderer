@@ -185,6 +185,12 @@
     <None Include="app.cfg">
       <Filter>Config Files</Filter>
     </None>
+    <None Include="regularShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="regularShader.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYCudaHelper.cu">

@@ -230,6 +230,8 @@
     </None>
     <None Include="LYSpatialHash_impl.cuh" />
     <None Include="LYSpatialHash_kernel.cuh" />
+    <None Include="regularShader.frag" />
+    <None Include="regularShader.vs" />
     <None Include="Shaders\blur_pass.frag" />
     <None Include="Shaders\blur_pass.vs" />
     <None Include="Shaders\depth_pass.frag" />
