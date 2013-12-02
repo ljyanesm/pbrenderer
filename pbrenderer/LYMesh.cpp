@@ -4,6 +4,7 @@
 
 LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
                           const std::vector<unsigned int>& Indices)
+						  : m_points(true)
 {
     this->numVertices = NumIndices = Indices.size();
 	m_Vertices = Vertices;
@@ -44,7 +45,7 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
 	modelMatrix = glm::translate(modelMatrix, -modelCentre);
 }
 
-LYMesh::LYMesh()
+LYMesh::LYMesh() : m_points(true)
 {
 	VB = INVALID_OGL_VALUE;
 	IB = INVALID_OGL_VALUE;

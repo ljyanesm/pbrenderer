@@ -69,6 +69,9 @@ glm::mat4 viewMatrix;
 glm::mat4 modelViewMatrix;
 glm::mat4 p;
 
+LYMesh* m_CubeObj;
+LYshader* regularShader;
+
 LYWorld m_pWorld;
 // Information below this line has to move to LYWorld.
 ///////////////////////////////////////////////////////
@@ -228,6 +231,10 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer->setCollider(haptic_interface);
 	screenspace_renderer->setPointRadius(pointRadius);
 	haptic_interface->setTimer(hapticTimer);
+
+
+	m_CubeObj = m_plyLoader->getInstance().readFile("cube.ply");
+	regularShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 
 	glutReportErrors();
 }
@@ -527,10 +534,9 @@ int sleep_time = 0;
 static int hapticFPS = 0;
 void display()
 {
-	sdkResetTimer(&graphicsTimer);
+	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
 	// update the simulation
-	glutSolidCube(5.0f);
 	haptic_interface->toggleForces(bPause);
 	if (!bPause)
 	{
@@ -583,8 +589,13 @@ void display()
 	m_pCamera->setViewMatrix(viewMat);
 	//////////////////////////////////////////////////////////////////////////////////////////
 
-	screenspace_renderer->display(m_pMesh, mode);
-	float displayTimer = sdkGetTimerValue(&graphicsTimer);
+	//////////////////////////////////////////////////////////////////////////////////////////
+	screenspace_renderer->addDisplayMesh(m_pMesh);
+	screenspace_renderer->addDisplayMesh(m_CubeObj);
+
+	screenspace_renderer->display(mode);
+	sdkStopTimer(&graphicsTimer);
+	float displayTimer = sdkGetAverageTimerValue(&graphicsTimer);
 	glutSwapBuffers();
 	glutReportErrors();
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
@@ -598,6 +609,7 @@ void display()
 	glutSetWindowTitle(fps_string);
 	hapticFPS++;
 	if (hapticFPS >= 20){
+		sdkResetTimer(&graphicsTimer);
 		sdkResetTimer(&hapticTimer);
 		hapticFPS = 0;
 	}

@@ -292,6 +292,7 @@ void LYScreenspaceRenderer::_drawCollider()
 	glDisableVertexAttribArray(3);
 
 }
+
 void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 {
 	glEnableVertexAttribArray(0);
@@ -316,7 +317,97 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 	glDisableVertexAttribArray(3);
 }
 
-void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTICLE_POINTS */)
+void LYScreenspaceRenderer::_drawTriangles(LYMesh *m_mesh)
+{
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+
+	int vbo = m_mesh->getVBO();
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	int ib = m_mesh->getIB();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+
+	size_t numIndices = m_mesh->getNumIndices();
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+}
+
+void LYScreenspaceRenderer::displayTriangleMesh(LYMesh *m_mesh, DisplayMode mode = DISPLAY_TOTAL)
+{
+	_setTextures();
+	_bindFBO(m_FBO);
+
+	//Draw Particles
+	glEnable(GL_POINT_SPRITE_ARB);
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+
+	depthShader->useShader();
+	glm::mat4 modelMatrix = glm::mat4();
+	glm::mat4 modelViewMatrix = glm::mat4();
+	glm::mat4 inverse_transposed = glm::mat4();
+
+	modelMatrix =  m_mesh->getModelMatrix();
+	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
+	inverse_transposed = glm::inverse(modelViewMatrix);
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+
+	_drawTriangles(m_mesh);
+
+	glDisable(GL_POINT_SPRITE_ARB);
+
+	glDisable(GL_DEPTH_TEST);
+}
+
+void LYScreenspaceRenderer::displayPointMesh(LYMesh *m_mesh, DisplayMode mode = DISPLAY_TOTAL)
+{
+	_setTextures();
+	_bindFBO(m_FBO);
+
+	//Draw Particles
+	glEnable(GL_POINT_SPRITE_ARB);
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+
+	depthShader->useShader();
+	glm::mat4 modelMatrix = glm::mat4();
+	glm::mat4 modelViewMatrix = glm::mat4();
+	glm::mat4 inverse_transposed = glm::mat4();
+
+	modelMatrix =  m_mesh->getModelMatrix();
+	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
+	inverse_transposed = glm::inverse(modelViewMatrix);
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
+	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+
+	_drawPoints(m_mesh);
+
+	glDisable(GL_POINT_SPRITE_ARB);
+
+	glDisable(GL_DEPTH_TEST);
+}
+
+void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode  = DISPLAY_TOTAL)
 {
 	//Render Attributes to Texture
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -464,34 +555,35 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode /* = PARTIC
 
 void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
 {
-	std::ofstream outFile;
-	outFile.open((outputFilename+".pdb").c_str());
-	std::vector<LYVertex> *vertices = m_mesh->getVertices();
-	for(unsigned int i=0; i< vertices->size(); i++)
+/************************************************************************/
+/* Change function to work with a LYMesh* vector!
+/************************************************************************/
+	for(std::vector<LYMesh*>::iterator it = m_objects.begin(); it != m_objects.end(); ++it)
 	{
-		float localSCP[3] = {vertices->at(i).m_pos.x, vertices->at(i).m_pos.y, vertices->at(i).m_pos.z}; //get centre values of points
+		std::ofstream outFile;
+		outFile.open((outputFilename+".pdb").c_str());
+		std::vector<LYVertex> vertices = it->getVertices();
+		for(unsigned int i=0; i< vertices->size(); i++)
+		{
+			float localSCP[3] = {vertices->at(i).m_pos.x, vertices->at(i).m_pos.y, vertices->at(i).m_pos.z}; //get centre values of points
 
-		outFile << "ATOM "<<std::setw(6)<<i+1<<" O   HOH     1    ";
-		outFile << std::setw(8);
-		outFile << std::setprecision(3);
-		outFile.setf(std::ios::fixed);
-		outFile <<std::setw(8)<<std::setprecision(3)<<localSCP[0]<<std::setw(8)<<std::setprecision(3)<<localSCP[1]<<std::setw(8)<<std::setprecision(3)<<localSCP[2];
-		outFile << "  1.00 67.53           O  "<<std::endl;
+			outFile << "ATOM "<<std::setw(6)<<i+1<<" O   HOH     1    ";
+			outFile << std::setw(8);
+			outFile << std::setprecision(3);
+			outFile.setf(std::ios::fixed);
+			outFile <<std::setw(8)<<std::setprecision(3)<<localSCP[0]<<std::setw(8)<<std::setprecision(3)<<localSCP[1]<<std::setw(8)<<std::setprecision(3)<<localSCP[2];
+			outFile << "  1.00 67.53           O  "<<std::endl;
 
+		}
+		outFile << "END                                                                             " << std::endl;
+		outFile.close();
 	}
-	outFile << "END                                                                             " << std::endl;
-	outFile.close();
 
 }
 
 void LYScreenspaceRenderer::setPointRadius( float r )
 {
 	m_pointRadius = r;
-}
-
-void LYScreenspaceRenderer::setMesh( LYMesh *m )
-{
-	m_mesh = m;
 }
 
 void LYScreenspaceRenderer::setCamera( LYCamera *c )

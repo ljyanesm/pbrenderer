@@ -43,11 +43,23 @@ public:
 		DISPLAY_TOTAL = 11,
 		NUM_DISPLAY_MODES
 	};
+
+	enum RenderMode {
+		POINTS = 0,
+		TRIANGLES = 1,
+		NUM_RENDER_MODES
+	};
 	LYScreenspaceRenderer(LYCamera *c);
 	LYScreenspaceRenderer(void);
 	~LYScreenspaceRenderer(void);
 
-	void display(LYMesh *mesh, DisplayMode mode = DISPLAY_TOTAL);
+	void addDisplayMesh(LYMesh *mesh)
+	{
+		m_objects.push_back(mesh);
+	}
+	void displayTriangleMesh(LYMesh *mesh, DisplayMode mode);
+	void displayPointMesh(LYMesh *mesh, DisplayMode mode);
+	void display(LYMesh *mesh, DisplayMode mode);
 
 	void setCamera(LYCamera *c);
 	void setMesh(LYMesh *m);
@@ -64,6 +76,7 @@ protected:
 	void _setTextures();
 	void _bindFBO(GLuint FBO);
 	void _drawPoints(LYMesh *mesh);
+	void _drawTriangles(LYMesh *mesh);
 	void _drawCollider();
 	void _initShaders();
 
@@ -74,8 +87,8 @@ private:
 	LYshader	*diffuseShader;		//Diffuse and specular? lighting from normals.
 	LYshader	*totalShader;		//Combination of the previous passes.
 
-	const LYCamera	*m_camera;
-	LYMesh			*m_mesh;
+	const LYCamera*			m_camera;
+	std::vector<LYMesh*>	m_objects;
 
 	int			m_pointDiv;
 
