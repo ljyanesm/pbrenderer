@@ -234,6 +234,7 @@ void initGL(int *argc, char **argv){
 
 
 	m_CubeObj = m_plyLoader->getInstance().readFile("cube.ply");
+	m_CubeObj->setRenderMode(true);
 	regularShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 
 	glutReportErrors();

@@ -152,6 +152,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;./project libraries\glew-1.9.0\lib;C:\Projects\pbrenderer\pbrenderer\project libraries\config4cpp\lib;.\project libraries\config4cpp\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
     <CudaCompile>
       <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
@@ -177,6 +178,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x64;.\project libraries\x64;.\project libraries\config4cpp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut64.lib;glew64.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
     <CudaCompile>
       <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
