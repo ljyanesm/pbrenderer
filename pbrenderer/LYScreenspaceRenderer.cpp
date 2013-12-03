@@ -407,7 +407,7 @@ void LYScreenspaceRenderer::displayPointMesh(LYMesh *m_mesh, DisplayMode mode = 
 	glDisable(GL_DEPTH_TEST);
 }
 
-void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode  = DISPLAY_TOTAL)
+void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 {
 	//Render Attributes to Texture
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -429,16 +429,20 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode  = DISPLAY_
 	glm::mat4 modelViewMatrix = glm::mat4();
 	glm::mat4 inverse_transposed = glm::mat4();
 
-	modelMatrix =  m_mesh->getModelMatrix();
-	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
-	inverse_transposed = glm::inverse(modelViewMatrix);
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
-	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+	for (std::vector<LYMesh*>::iterator it = m_objects.begin(); it != m_objects.end(); ++it)
+	{
+		LYMesh* mesh = (*it);
+		modelMatrix =  mesh->getModelMatrix();
+		modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
+		inverse_transposed = glm::inverse(modelViewMatrix);
+		glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
+		glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
+		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
+		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
-	_drawPoints(m_mesh);
+		(mesh->getRenderPoints()) ? _drawPoints(mesh) : _drawTriangles(mesh);
+	}
 
 	modelMatrix = m_collider->getHIPMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
@@ -550,7 +554,7 @@ void LYScreenspaceRenderer::display(LYMesh *m_mesh, DisplayMode mode  = DISPLAY_
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
-
+	m_objects.clear();
 }
 
 void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
@@ -562,7 +566,7 @@ void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
 	{
 		std::ofstream outFile;
 		outFile.open((outputFilename+".pdb").c_str());
-		std::vector<LYVertex> vertices = it->getVertices();
+		std::vector<LYVertex> *vertices = (*it)->getVertices();
 		for(unsigned int i=0; i< vertices->size(); i++)
 		{
 			float localSCP[3] = {vertices->at(i).m_pos.x, vertices->at(i).m_pos.y, vertices->at(i).m_pos.z}; //get centre values of points

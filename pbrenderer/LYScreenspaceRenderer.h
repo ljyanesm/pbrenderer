@@ -59,7 +59,7 @@ public:
 	}
 	void displayTriangleMesh(LYMesh *mesh, DisplayMode mode);
 	void displayPointMesh(LYMesh *mesh, DisplayMode mode);
-	void display(LYMesh *mesh, DisplayMode mode);
+	void display(DisplayMode mode);
 
 	void setCamera(LYCamera *c);
 	void setMesh(LYMesh *m);

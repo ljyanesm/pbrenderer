@@ -37,7 +37,7 @@ public:
 	GLuint		getIB() { return IB; }
 	size_t		getNumIndices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
 	size_t		getNumVertices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
-	bool		getRenderPoints(){ m_points; }
+	bool		getRenderPoints(){ return m_points; }
 	std::vector<LYVertex> *getVertices() { return &m_Vertices; }
 	void setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
 	void setRenderMode(bool points){ m_points = points; }
