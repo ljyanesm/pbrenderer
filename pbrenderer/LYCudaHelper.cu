@@ -71,3 +71,12 @@ void LYCudaHelper::getMappedPointer(void **device, void *host, uint flag)
 {
 	checkCudaErrors(cudaHostGetDevicePointer(device, host, flag));
 }
+
+void LYCudaHelper::printMemInfo()
+{
+	size_t gpuFreeMem, gpuTotalMem;
+	checkCudaErrors(cudaMemGetInfo(&gpuFreeMem, &gpuTotalMem));
+	gpuFreeMem /= 1024*1024;
+	gpuTotalMem /= 1024*1024;
+	printf("Total amount of MB available: %Iu MB \nTotal amount of device memory: %Iu MB\n", gpuFreeMem, gpuTotalMem);
+}

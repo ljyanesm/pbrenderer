@@ -191,7 +191,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
     if (index >= numVertices) return;
 
     // read particle data from sorted arrays
- 	int3 gridPos = calcGridPos(make_float3(pos.x, pos.y, pos.z));
+ 	//int3 gridPos = calcGridPos(make_float3(pos.x, pos.y, pos.z));
 	LYVertex pos2 = FETCH(oldPos, index);
 	float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
 
@@ -216,24 +216,6 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	else {
 		return;
 	}
-
-	//TODO:	Calculate the real size of the neighborhood using the different 
-	//		functions for neighbor calculation [square, sphere, point]
-
-//int maskSize = 2;
-//   for (int z=-maskSize; z<=maskSize; z++)
-//   {
-//       for (int y=-maskSize; y<=maskSize; y++)
-//       {
-//           for (int x=-maskSize; x<=maskSize; x++)
-//           {
-//               int3 neighbourPos;
-//			neighbourPos = gridPos + make_int3(x,y,z);
-//			force = _collideCell(neighbourPos, index, pos, oldPos, cellStart, cellEnd, &Ax, &Nx);
-//               total_force += force;
-//           }
-//       }
-//   }
 
 	atomicAdd(&dev_params->Ax.x, Ax.x);
 	atomicAdd(&dev_params->Ax.y, Ax.y);

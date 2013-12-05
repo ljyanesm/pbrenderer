@@ -221,7 +221,9 @@ void initGL(int *argc, char **argv){
 	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(256, 256, 256));
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
-		haptic_interface = new LYKeyboardDevice(space_handler);
+		haptic_interface = new LYKeyboardDevice(space_handler, 
+		m_plyLoader->getInstance().readFile("proxy.ply"), 
+		m_plyLoader->getInstance().readFile("hip.ply"));
 	
 	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) 
 		haptic_interface = new LYHapticDevice(space_handler, 
@@ -513,6 +515,7 @@ void special(int k, int x, int y)
 
 void cleanup()
 {
+	printf("Cleaning up!\n");
 	sdkDeleteTimer(&graphicsTimer);
 	sdkDeleteTimer(&hapticTimer);
 	delete m_plyLoader;

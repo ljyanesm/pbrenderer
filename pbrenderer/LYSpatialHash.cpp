@@ -43,8 +43,13 @@ m_gridSize(gridSize)
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 	
-	printf("This class requires: %d bytes\n", m_numVertices*sizeof(LYVertex) + m_numVertices*sizeof(uint)*2 + m_numGridCells*sizeof(uint)*2);
+	size_t classSize = m_numVertices*sizeof(LYVertex) + m_numVertices*sizeof(uint)*2 + m_numGridCells*sizeof(uint)*2;
+	(classSize > 1024*1024) ? 
+		printf("This mesh requires: %d MB\n", classSize / (1024*1024)) :
+	(classSize > 1024) ? printf("This mesh requires: %d Kb\n", classSize / (1024)):
+		printf("This mesh requires: %d Bytes\n", classSize);
 
+	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
 
 	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
@@ -54,6 +59,7 @@ m_gridSize(gridSize)
 	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_dForceFeedback, sizeof(float3));
 	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
+	LYCudaHelper::printMemInfo();
 
 	cudaDeviceSynchronize();
 	m_dirtyPos = true;
@@ -65,7 +71,7 @@ LYSpatialHash::~LYSpatialHash(void)
 	delete m_hCellEnd;
 	delete m_hCellStart;
 	delete m_forceFeedback;
-	delete m_hParams;
+	delete m_hParams;	
 
 	LYCudaHelper::freeArray(m_sorted_points);
 	std::cout << "m_sorted_points" << std::endl;
@@ -73,12 +79,12 @@ LYSpatialHash::~LYSpatialHash(void)
 	std::cout << "m_pointHash" << std::endl;
 	LYCudaHelper::freeArray(m_pointGridIndex);
 	std::cout << "m_pointGridIndex" << std::endl;
-	LYCudaHelper::freeArray(m_cellStart);
-	std::cout << "m_cellStart" << std::endl;
 	LYCudaHelper::freeArray(m_cellEnd);
 	std::cout << "m_cellEnd" << std::endl;
-	LYCudaHelper::freeArray(m_forceFeedback);
-	std::cout << "m_forceFeedback" << std::endl;
+	LYCudaHelper::freeArray(m_cellStart);
+	std::cout << "m_cellStart" << std::endl;
+	LYCudaHelper::freeArray(m_dForceFeedback);
+	std::cout << "m_dForceFeedback" << std::endl;
 	LYCudaHelper::freeArray(m_dParams);
 	std::cout << "m_dParams" << std::endl;
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
@@ -203,7 +209,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 			Psurface = Pseed;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx;
-			float3 f = (Psurface - colliderPos)*0.000001*pow(1./this->m_hParams->R, 5);
+			float3 f = (Psurface - colliderPos);
 			return f;
 		} else {
 			pos->m_normal = colliderPos;
@@ -227,7 +233,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 			Psurface = Ax;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx;
-			float3 f = (Psurface - colliderPos)*0.0000001*pow(1./this->m_hParams->R, 5);
+			float3 f = (Psurface - colliderPos);
 			return f;
 		} else {
 			touched = false;

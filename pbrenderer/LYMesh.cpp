@@ -8,8 +8,11 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
 {
     this->numVertices = NumIndices = Indices.size();
 	m_Vertices = Vertices;
-
-	printf("This mesh requeres: %d bytes\n", sizeof(LYVertex) * Vertices.size() + sizeof(unsigned int) * NumIndices);
+	size_t classSize = sizeof(LYVertex) * Vertices.size() + sizeof(unsigned int) * NumIndices;
+	(classSize > 1024*1024) ? 
+		printf("This mesh requires: %d MB\n", classSize / (1024*1024)) :
+		(classSize > 1024) ? printf("This mesh requires: %d Kb\n", classSize / (1024)):
+							 printf("This mesh requires: %d Bytes\n", classSize);
     glGenBuffers(1, &VB);
   	glBindBuffer(GL_ARRAY_BUFFER, VB);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * Vertices.size(), &Vertices[0], GL_STATIC_DRAW);

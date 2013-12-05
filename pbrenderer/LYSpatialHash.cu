@@ -120,7 +120,7 @@ extern "C" {
 
         // thread per particle
         uint numThreads, numBlocks;
-        computeGridSize(numVertices, 640, numBlocks, numThreads);
+        computeGridSize(numVertices, 256, numBlocks, numThreads);
 
 		// execute the kernel
         _collisionCheckD<<< numBlocks, numThreads >>>(pos,

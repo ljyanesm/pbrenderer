@@ -26,4 +26,5 @@ namespace LYCudaHelper
 	void registerGLBufferObject(uint vbo, struct cudaGraphicsResource **cuda_vbo_resource);
 	void unregisterGLBufferObject(struct cudaGraphicsResource *cuda_vbo_resource);
 	void getMappedPointer(void **device, void *host, uint flag = 0);
+	void printMemInfo();
 }
