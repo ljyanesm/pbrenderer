@@ -1,7 +1,7 @@
 #include "LYKeyboardDevice.h"
 
 
-LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh)
+LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh)
 {
 	m_spaceHandler = sh;
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
@@ -9,16 +9,34 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh)
 	m_speed =		0.01f;
 	m_size	=		0.03f;
 
+	m_workspaceScale	= make_float3(0.3f);
+	m_relativePosition	= make_float3(0.0f);
+
+	m_ProxyObject	= proxyMesh;
+	m_HIPObject		= hipMesh;
+
+	m_HIPMatrix = glm::mat4();
+	m_ProxyMatrix = glm::mat4();
+	m_CameraMatrix = glm::mat4();
+
+	LYVertex proxy;
+	proxy.m_pos = m_collider.m_normal;
+
 	std::vector<LYVertex> Vertices;
 	std::vector<unsigned int> Indices;
-	LYVertex v(make_float3(0.0, 0.0, 0.0),
+	LYVertex hip(make_float3(0.0, 0.0, 0.0),
 		make_float2(0.0, 0.0),
 		make_float3(0.0, 0.0, 0.0),
-		make_float3(255, 255, 255),
+		make_float3(0, 0, 0),
+		int(0));
+	LYVertex p(make_float3(0.0, 0.0, 0.0),
+		make_float2(0.0, 0.0),
+		make_float3(0.0, 0.0, 0.0),
+		make_float3(255, 0, 0),
 		int(1));
 
-	Vertices.push_back(v);
-	Vertices.push_back(v);
+	Vertices.push_back(hip);
+	Vertices.push_back(p);
 
 	Indices.push_back(0);
 	Indices.push_back(1);
@@ -58,6 +76,7 @@ void LYKeyboardDevice::setPosition(float3 pos) {
 	// Graphics only
 	glm::mat4 finalTransformation = glm::translate(this->m_CameraMatrix, p);
 	m_HIPMatrix = finalTransformation;
+	p = glm::vec3(finalTransformation * glm::vec4(glm::vec3(0,0,0),1.0));
 	finalTransformation = glm::translate(this->m_CameraMatrix, glm::vec3(m_collider.m_normal.x, m_collider.m_normal.y, m_collider.m_normal.z));
 	m_ProxyMatrix = finalTransformation;
 }
