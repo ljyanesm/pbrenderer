@@ -16,7 +16,7 @@ private:
 	LYSpaceHandler *m_spaceHandler;
 	bool COLLISION_FORCEFEEDBACK;
 public:
-	LYKeyboardDevice(LYSpaceHandler *sh);
+	LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh);
 	~LYKeyboardDevice(void);
 
 	void pause() 
