@@ -122,7 +122,7 @@ void	LYSpatialHash::update()
 	m_hParams->Nx = make_float3(0.0f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (m_dirtyPos) {
+	if (true || m_dirtyPos) {
 		dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
