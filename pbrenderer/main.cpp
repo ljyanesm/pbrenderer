@@ -218,7 +218,7 @@ void initGL(int *argc, char **argv){
 
 	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
 	global_point_scale = m_pMesh->getScale();
-	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(256, 256, 256));
+	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 

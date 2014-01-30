@@ -184,6 +184,50 @@ float3 _collideCell(int3    gridPos,
 }
 
 __global__
+void _collisionCheck_cellsD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numCells)
+
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	if (index >= numCells) return;
+	int start = cellStart[index];
+	int end   = cellEnd  [index];
+	for (int i = start; i < end; i++)
+	{
+		LYVertex pos2 = FETCH(oldPos, index);
+		float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
+
+		float3 force = make_float3(0.0f, 0.0f, 0.0f);
+
+		float3 Ax = make_float3(0.0f);
+		float3 Nx = make_float3(0.0f);
+
+		float3 npos;
+		float w = 0.0f;
+		npos = pos2.m_pos - pos;
+		float dist = length(npos);
+		float R = params.R;
+
+		if (dist < R)
+		{
+			w= KernelQuintic(dist,R);
+			Ax += w * pos2.m_pos;
+			float3 Ntmp = w * pos2.m_normal;
+			Nx += Ntmp;
+		}
+		else {
+			return;
+		}
+
+		atomicAdd(&dev_params->Ax.x, Ax.x);
+		atomicAdd(&dev_params->Ax.y, Ax.y);
+		atomicAdd(&dev_params->Ax.z, Ax.z);
+		atomicAdd(&dev_params->Nx.x, Nx.x);
+		atomicAdd(&dev_params->Nx.y, Nx.y);
+		atomicAdd(&dev_params->Nx.z, Nx.z);
+		atomicAdd(&dev_params->w_tot, w);
+	}
+}
+__global__
 void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
