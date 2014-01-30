@@ -64,6 +64,9 @@ LYHapticDevice::~LYHapticDevice(void)
 	delete pState;
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ib);
+	hdStopScheduler();
+	hdUnschedule(hUpdateDeviceCallback);
+	hdDisableDevice(ghHD);
 }
 
 float3 LYHapticDevice::getPosition() const{
@@ -234,8 +237,7 @@ HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData)
 HDCallbackCode HDCALLBACK touchMesh(void *pUserData)
 {
 	LYHapticDevice* haptic = (LYHapticDevice*) pUserData;
-	bool enabled = haptic->isEnabled();
-	if(enabled) haptic->touchTool();
+	haptic->touchTool();
 
 	return HD_CALLBACK_CONTINUE;
 }
