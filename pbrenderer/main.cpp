@@ -117,8 +117,8 @@ const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 ///////////////////////////////////////////////////////
 
 
-float global_point_scale = 0.01;
-float local_point_scale = 0.01;
+float global_point_scale = 0.01f;
+float local_point_scale = 0.01f;
 
 float3 devPosition;
 int loadedModel = 0;
@@ -382,7 +382,7 @@ void key(unsigned char key, int x, int y)
 				break;	// Exit the loop
 			}
 			catch (int e){
-				printf("The object %d - %s could not be loaded, loading next model...\n", loadedModel, modelFile.c_str());
+				printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
 				loadedModel = loadedModel--%modelFiles.size();
 				modelFile = modelFiles.at(loadedModel).string();
 			}
@@ -406,7 +406,7 @@ void key(unsigned char key, int x, int y)
 				break;
 			}
 			catch (int e){
-				printf("The object %d - %s could not be loaded, loading next model...\n", loadedModel, modelFile.c_str());
+				printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
 				loadedModel = ++loadedModel%modelFiles.size();
 				modelFile = modelFiles.at(loadedModel).string();
 			}
@@ -493,16 +493,16 @@ void key(unsigned char key, int x, int y)
 		std::cout << "Influence Radius: " << influenceRadius << std::endl;
 		break;
 	case ':':
-		global_point_scale += 0.01;
+		global_point_scale += 0.01f;
 		break;
 	case '@':
-		global_point_scale -= 0.01;
+		global_point_scale -= 0.01f;
 		break;
 	case ';':
-		local_point_scale += 0.1;
+		local_point_scale += 0.1f;
 		break;
 	case '\'':
-		local_point_scale -= 0.1;
+		local_point_scale -= 0.1f;
 		break;
 	}
 	devPosition += pos;
@@ -519,12 +519,12 @@ void cleanup()
 	sdkDeleteTimer(&graphicsTimer);
 	sdkDeleteTimer(&hapticTimer);
 	delete m_plyLoader;
+	delete haptic_interface;
+	delete haptics;
 	delete screenspace_renderer;
 	delete space_handler;
 	delete m_pMesh;
 	delete m_pCamera;
-	delete haptic_interface;
-	delete haptics;
 	fclose(performanceFile);
 }
 
