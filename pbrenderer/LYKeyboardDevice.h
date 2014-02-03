@@ -33,7 +33,11 @@ public:
 	void setRelativePosition(float3 pos) { m_relativePosition = pos; }
 	void setCameraMatrix(glm::mat4 t) { m_CameraMatrix = t; }
 	void pause(bool p) { bPause = p; }
-	bool toggleForces(bool p = true) { return false;}
+	bool toggleForces(bool p = true) 
+	{
+		COLLISION_FORCEFEEDBACK = p;
+		return COLLISION_FORCEFEEDBACK;
+	}
 
 	glm::mat4 getHIPMatrix() const { return m_HIPMatrix; }
 	glm::mat4 getProxyMatrix() const { return m_ProxyMatrix; }

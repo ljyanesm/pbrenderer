@@ -359,8 +359,7 @@ void key(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case ' ':
-		bPause = !bPause;
-		haptic_interface->toggleForces(bPause);
+		bPause = haptic_interface->toggleForces(!bPause);
 		break;
 	case 13:		// ENTER key
 
@@ -541,8 +540,7 @@ void display()
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
 	// update the simulation
-	haptic_interface->toggleForces(bPause);
-	if (!bPause)
+	if (bPause)
 	{
 		space_handler->update();
 		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
