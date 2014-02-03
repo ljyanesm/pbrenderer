@@ -37,6 +37,7 @@ typedef struct ALIGN(16) _SimParams
 
 	float dmin;
 	float w_tot;
+	float wn_tot;
 	float R;
 	float RMAX;
 	float RMIN;

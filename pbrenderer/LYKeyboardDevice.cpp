@@ -7,7 +7,7 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
 	m_collider =	LYVertex();
 	m_speed =		0.01f;
-	m_size	=		0.03f;
+	m_size	=		0.003f;
 
 	m_workspaceScale	= make_float3(0.3f);
 	m_relativePosition	= make_float3(0.0f);

@@ -100,6 +100,7 @@ void	LYSpatialHash::setVBO(uint vbo)
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&m_vboRes, vbo, cudaGraphicsMapFlagsWriteDiscard));
 
 }
+
 void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
 {
 
@@ -114,16 +115,14 @@ void LYSpatialHash::setInfluenceRadius(float r){
 
 void	LYSpatialHash::update()
 {
-	LYVertex *dPos;
-
 	// update constants
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (true || m_dirtyPos) {
-		dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+	if (false || m_dirtyPos) {
+		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
 			m_pointHash,
@@ -151,27 +150,6 @@ void	LYSpatialHash::update()
 	}
 }
 
-void LYSpatialHash::dump()
-{
-	// dump grid information
-	LYCudaHelper::copyArrayFromDevice(m_hCellStart, m_cellStart, 0, sizeof(uint)*m_numGridCells);
-	LYCudaHelper::copyArrayFromDevice(m_hCellEnd, m_cellEnd, 0, sizeof(uint)*m_numGridCells);
-	uint maxCellSize = 0;
-
-	for (uint i=0; i<m_numGridCells; i++)
-	{
-		if (m_hCellStart[i] != 0xffffffff)
-		{
-			uint cellSize = m_hCellEnd[i] - m_hCellStart[i];
-
-			if (cellSize > maxCellSize)
-			{
-				maxCellSize = cellSize;
-			}
-		}
-	}
-	printf("maximum particles per cell = %d\n", maxCellSize);
-}
 
 void LYSpatialHash::calculateCollisions( float3 pos )
 {
@@ -179,9 +157,14 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+	
+	
 	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
+
+
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }
+
 
 float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 {
@@ -219,17 +202,18 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 		float dist = dot(colliderPos - Psurface, tgPlaneNormal);
 		if (dist <= 0)
 		{
-			float3 P0p = colliderPos - Psurface;
-			float dist = dot(P0p, tgPlaneNormal);
-			P0p = colliderPos - dist*tgPlaneNormal;
-			Pseed = P0p;
+			Pseed = colliderPos - dist*tgPlaneNormal;
 			do{
 				calculateCollisions(Pseed);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
-				Nx = m_hParams->Nx/length(m_hParams->Nx);
-				dP = - (Ax*Nx)/(Nx*Nx);
-				Pseed += dP;
-			} while (length(dP) < 0.001);
+				Nx = m_hParams->Nx/m_hParams->wn_tot;
+				float dNx = length(Nx);
+				dP.x = -Ax.x * Nx.x;
+				dP.y = -Ax.y * Nx.y;
+				dP.z = -Ax.z * Nx.z;
+				dP = dP/dNx;
+				Pseed += dP*0.1f;
+			} while (length(dP) > 0.001);
 			Psurface = Ax;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx;
@@ -242,4 +226,26 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 	}
 
 	return make_float3(0.0f);
+}
+
+void LYSpatialHash::dump()
+{
+	// dump grid information
+	LYCudaHelper::copyArrayFromDevice(m_hCellStart, m_cellStart, 0, sizeof(uint)*m_numGridCells);
+	LYCudaHelper::copyArrayFromDevice(m_hCellEnd, m_cellEnd, 0, sizeof(uint)*m_numGridCells);
+	uint maxCellSize = 0;
+
+	for (uint i=0; i<m_numGridCells; i++)
+	{
+		if (m_hCellStart[i] != 0xffffffff)
+		{
+			uint cellSize = m_hCellEnd[i] - m_hCellStart[i];
+
+			if (cellSize > maxCellSize)
+			{
+				maxCellSize = cellSize;
+			}
+		}
+	}
+	printf("maximum particles per cell = %d\n", maxCellSize);
 }

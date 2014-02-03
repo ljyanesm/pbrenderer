@@ -246,16 +246,17 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 
 	float3 npos;
 	float w = 0.0f;
+	float wn = 0.0f;
 	npos = pos2.m_pos - pos;
 	float dist = length(npos);
 	float R = params.R;
 
 	if (dist < R)
 	{
-		w= KernelQuintic(dist,R);
+		w = KernelQuintic(dist,R);
 		Ax += w * pos2.m_pos;
-		float3 Ntmp = w * pos2.m_normal;
-		Nx += Ntmp;
+		Nx += w * pos2.m_normal;
+		wn = length(Nx);
 	}
 	else {
 		return;
@@ -268,4 +269,5 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	atomicAdd(&dev_params->Nx.y, Nx.y);
 	atomicAdd(&dev_params->Nx.z, Nx.z);
 	atomicAdd(&dev_params->w_tot, w);
+	atomicAdd(&dev_params->wn_tot, wn);
 }
