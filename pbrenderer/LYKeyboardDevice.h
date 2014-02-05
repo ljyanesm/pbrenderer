@@ -32,6 +32,10 @@ public:
 	void setWorkspaceScale(float3 dim) { m_workspaceScale = dim; }
 	void setRelativePosition(float3 pos) { m_relativePosition = pos; }
 	void setCameraMatrix(glm::mat4 t) { m_CameraMatrix = t; }
+
+	void setSpeed(float s) { m_speed = s;}
+
+
 	void pause(bool p) { bPause = p; }
 	bool toggleForces(bool p = true) 
 	{

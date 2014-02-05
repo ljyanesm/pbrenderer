@@ -59,6 +59,9 @@ public:
 	glm::mat4 getProxyMatrix() const { return m_ProxyMatrix; }
 	float3 getPosition() const;
 	float getSpeed() const;
+
+	void setSpeed(float s) { m_speed = s;}
+
 	float getSize() const;	
 	LYDEVICE_TYPE getDeviceType() const { return m_deviceType; }
 	uint getVBO()	const;

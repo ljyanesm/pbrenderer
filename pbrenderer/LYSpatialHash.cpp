@@ -206,15 +206,18 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 			do{
 				calculateCollisions(Pseed);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
-				Nx = m_hParams->Nx/m_hParams->wn_tot;
+				Nx = m_hParams->Nx;
 				float dNx = length(Nx);
-				dP.x = -Ax.x * Nx.x;
-				dP.y = -Ax.y * Nx.y;
-				dP.z = -Ax.z * Nx.z;
-				dP = dP/dNx;
-				Pseed += dP*0.1f;
+				Nx /= dNx;
+				Fx = dot(Nx, Pseed - Ax);
+				dP.x = -Fx * Nx.x;
+				dP.y = -Fx * Nx.y;
+				dP.z = -Fx * Nx.z;
+				dP = dP/ fmaxf(dNx, 0.1f);
+				dP *= 0.01f;
+				Pseed += dP;
 			} while (length(dP) > 0.001);
-			Psurface = Ax;
+			Psurface = Pseed;
 			pos->m_normal = Psurface;
 			tgPlaneNormal = Nx;
 			float3 f = (Psurface - colliderPos);
