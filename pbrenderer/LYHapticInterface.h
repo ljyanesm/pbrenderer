@@ -26,6 +26,7 @@ public:
 	virtual void start() = 0;
 	virtual bool toggleForces(bool p = true) = 0;
 	virtual void	setTimer(StopWatchInterface *timer) = 0;
+	virtual void setSpeed(float speed) = 0;
 
 
 	virtual glm::mat4 getHIPMatrix() const = 0;

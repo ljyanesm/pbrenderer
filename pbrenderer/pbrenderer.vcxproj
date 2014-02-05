@@ -186,6 +186,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="LYCamera.cpp" />
     <ClCompile Include="LYKeyboardDevice.cpp" />
     <ClCompile Include="LYOctree.cpp" />
@@ -201,6 +202,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="defines.h" />
+    <ClInclude Include="IOManager.h" />
     <ClInclude Include="LYHapticState.h" />
     <ClInclude Include="LYCamera.h" />
     <ClInclude Include="LYHapticInterface.h" />

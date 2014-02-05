@@ -234,9 +234,6 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer->setPointRadius(pointRadius);
 	haptic_interface->setTimer(hapticTimer);
 
-
-	m_CubeObj = m_plyLoader->getInstance().readFile("cube.ply");
-	m_CubeObj->setRenderMode(true);
 	regularShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 
 	glutReportErrors();
@@ -460,7 +457,13 @@ void key(unsigned char key, int x, int y)
 	case 'c':
 		pos.z -= haptic_interface->getSpeed();
 		break;
-
+	case 'W':
+		// Move collider up
+		haptic_interface->setSpeed(haptic_interface->getSpeed()*1.1f);
+		break;
+	case 'S':
+		haptic_interface->setSpeed(haptic_interface->getSpeed()*0.9f);
+		break;
 	case '+':
 		pointRadius += 0.001f;
 		screenspace_renderer->setPointRadius(pointRadius);
@@ -593,7 +596,6 @@ void display()
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	screenspace_renderer->addDisplayMesh(m_pMesh);
-	screenspace_renderer->addDisplayMesh(m_CubeObj);
 
 	screenspace_renderer->display(mode);
 	sdkStopTimer(&graphicsTimer);

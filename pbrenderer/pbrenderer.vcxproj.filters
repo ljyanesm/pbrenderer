@@ -91,6 +91,9 @@
     <ClCompile Include="rply.c">
       <Filter>File Loaders</Filter>
     </ClCompile>
+    <ClCompile Include="IOManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LYWorld.h">
@@ -143,6 +146,9 @@
     </ClInclude>
     <ClInclude Include="LYPLYLoader.h">
       <Filter>File Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="IOManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
