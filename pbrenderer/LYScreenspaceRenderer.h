@@ -81,11 +81,11 @@ protected:
 	void _initShaders();
 
 private:
-	LYshader	*depthShader;		//Point sprites shader to depth and color render targets.
-	LYshader	*blurDepthShader;	//Point sprites shader to depth and color render targets.
-	LYshader	*normalShader;		//Normals from image space depth and positions.
-	LYshader	*diffuseShader;		//Diffuse and specular? lighting from normals.
-	LYshader	*totalShader;		//Combination of the previous passes.
+	LYShader	*depthShader;		//Point sprites shader to depth and color render targets.
+	LYShader	*blurDepthShader;	//Point sprites shader to depth and color render targets.
+	LYShader	*normalShader;		//Normals from image space depth and positions.
+	LYShader	*diffuseShader;		//Diffuse and specular? lighting from normals.
+	LYShader	*totalShader;		//Combination of the previous passes.
 
 	const LYCamera*			m_camera;
 	std::vector<LYMesh*>	m_objects;

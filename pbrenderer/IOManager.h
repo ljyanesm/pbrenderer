@@ -14,10 +14,12 @@ class IOManager
 
 	LYHapticInterface *_device;	// This will not be modifiable just to be read from
 
-
 public:
 	IOManager(void);
-	IOManager(LYHapticInterface *_d, float4 wsDim, float4 wsWD) {};
+	IOManager(LYHapticInterface *_d, float4 wsDim, float4 wsWD);
 	~IOManager(void);
+
+	float4 getSurfacePosition() { return surfacePosition; }
+	float4 getSurfaceNormal() { return surfaceNormal; }
 };
 

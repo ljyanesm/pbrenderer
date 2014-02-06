@@ -94,6 +94,9 @@
     <ClCompile Include="IOManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="OverlayRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LYWorld.h">
@@ -150,6 +153,9 @@
     <ClInclude Include="IOManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OverlayRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\blur_pass.frag">
@@ -191,10 +197,10 @@
     <None Include="app.cfg">
       <Filter>Config Files</Filter>
     </None>
-    <None Include="regularShader.frag">
+    <None Include="Shaders\regularShader.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="regularShader.vs">
+    <None Include="Shaders\regularShader.vs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

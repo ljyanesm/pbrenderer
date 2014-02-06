@@ -74,10 +74,10 @@ LYScreenspaceRenderer::~LYScreenspaceRenderer(void)
 
 void LYScreenspaceRenderer::_initShaders() 
 {
-	depthShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
-	normalShader = new LYshader("./shaders/normal_pass.vs", "./shaders/normal_pass.frag", "Texcoord");
-	blurDepthShader = new LYshader("./shaders/blur_pass.vs", "./shaders/blur_pass.frag", "Texcoord");
-	totalShader = new LYshader("./shaders/shader.vs", "./shaders/shader.frag", "Texcoord");
+	depthShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
+	normalShader = new LYShader("./shaders/normal_pass.vs", "./shaders/normal_pass.frag", "Texcoord");
+	blurDepthShader = new LYShader("./shaders/blur_pass.vs", "./shaders/blur_pass.frag", "Texcoord");
+	totalShader = new LYShader("./shaders/shader.vs", "./shaders/shader.frag", "Texcoord");
 }
 
 void LYScreenspaceRenderer::_setTextures() {

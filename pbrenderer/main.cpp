@@ -32,6 +32,7 @@
 #include "LYWorld.h"
 #include "LYMesh.h"
 #include "LYCamera.h"
+#include "OverlayRenderer.h"
 #include "LYScreenspaceRenderer.h"
 #include "LYSpatialHash.h"
 #include "LYKeyboardDevice.h"
@@ -70,7 +71,7 @@ glm::mat4 modelViewMatrix;
 glm::mat4 p;
 
 LYMesh* m_CubeObj;
-LYshader* regularShader;
+LYShader* regularShader;
 
 LYWorld m_pWorld;
 // Information below this line has to move to LYWorld.
@@ -88,6 +89,7 @@ uint LYPLYLoader::nB = 0;
 ///////////////////////////////////////////////////////
 
 LYScreenspaceRenderer *screenspace_renderer;
+OverlayRenderer *overlay_renderer;
 LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
 LYCamera *m_pCamera;
@@ -214,7 +216,7 @@ void initGL(int *argc, char **argv){
 
 	m_pCamera = new LYCamera(width, height);
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
-
+	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
 	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
 	global_point_scale = m_pMesh->getScale();
@@ -234,7 +236,7 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer->setPointRadius(pointRadius);
 	haptic_interface->setTimer(hapticTimer);
 
-	regularShader = new LYshader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
+	regularShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 
 	glutReportErrors();
 }
@@ -598,6 +600,17 @@ void display()
 	screenspace_renderer->addDisplayMesh(m_pMesh);
 
 	screenspace_renderer->display(mode);
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	// Start displaying Workspace Box / Surface Tangent Plane
+	///////////////////////////////////////////////////////////////////////////////////////////
+	
+	overlay_renderer->display();
+	
+	/////////////////////////////////////////////////////////////////////////////////////////// 
+
+
+
 	sdkStopTimer(&graphicsTimer);
 	float displayTimer = sdkGetAverageTimerValue(&graphicsTimer);
 	glutSwapBuffers();
