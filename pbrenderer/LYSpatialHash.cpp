@@ -186,7 +186,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 
 		Fx = dot(Nx, colliderPos - Ax);
 
-		if (Fx < 0.0f && dot(colliderPos - Ax, Nx) < 0.0f){
+		if (Fx < 0.0f){
 			touched = true;
 			Pseed = Ax;
 			Psurface = Pseed;

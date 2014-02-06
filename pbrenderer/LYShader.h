@@ -8,14 +8,14 @@
 #include <iostream>
 #include <cstdarg>
 
-class LYshader{
+class LYShader{
 	unsigned int vs,fs,program;
 	void loadFile(const char* fn,std::string& str);
 	unsigned int loadShader(std::string& source,unsigned int mode);
 	public:
-		LYshader();
-		LYshader(const char* vss,const char* fss, const char *attribLoc);
-		~LYshader();
+		LYShader();
+		LYShader(const char* vss,const char* fss, const char *attribLoc);
+		~LYShader();
 		void useShader();
 		void delShader();
 		unsigned int getProgramId();

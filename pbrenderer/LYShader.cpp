@@ -1,6 +1,6 @@
 #include "LYShader.h"
 
-void LYshader::loadFile(const char* fn,std::string& str)
+void LYShader::loadFile(const char* fn,std::string& str)
 {
 	std::ifstream in(fn);
 	if(!in.is_open())
@@ -17,7 +17,7 @@ void LYshader::loadFile(const char* fn,std::string& str)
 	}
 }
 
-unsigned int LYshader::loadShader(std::string& source,unsigned int mode)
+unsigned int LYShader::loadShader(std::string& source,unsigned int mode)
 {
 	unsigned int id;
 	id=glCreateShader(mode);
@@ -32,7 +32,7 @@ unsigned int LYshader::loadShader(std::string& source,unsigned int mode)
 	return id;
 }
 
-LYshader::LYshader(const char* vss,const char* fss, const char *attribLoc)
+LYShader::LYShader(const char* vss,const char* fss, const char *attribLoc)
 {
 	std::string source;
 	loadFile(vss,source);
@@ -51,7 +51,7 @@ LYshader::LYshader(const char* vss,const char* fss, const char *attribLoc)
 	glLinkProgram(program);
 }
 
-LYshader::~LYshader()
+LYShader::~LYShader()
 {
 	glDetachShader(program,vs);
 	glDetachShader(program,fs);
@@ -60,18 +60,18 @@ LYshader::~LYshader()
 	glDeleteProgram(program);
 }
 
-void LYshader::useShader()
+void LYShader::useShader()
 {
 	glUseProgram(program);
 }
 
-unsigned int LYshader::getProgramId()
+unsigned int LYShader::getProgramId()
 {
 	return program;
 }
 
 
-void LYshader::delShader()
+void LYShader::delShader()
 {
 	glUseProgram(0);
 }
