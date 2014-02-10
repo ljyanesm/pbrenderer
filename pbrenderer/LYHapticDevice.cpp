@@ -20,7 +20,7 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 
 	m_HIPMatrix = glm::mat4();
 	m_ProxyMatrix = glm::mat4();
-	m_CameraMatrix = glm::mat4();
+	m_ViewMatrix = glm::mat4();
 
 	LYVertex proxy;
 	proxy.m_pos = m_collider.m_normal;
@@ -67,57 +67,6 @@ LYHapticDevice::~LYHapticDevice(void)
 	hdStopScheduler();
 	hdUnschedule(hUpdateDeviceCallback);
 	hdDisableDevice(ghHD);
-}
-
-float3 LYHapticDevice::getPosition() const{
-	return m_collider.m_pos;
-}
-
-// Position for display!!
-void LYHapticDevice::setPosition(float3 pos) {
-
-	// Haptics only
-	glm::mat4 inverseTransformation = glm::inverse(this->m_CameraMatrix);
-	glm::vec3 p = glm::vec3(inverseTransformation * glm::vec4(pos.x, pos.y, pos.z, 1));
-	m_collider.m_pos = make_float3(p.x, p.y, p.z);
-
-	// Graphics only
-	glm::mat4 finalTransformation = glm::translate(this->m_CameraMatrix, p);
-	m_HIPMatrix = finalTransformation;
-	p = glm::vec3(finalTransformation * glm::vec4(glm::vec3(0,0,0),1.0));
-	finalTransformation = glm::translate(this->m_CameraMatrix, glm::vec3(m_collider.m_normal.x, m_collider.m_normal.y, m_collider.m_normal.z));
-	m_ProxyMatrix = finalTransformation;
-}
-
-float3 LYHapticDevice::calculateFeedbackUpdateProxy()
-{
-	float3 force = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
-	return force;
-}
-
-float LYHapticDevice::getSpeed() const 
-{
-	return m_speed;
-}
-
-float LYHapticDevice::getSize() const 
-{
-	return m_size;
-}
-
-uint LYHapticDevice::getIB() const
-{
-	return ib;
-}
-
-uint LYHapticDevice::getVBO() const
-{
-	return vbo;
-}
-
-void LYHapticDevice::setForces(bool c)
-{
-	COLLISION_FORCEFEEDBACK = c;
 }
 
 void LYHapticDevice::loadDevices()
@@ -174,7 +123,7 @@ void LYHapticDevice::touchTool()
 		float3 tmpForce = this->calculateFeedbackUpdateProxy();
 
 		// Apply the current modelView rotation transformation (NO TRANSLATION) to the force vector
-		glm::mat4 noTranslationMat = this->m_CameraMatrix;
+		glm::mat4 noTranslationMat = this->m_ViewMatrix;
 		noTranslationMat[3][0] = 0; noTranslationMat[3][1] = 0; noTranslationMat[3][2] = 0; noTranslationMat[3][3] = 1;
 		glm::vec3 p = glm::vec3(noTranslationMat * glm::vec4(tmpForce.x, tmpForce.y, tmpForce.z,1));
 		tmpForce = make_float3(p.x, p.y, p.z);
@@ -197,27 +146,6 @@ void LYHapticDevice::touchTool()
 	}
 	hdEndFrame(ghHD);
 	sdkStopTimer(&m_timer);
-}
-
-bool LYHapticDevice::toggleForces(bool p)
-{
-	COLLISION_FORCEFEEDBACK = p;
-
-	return COLLISION_FORCEFEEDBACK;
-}
-
-void LYHapticDevice::setSpaceHandler( LYSpaceHandler *sh )
-{
-	m_spaceHandler = sh;
-	m_HIPMatrix = glm::mat4();
-	m_ProxyMatrix = glm::mat4();
-	m_CameraMatrix = glm::mat4();
-
-}
-
-void LYHapticDevice::setSize( float r )
-{
-	m_size = r;
 }
 
 /******************** OPEN HAPTICS CALBACK FUNCTIONS **************/

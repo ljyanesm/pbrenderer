@@ -34,7 +34,7 @@ void OverlayRenderer::display() const {
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"projection"),1,GL_FALSE, &m_camera->getProjection()[0][0]);
 
 		_drawTriangles(vectorObject);
-		_drawTriangles(surfaceObject);
+		//_drawTriangles(surfaceObject);
 	//	_drawTriangles(hapticWorkspaceObject);
 	normalShader->delShader();
 }

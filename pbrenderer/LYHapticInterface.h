@@ -15,40 +15,45 @@ public:
 		HAPTIC_DEVICE
 	}LYDEVICE_TYPE;
 
-	virtual void setPosition(float3 pos) = 0;
-	virtual void setSpaceHandler(LYSpaceHandler *sh) = 0;
-	virtual void setWorkspaceScale(float3 dim) = 0;
-	virtual void setCameraMatrix(glm::mat4 t) = 0;
-	virtual float3 calculateFeedbackUpdateProxy() = 0;
-	virtual void setSize(float) = 0;
-	virtual void setRelativePosition(float3 pos) = 0;
-	virtual void pause() = 0;
-	virtual void start() = 0;
-	virtual bool toggleForces(bool p = true) = 0;
-	virtual void	setTimer(StopWatchInterface *timer) = 0;
-	virtual void setSpeed(float speed) = 0;
+	virtual void	setPosition(float3 pos);
+	virtual void	setSpaceHandler( LYSpaceHandler *sh );
+	virtual void	setWorkspaceScale(float3 dim);
+	virtual void	setRelativePosition(float3 pos);
+	virtual void	setCameraMatrix(glm::mat4 t);
+	virtual void	setModelMatrix(glm::mat4 t);
+	virtual void setSize(float r);
+	virtual bool toggleForces(bool p = true);
+	virtual void	setTimer(StopWatchInterface *timer);
+	virtual void	setSpeed(float s);
+
+	float3	calculateFeedbackUpdateProxy();
+	virtual void pause();
+	virtual void start();
+	virtual void pause(bool p);
 
 
-	virtual glm::mat4 getHIPMatrix() const = 0;
-	virtual glm::mat4 getProxyMatrix() const = 0;
-	virtual float3 getPosition() const = 0;
-	virtual float getSpeed() const = 0;
-	virtual float getSize() const = 0;
-	virtual LYDEVICE_TYPE getDeviceType() const = 0;
-	virtual uint getVBO()	const = 0;
-	virtual uint getIB()	const	= 0;
+	virtual glm::mat4 getHIPMatrix() const;
+	virtual glm::mat4 getProxyMatrix() const;
+	virtual float3			getPosition() const;
+	virtual float getSpeed() const;
+	virtual float getSize()	const;
+	virtual LYDEVICE_TYPE getDeviceType() const;
+	virtual uint getVBO() const;
+	virtual uint getIB() const;
 
-	virtual LYMesh* getHIPObject() const = 0;
-	virtual LYMesh* getProxyObject() const = 0;
-	virtual uint getProxyVBO() const = 0;
-	virtual uint getProxyIB() const = 0;
-	virtual size_t getProxyNumVertices() const = 0;
-	virtual uint getHIPVBO() const = 0;
-	virtual uint getHIPIB() const = 0;
-	virtual size_t getHIPNumVertices() const = 0;
-	virtual bool isEnabled() const = 0;
+	virtual LYMesh* getHIPObject() const;
+	virtual LYMesh* getProxyObject() const;
+	virtual uint getProxyVBO() const;
+	virtual uint getProxyIB() const;
+	virtual uint getHIPVBO() const;
+	virtual uint getHIPIB() const;
+	virtual size_t getProxyNumVertices() const;
+	virtual size_t getHIPNumVertices() const;
+	virtual bool isEnabled() const;
 
 protected:
+	bool COLLISION_FORCEFEEDBACK;
+	
 	LYVertex	m_collider;
 	float3		m_workspaceScale;
 	float3		m_relativePosition;
@@ -58,7 +63,8 @@ protected:
 	LYMesh		*m_HIPObject;
 	LYMesh		*m_ProxyObject;
 
-	glm::mat4	m_CameraMatrix;
+	glm::mat4	m_ViewMatrix;
+	glm::mat4	m_ModelMatrix;
 	glm::mat4	m_HIPMatrix;
 	glm::mat4	m_ProxyMatrix;
 
@@ -70,4 +76,6 @@ protected:
 	bool bPause;
 
 	StopWatchInterface *m_timer;
+
+	LYSpaceHandler *m_spaceHandler;
 };

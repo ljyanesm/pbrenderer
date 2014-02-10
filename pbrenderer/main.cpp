@@ -235,7 +235,6 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer->setCollider(haptic_interface);
 	screenspace_renderer->setPointRadius(pointRadius);
 	haptic_interface->setTimer(hapticTimer);
-
 	regularShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 
 	glutReportErrors();
@@ -544,15 +543,6 @@ void display()
 {
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
-	// update the simulation
-	if (bPause)
-	{
-		space_handler->update();
-		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
-			haptic_interface->setPosition(devPosition);
-			float3 force = haptic_interface->calculateFeedbackUpdateProxy();
-		}
-	}
 	// render
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewMatrix = glm::mat4();
@@ -572,29 +562,39 @@ void display()
 	modelMatrix *= glm::scale(glm::vec3(global_point_scale));
 	modelMatrix *= glm::translate(-modelCentre);
 	m_pMesh->setModelMatrix(modelMatrix);
+	haptic_interface->setModelMatrix(modelMatrix);
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	/*/////////////////////////////////////////////////////////////////////////////////////////
 	Setup the haptic dimensions for collision detection and force response:
 	Find the object that is closest to the HIP and use it for the cameraMatrix computation.
 	/////////////////////////////////////////////////////////////////////////////////////////*/
-	float3 devicePosition = haptic_interface->getPosition();
 	haptic_interface->setWorkspaceScale(make_float3(0.05f, 0.05f, 0.05f));
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	/*/////////////////////////////////////////////////////////////////////////////////////////
 	Setup the view matrix
 	/////////////////////////////////////////////////////////////////////////////////////////*/
-	glm::mat4 viewMat = glm::mat4();
-
-	viewMat *= glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
-	viewMat *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
-	viewMat *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
-	viewMat *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
-	viewMat *= glm::scale(glm::vec3(local_point_scale));
-	m_pCamera->setViewMatrix(viewMat);
-	haptic_interface->setCameraMatrix(viewMatrix);		// Camera matrix is the final transformation of the screen!
+	glm::mat4 viewTransformation = glm::mat4();
+	viewMatrix *= glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewTransformation *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	viewTransformation *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
+	viewTransformation *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
+	viewMatrix *= viewTransformation;
+	viewMatrix *= glm::scale(glm::vec3(local_point_scale));
+	m_pCamera->setViewMatrix(viewMatrix);
+	haptic_interface->setCameraMatrix(viewTransformation);		// Camera matrix is the final transformation of the screen!
 	//////////////////////////////////////////////////////////////////////////////////////////
+
+	// update the simulation
+	if (bPause)
+	{
+		space_handler->update();
+		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
+			haptic_interface->setPosition(devPosition);
+			float3 force = haptic_interface->calculateFeedbackUpdateProxy();
+		}
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	screenspace_renderer->addDisplayMesh(m_pMesh);
@@ -609,9 +609,7 @@ void display()
 	overlay_renderer->display();
 	
 	/////////////////////////////////////////////////////////////////////////////////////////// 
-
-
-
+	
 	sdkStopTimer(&graphicsTimer);
 	float displayTimer = sdkGetAverageTimerValue(&graphicsTimer);
 	glutSwapBuffers();
