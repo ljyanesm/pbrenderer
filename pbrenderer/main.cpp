@@ -38,8 +38,8 @@
 #include "LYKeyboardDevice.h"
 #include "LYPLYLoader.h"
 
-int width = 1600;
-int height = 900;
+int width = 1024;
+int height = 768;
 
 float	pointRadius = 0.01f;
 float	pointScale = 0.01f;
@@ -570,9 +570,6 @@ void display()
 
 	glm::mat4 modelMatrix;
 	modelMatrix *= glm::scale(glm::vec3(global_point_scale));
-	modelMatrix *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
-	modelMatrix *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
-	modelMatrix *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
 	modelMatrix *= glm::translate(-modelCentre);
 	m_pMesh->setModelMatrix(modelMatrix);
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -582,7 +579,6 @@ void display()
 	Find the object that is closest to the HIP and use it for the cameraMatrix computation.
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	float3 devicePosition = haptic_interface->getPosition();
-	haptic_interface->setCameraMatrix(modelMatrix);		// Camera matrix is the final transformation of the screen!
 	haptic_interface->setWorkspaceScale(make_float3(0.05f, 0.05f, 0.05f));
 	//////////////////////////////////////////////////////////////////////////////////////////
 
@@ -592,8 +588,12 @@ void display()
 	glm::mat4 viewMat = glm::mat4();
 
 	viewMat *= glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewMat *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	viewMat *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
+	viewMat *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
 	viewMat *= glm::scale(glm::vec3(local_point_scale));
 	m_pCamera->setViewMatrix(viewMat);
+	haptic_interface->setCameraMatrix(viewMatrix);		// Camera matrix is the final transformation of the screen!
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -604,7 +604,8 @@ void display()
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Start displaying Workspace Box / Surface Tangent Plane
 	///////////////////////////////////////////////////////////////////////////////////////////
-	
+	overlay_renderer->setDepthFBO(screenspace_renderer->getDepthFBO());
+	overlay_renderer->setSceneModelMatrix(modelMatrix);
 	overlay_renderer->display();
 	
 	/////////////////////////////////////////////////////////////////////////////////////////// 

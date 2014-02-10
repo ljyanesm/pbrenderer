@@ -13,29 +13,30 @@ OverlayRenderer::OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam)
 
 OverlayRenderer::~OverlayRenderer(void)
 {
+	delete vectorObject;
+	delete surfaceObject;
+	delete hapticWorkspaceObject;
 }
 
 void OverlayRenderer::display() const {
-
-	glDepthMask(GL_FALSE);
-	glDisable(GL_DEPTH_TEST);
-	glBindTexture(GL_TEXTURE_2D,0); 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glEnable(GL_BLEND);
+	
+	glEnable(GL_DEPTH_TEST);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_depthFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	int width(m_camera->getWidth());
+	int height(m_camera->getHeight());
+	glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, 
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST);	
 	normalShader->useShader();
-	glm::mat4 model =  vectorObject->getModelMatrix();
-	glm::rotate(model, 180.0f, 0.0f, 0.0f, 1.0f);
+	glm::mat4 model =  glm::mat4();
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"model"),1,GL_FALSE, &model[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"view"),1,GL_FALSE, &m_camera->getViewMatrix()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"projection"),1,GL_FALSE, &m_camera->getProjection()[0][0]);
 
 		_drawTriangles(vectorObject);
-	//	_drawTriangles(surfaceObject);
+		_drawTriangles(surfaceObject);
 	//	_drawTriangles(hapticWorkspaceObject);
 	normalShader->delShader();
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_TRUE);
 }
 
 void OverlayRenderer::_drawTriangles(LYMesh *m_mesh) const
@@ -55,7 +56,7 @@ void OverlayRenderer::_drawTriangles(LYMesh *m_mesh) const
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
 	size_t numIndices = m_mesh->getNumIndices();
-	glDrawElements(GL_LINE_LOOP, numIndices, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);

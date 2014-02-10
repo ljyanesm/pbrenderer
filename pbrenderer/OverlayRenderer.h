@@ -13,12 +13,18 @@ class OverlayRenderer
 	LYShader *normalShader;				// General shader
 
 	LYCamera *m_camera;
+
+	GLuint m_depthFBO;
+
+	glm::mat4 sceneModelMatrix;
 public:
 	OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam);
 	~OverlayRenderer(void);
 
 	void display() const;
 
+	void setDepthFBO(GLuint dFBO) { m_depthFBO = dFBO; }
+	void setSceneModelMatrix (glm::mat4 mMat) { sceneModelMatrix = mMat; }
 private:
 	void _drawTriangles(LYMesh *m_mesh) const;
 };
