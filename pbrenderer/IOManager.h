@@ -19,7 +19,10 @@ public:
 	IOManager(LYHapticInterface *_d, float4 wsDim, float4 wsWD);
 	~IOManager(void);
 
-	float4 getSurfacePosition() { return surfacePosition; }
-	float4 getSurfaceNormal() { return surfaceNormal; }
+	const float4 getSurfacePosition() const { return surfacePosition; }
+	const float4 getSurfaceNormal() const { return surfaceNormal; }
+
+	void setSurfaceNormal(float4 sn) { surfaceNormal = sn; }
+	void setSurfacePosition (float4 sp) { surfacePosition = sp; }
 };
 

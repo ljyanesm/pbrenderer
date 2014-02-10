@@ -6,8 +6,8 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	m_spaceHandler = sh;
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
 	m_collider =	LYVertex();
-	m_speed =		0.01f;
-	m_size	=		0.003f;
+	m_speed =		0.1f;
+	m_size	=		0.03f;
 
 	m_workspaceScale	= make_float3(0.3f);
 	m_relativePosition	= make_float3(0.0f);
@@ -17,7 +17,7 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 
 	m_HIPMatrix = glm::mat4();
 	m_ProxyMatrix = glm::mat4();
-	m_CameraMatrix = glm::mat4();
+	m_ViewMatrix = glm::mat4();
 
 	LYVertex proxy;
 	proxy.m_pos = m_collider.m_normal;
@@ -57,62 +57,4 @@ LYKeyboardDevice::~LYKeyboardDevice(void)
 {
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ib);
-}
-
-float3 LYKeyboardDevice::getPosition() const{
-	return m_collider.m_pos;
-}
-
-float3 *LYKeyboardDevice::getHIP() {
-	return &(m_collider.m_pos);
-}
-
-void LYKeyboardDevice::setPosition(float3 pos) {
-	// Haptics only
-	glm::mat4 inverseTransformation = glm::inverse(this->m_CameraMatrix);
-	glm::vec3 p = glm::vec3(inverseTransformation * glm::vec4(pos.x, pos.y, pos.z, 1));
-	m_collider.m_pos = make_float3(p.x, p.y, p.z);
-
-	// Graphics only
-	glm::mat4 finalTransformation = glm::translate(this->m_CameraMatrix, p);
-	m_HIPMatrix = finalTransformation;
-	p = glm::vec3(finalTransformation * glm::vec4(glm::vec3(0,0,0),1.0));
-	finalTransformation = glm::translate(this->m_CameraMatrix, glm::vec3(m_collider.m_normal.x, m_collider.m_normal.y, m_collider.m_normal.z));
-	m_ProxyMatrix = finalTransformation;
-}
-
-float3 LYKeyboardDevice::calculateFeedbackUpdateProxy()
-{
-	float3 force = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
-	return force;
-}
-
-float LYKeyboardDevice::getSpeed() const 
-{
-	return m_speed;
-}
-
-float LYKeyboardDevice::getSize() const 
-{
-	return m_size;
-}
-
-uint LYKeyboardDevice::getIB() const
-{
-	return ib;
-}
-
-uint LYKeyboardDevice::getVBO() const
-{
-	return vbo;
-}
-
-void LYKeyboardDevice::setSpaceHandler( LYSpaceHandler *sh )
-{
-	m_spaceHandler = sh;
-}
-
-void LYKeyboardDevice::setSize( float r )
-{
-	m_size = r;
 }

@@ -24,12 +24,6 @@
     <Filter Include="IODevices">
       <UniqueIdentifier>{ab5d2065-5f1c-4fd1-ae1b-6f402551538e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="IODevices\Source">
-      <UniqueIdentifier>{758a05ef-1514-4796-b142-88a5928e5238}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="IODevices\Header">
-      <UniqueIdentifier>{76950e44-467d-4c25-a3bb-767b05d12b65}</UniqueIdentifier>
-    </Filter>
     <Filter Include="OpenGL Renderer">
       <UniqueIdentifier>{a41ce26e-5c62-42e8-8e87-03f470c22e21}</UniqueIdentifier>
     </Filter>
@@ -55,11 +49,17 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="OpenGL Renderer\Main Renderer">
+      <UniqueIdentifier>{adfda875-ce12-4c97-94df-07c0675106fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IODevices\Haptic">
+      <UniqueIdentifier>{76950e44-467d-4c25-a3bb-767b05d12b65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IODevices\Keyboard">
+      <UniqueIdentifier>{758a05ef-1514-4796-b142-88a5928e5238}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LYWorld.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="LYOctree.cpp">
       <Filter>Space Partitioning\Source</Filter>
@@ -67,17 +67,11 @@
     <ClCompile Include="LYSpatialHash.cpp">
       <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
-    <ClCompile Include="LYHapticDevice.cpp">
-      <Filter>IODevices\Source</Filter>
-    </ClCompile>
     <ClCompile Include="LYKeyboardDevice.cpp">
-      <Filter>IODevices\Source</Filter>
+      <Filter>IODevices\Keyboard</Filter>
     </ClCompile>
     <ClCompile Include="LYScreenspaceRenderer.cpp">
       <Filter>OpenGL Renderer\Screenspace Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="LYMesh.cpp">
-      <Filter>OpenGL Renderer\Mesh\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYShader.cpp">
       <Filter>OpenGL Renderer\Mesh\Source</Filter>
@@ -91,10 +85,19 @@
     <ClCompile Include="rply.c">
       <Filter>File Loaders</Filter>
     </ClCompile>
-    <ClCompile Include="IOManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="OverlayRenderer.cpp">
+      <Filter>OpenGL Renderer\Main Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="IOManager.cpp">
+      <Filter>IODevices</Filter>
+    </ClCompile>
+    <ClCompile Include="LYHapticDevice.cpp">
+      <Filter>IODevices\Haptic</Filter>
+    </ClCompile>
+    <ClCompile Include="LYMesh.cpp">
+      <Filter>OpenGL Renderer\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="LYWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -108,26 +111,14 @@
     <ClInclude Include="LYOctree.h">
       <Filter>Space Partitioning\Header</Filter>
     </ClInclude>
-    <ClInclude Include="LYSpaceHandler.h">
-      <Filter>Space Partitioning\Header</Filter>
-    </ClInclude>
     <ClInclude Include="LYSpatialHash.h">
       <Filter>Space Partitioning\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYHapticDevice.h">
-      <Filter>IODevices\Header</Filter>
-    </ClInclude>
-    <ClInclude Include="LYHapticInterface.h">
-      <Filter>IODevices\Header</Filter>
+      <Filter>IODevices\Haptic</Filter>
     </ClInclude>
     <ClInclude Include="LYHapticState.h">
-      <Filter>IODevices\Header</Filter>
-    </ClInclude>
-    <ClInclude Include="LYKeyboardDevice.h">
-      <Filter>IODevices\Header</Filter>
-    </ClInclude>
-    <ClInclude Include="LYMesh.h">
-      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+      <Filter>IODevices\Haptic</Filter>
     </ClInclude>
     <ClInclude Include="LYTexture.h">
       <Filter>OpenGL Renderer\Mesh\Header</Filter>
@@ -150,11 +141,23 @@
     <ClInclude Include="LYPLYLoader.h">
       <Filter>File Loaders</Filter>
     </ClInclude>
-    <ClInclude Include="IOManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="OverlayRenderer.h">
-      <Filter>Header Files</Filter>
+      <Filter>OpenGL Renderer\Main Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="IOManager.h">
+      <Filter>IODevices</Filter>
+    </ClInclude>
+    <ClInclude Include="LYKeyboardDevice.h">
+      <Filter>IODevices\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="LYHapticInterface.h">
+      <Filter>IODevices</Filter>
+    </ClInclude>
+    <ClInclude Include="LYMesh.h">
+      <Filter>OpenGL Renderer\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="LYSpaceHandler.h">
+      <Filter>Space Partitioning</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
