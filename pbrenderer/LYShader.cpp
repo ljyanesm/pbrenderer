@@ -34,6 +34,7 @@ unsigned int LYShader::loadShader(std::string& source,unsigned int mode)
 
 LYShader::LYShader(const char* vss,const char* fss, const char *attribLoc)
 {
+	std::cout << "Compiling: " << vss << " and " << fss << std::endl;
 	std::string source;
 	loadFile(vss,source);
 	vs=loadShader(source,GL_VERTEX_SHADER);

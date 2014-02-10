@@ -117,7 +117,7 @@ public:
 		std::vector<LYVertex> m_Vertices;
 
 		nvertices = 
-			ply_set_read_cb(ply, "vertex", "x", vertex_x,(void *) &m_Vertices, 0);
+		ply_set_read_cb(ply, "vertex", "x", vertex_x,(void *) &m_Vertices, 0);
 		ply_set_read_cb(ply, "vertex", "y", vertex_y,(void *) &m_Vertices, 1);
 		ply_set_read_cb(ply, "vertex", "z", vertex_z,(void *) &m_Vertices, 2);
 		ply_set_read_cb(ply, "vertex", "nx", vertex_nx,(void *) &m_Vertices, 3);
