@@ -1,6 +1,10 @@
 #pragma once
 #include <vector>
 #include <string>
+
+#include <assimp/cimport.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include "LYMesh.h"
 #include "defines.h"
 #include "rply.h"
@@ -9,6 +13,8 @@ class LYPLYLoader{
 	LYPLYLoader(){}
 	LYPLYLoader(LYPLYLoader const&);
 	void operator= (LYPLYLoader const&);
+
+	const aiScene *scene;
 
 	static int LYPLYLoader::vertex_x(p_ply_argument argument) {
 		long eol;
@@ -103,7 +109,45 @@ public:
 		return instance;
 	}
 
-	LYMesh* readFile(const std::string &filename)
+	LYMesh* readPolygonData(const std::string &filename)
+	{
+		LYMesh *ret;
+
+		std::string currentLine;
+		unsigned long numVertices(0);
+
+		scene = aiImportFile(filename.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
+
+		std::vector<LYVertex> m_Vertices;
+		std::vector<unsigned int> m_Indices;
+		m_Vertices.resize(scene->mMeshes[0]->mNumVertices);
+		if(scene)
+		{
+			for(unsigned int i = 0; i < scene->mMeshes[0]->mNumVertices; i++)
+			{
+				m_Vertices.at(i).m_pos = make_float3(scene->mMeshes[0]->mVertices[i].x, scene->mMeshes[0]->mVertices[i].y, scene->mMeshes[0]->mVertices[i].z);
+				m_Vertices.at(i).m_tex = make_float2(0,0);
+				m_Vertices.at(i).m_normal = make_float3(scene->mMeshes[0]->mNormals[i].x, scene->mMeshes[0]->mNormals[i].y, scene->mMeshes[0]->mNormals[i].z);
+				if (scene->mMeshes[0]->HasVertexColors(i)) m_Vertices.at(i).m_color = make_float3(scene->mMeshes[0]->mColors[i]->r, scene->mMeshes[0]->mColors[i]->g, scene->mMeshes[0]->mColors[i]->b);
+				m_Vertices.at(i).m_objectID = i;
+			}
+
+			for (unsigned int i = 0 ; i < scene->mMeshes[0]->mNumFaces ; i++) {
+				const aiFace& Face = scene->mMeshes[0]->mFaces[i];
+				assert(Face.mNumIndices == 3);
+				m_Indices.push_back(Face.mIndices[0]);
+				m_Indices.push_back(Face.mIndices[1]);
+				m_Indices.push_back(Face.mIndices[2]);
+			}
+
+			ret = new LYMesh(m_Vertices, m_Indices);
+		}
+		m_Vertices.resize(0);
+		m_Indices.resize(0);
+		return ret;
+	}
+
+	LYMesh* readPointData(const std::string &filename)
 	{
 		LYMesh *ret;
 		std::string currentLine;

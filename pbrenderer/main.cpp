@@ -27,6 +27,7 @@
 #include <vector_functions.h>
 #include <vector_types.h>
 
+#include "IOManager.h"
 #include "LYHapticDevice.h"
 
 #include "LYWorld.h"
@@ -94,7 +95,7 @@ LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
 LYCamera *m_pCamera;
 LYHapticInterface *haptic_interface;
-LYHapticDevice* haptics;
+IOManager *ioInterface;
 ///////////////////////////////////////////////////////
 
 // Variables to load from the cfg file
@@ -126,10 +127,6 @@ float3 devPosition;
 int loadedModel = 0;
 float objectScale = 0.0;
 enum {M_VIEW = 0, M_MOVE};
-
-
-FILE* performanceFile = NULL;
-bool print_to_file = false;
 
 namespace fs = ::boost::filesystem;
 std::vector<fs::path> modelFiles;
@@ -218,23 +215,25 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
-	m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
 	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 
-		m_plyLoader->getInstance().readFile("proxy.ply"), 
-		m_plyLoader->getInstance().readFile("hip.ply"));
+		m_plyLoader->getInstance().readPointData("proxy.ply"), 
+		m_plyLoader->getInstance().readPointData("hip.ply"));
 	
 	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) 
 		haptic_interface = new LYHapticDevice(space_handler, 
-		m_plyLoader->getInstance().readFile("proxy.ply"), 
-		m_plyLoader->getInstance().readFile("hip.ply"));
+		m_plyLoader->getInstance().readPointData("proxy.ply"), 
+		m_plyLoader->getInstance().readPointData("hip.ply"));
 	
-	screenspace_renderer->setCollider(haptic_interface);
+	ioInterface = new IOManager(haptic_interface, make_float4(0,0,0,0), make_float4(0,0,0,0));
+
+	screenspace_renderer->setCollider(ioInterface->getDevice());
 	screenspace_renderer->setPointRadius(pointRadius);
-	haptic_interface->setTimer(hapticTimer);
+	ioInterface->setTimer(hapticTimer);
 	regularShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
 
 	glutReportErrors();
@@ -313,7 +312,7 @@ void motion(int x, int y)
 	case M_MOVE:
 		{
 			float translateSpeed = 0.003f;
-			float3 p = haptic_interface->getPosition();
+			float3 p = ioInterface->getDevice()->getPosition();
 
 			if (buttonState==1)
 			{
@@ -338,7 +337,7 @@ void motion(int x, int y)
 				p.z += r.z;
 			}
 
-			haptic_interface->setPosition(p);
+			ioInterface->getDevice()->setPosition(p);
 		}
 		break;
 	}
@@ -357,7 +356,7 @@ void key(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case ' ':
-		bPause = haptic_interface->toggleForces(!bPause);
+		bPause = ioInterface->getDevice()->toggleForces(!bPause);
 		break;
 	case 13:		// ENTER key
 
@@ -367,14 +366,14 @@ void key(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case '[':
-		haptic_interface->pause();
+		ioInterface->getDevice()->pause();
 		loadedModel = loadedModel--%modelFiles.size();
 		modelFile = modelFiles.at(loadedModel).string();
 		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
 		while (true)
 		{
 			try{
-				m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+				m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 				global_point_scale = m_pMesh->getScale();
 				break;	// Exit the loop
 			}
@@ -384,21 +383,21 @@ void key(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
-		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
-		haptic_interface->setSpaceHandler(space_handler);
-		haptic_interface->start();
+		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
+		ioInterface->getDevice()->setSpaceHandler(space_handler);
+		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
 	case ']':
-		haptic_interface->pause();
+		ioInterface->getDevice()->pause();
 		loadedModel = ++loadedModel%modelFiles.size();
 		modelFile = modelFiles.at(loadedModel).string();
 		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
 		while (true)
 		{
 			try{
-				m_pMesh = m_plyLoader->getInstance().readFile(modelFile);
+				m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 				global_point_scale = m_pMesh->getScale();
 				break;
 			}
@@ -408,9 +407,9 @@ void key(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
-		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(256));
-		haptic_interface->setSpaceHandler(space_handler);
-		haptic_interface->start();
+		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
+		ioInterface->getDevice()->setSpaceHandler(space_handler);
+		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -433,37 +432,34 @@ void key(unsigned char key, int x, int y)
 	case 'v':
 		mouseMode = !mouseMode;
 		break;
-	case '/':
-		print_to_file = !print_to_file;
-		break;
 
 	case 'w':
 		// Move collider up
-		pos.y += haptic_interface->getSpeed();
+		pos.y += ioInterface->getDevice()->getSpeed();
 		break;
 	case 'a':
 		// Move collider left
-		pos.x -= haptic_interface->getSpeed();
+		pos.x -= ioInterface->getDevice()->getSpeed();
 		break;
 	case 's':
-		pos.y -= haptic_interface->getSpeed();
+		pos.y -= ioInterface->getDevice()->getSpeed();
 		break;
 	case 'd':
 		// Move collider right
-		pos.x += haptic_interface->getSpeed();
+		pos.x += ioInterface->getDevice()->getSpeed();
 		break;
 	case 'z':
-		pos.z += haptic_interface->getSpeed();
+		pos.z += ioInterface->getDevice()->getSpeed();
 		break;
 	case 'c':
-		pos.z -= haptic_interface->getSpeed();
+		pos.z -= ioInterface->getDevice()->getSpeed();
 		break;
 	case 'W':
 		// Move collider up
-		haptic_interface->setSpeed(haptic_interface->getSpeed()*1.1f);
+		ioInterface->getDevice()->setSpeed(ioInterface->getDevice()->getSpeed()*1.1f);
 		break;
 	case 'S':
-		haptic_interface->setSpeed(haptic_interface->getSpeed()*0.9f);
+		ioInterface->getDevice()->setSpeed(ioInterface->getDevice()->getSpeed()*0.9f);
 		break;
 	case '+':
 		pointRadius += 0.001f;
@@ -485,14 +481,14 @@ void key(unsigned char key, int x, int y)
 		// Make the radius 10% bigger
 		influenceRadius *= 1.1f;
 		space_handler->setInfluenceRadius(influenceRadius);
-		haptic_interface->setSize(influenceRadius);
+		ioInterface->getDevice()->setSize(influenceRadius);
 		std::cout << "Influence Radius: " << influenceRadius << std::endl;
 		break;
 	case '.':
 		// Make the radius  10% smaller
 		influenceRadius *= 0.9f;
 		space_handler->setInfluenceRadius(influenceRadius);
-		haptic_interface->setSize(influenceRadius);
+		ioInterface->getDevice()->setSize(influenceRadius);
 		std::cout << "Influence Radius: " << influenceRadius << std::endl;
 		break;
 	case ':':
@@ -522,13 +518,11 @@ void cleanup()
 	sdkDeleteTimer(&graphicsTimer);
 	sdkDeleteTimer(&hapticTimer);
 	delete m_plyLoader;
-	delete haptic_interface;
-	delete haptics;
 	delete screenspace_renderer;
 	delete space_handler;
 	delete m_pMesh;
 	delete m_pCamera;
-	fclose(performanceFile);
+	delete ioInterface;
 }
 
 void idle(void)
@@ -562,14 +556,14 @@ void display()
 	modelMatrix *= glm::scale(glm::vec3(global_point_scale));
 	modelMatrix *= glm::translate(-modelCentre);
 	m_pMesh->setModelMatrix(modelMatrix);
-	haptic_interface->setModelMatrix(modelMatrix);
+	ioInterface->getDevice()->setModelMatrix(modelMatrix);
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	/*/////////////////////////////////////////////////////////////////////////////////////////
 	Setup the haptic dimensions for collision detection and force response:
 	Find the object that is closest to the HIP and use it for the cameraMatrix computation.
 	/////////////////////////////////////////////////////////////////////////////////////////*/
-	haptic_interface->setWorkspaceScale(make_float3(0.05f, 0.05f, 0.05f));
+	ioInterface->getDevice()->setWorkspaceScale(make_float3(0.05f, 0.05f, 0.05f));
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	/*/////////////////////////////////////////////////////////////////////////////////////////
@@ -583,22 +577,21 @@ void display()
 	viewMatrix *= viewTransformation;
 	viewMatrix *= glm::scale(glm::vec3(local_point_scale));
 	m_pCamera->setViewMatrix(viewMatrix);
-	haptic_interface->setCameraMatrix(viewTransformation);		// Camera matrix is the final transformation of the screen!
+	ioInterface->getDevice()->setCameraMatrix(viewTransformation);		// Camera matrix is the final transformation of the screen!
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	// update the simulation
 	if (bPause)
 	{
 		space_handler->update();
-		if (haptic_interface->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
-			haptic_interface->setPosition(devPosition);
-			float3 force = haptic_interface->calculateFeedbackUpdateProxy();
+		if (ioInterface->getDevice()->getDeviceType() == LYHapticInterface::KEYBOARD_DEVICE){
+			ioInterface->getDevice()->setPosition(devPosition);
+			float3 force = ioInterface->getDevice()->calculateFeedbackUpdateProxy();
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	screenspace_renderer->addDisplayMesh(m_pMesh);
-
 	screenspace_renderer->display(mode);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -618,10 +611,6 @@ void display()
 	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f", modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime);
 	static int measureNum = 0;
 
-	if (print_to_file){
-		fprintf(performanceFile, "%d %f\n", measureNum++, averageTime);
-	}
-
 	glutSetWindowTitle(fps_string);
 	hapticFPS++;
 	if (hapticFPS >= 20){
@@ -633,7 +622,6 @@ void display()
 
 int main(int argc, char **argv)
 {
-	performanceFile = fopen("performance.txt", "w");
 	initCUDA(argc, argv);
 	initGL(&argc, argv);
 

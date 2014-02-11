@@ -121,7 +121,7 @@ void	LYSpatialHash::update()
 	m_hParams->Nx = make_float3(0.0f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (false || m_dirtyPos) {
+	if (true || m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
@@ -166,13 +166,13 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 }
 
 
-float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
+float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 {
 	static float3 tgPlaneNormal = make_float3(0.0f);
 	static float3 Psurface  = make_float3(0.0f);
 	static bool touched = false;
 
-	float3 colliderPos = pos->m_pos;
+	float3 colliderPos = pos->hapticPosition;
 	float3 Pseed = make_float3(0.0f);
 	float3 dP = make_float3(0.0f);
 	float error = 9999.999f;
@@ -190,12 +190,13 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 			touched = true;
 			Pseed = Ax;
 			Psurface = Pseed;
-			pos->m_normal = Psurface;
+			pos->scpPosition = Psurface;
 			tgPlaneNormal = Nx;
+			pos->surfaceTgPlane = Nx;
 			float3 f = (Psurface - colliderPos);
 			return f;
 		} else {
-			pos->m_normal = colliderPos;
+			pos->scpPosition = colliderPos;
 			touched = false;
 		}
 	} else {
@@ -218,13 +219,14 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( LYVertex *pos )
 				Pseed += dP;
 			} while (length(dP) > 0.001);
 			Psurface = Pseed;
-			pos->m_normal = Psurface;
+			pos->scpPosition = Psurface;
 			tgPlaneNormal = Nx;
+			pos->surfaceTgPlane = Nx;
 			float3 f = (Psurface - colliderPos);
 			return f;
 		} else {
 			touched = false;
-			pos->m_normal = colliderPos;
+			pos->scpPosition = colliderPos;
 		}
 	}
 

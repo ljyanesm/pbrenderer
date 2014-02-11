@@ -4,9 +4,9 @@
 OverlayRenderer::OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam)
 {
 	normalShader = new LYShader("./shaders/regularShader.vs", "./shaders/regularShader.frag", "Normal");
-	vectorObject = ply_loader->getInstance().readFile("arrow.ply");
-	surfaceObject = ply_loader->getInstance().readFile("surface.ply");
-	hapticWorkspaceObject = ply_loader->getInstance().readFile("cube-wire.ply");
+	vectorObject = ply_loader->getInstance().readPolygonData("arrow.ply");
+	surfaceObject = ply_loader->getInstance().readPolygonData("surface.ply");
+	hapticWorkspaceObject = ply_loader->getInstance().readPolygonData("cube-wire.ply");
 	m_camera = cam;
 }
 

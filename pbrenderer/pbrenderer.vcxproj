@@ -186,8 +186,10 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Collider.cpp" />
     <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="LYCamera.cpp" />
+    <ClCompile Include="LYHapticInterface.cpp" />
     <ClCompile Include="LYKeyboardDevice.cpp" />
     <ClCompile Include="LYOctree.cpp" />
     <ClCompile Include="LYShader.cpp" />
@@ -202,6 +204,7 @@
     <ClCompile Include="rply.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Collider.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="IOManager.h" />
     <ClInclude Include="LYHapticState.h" />

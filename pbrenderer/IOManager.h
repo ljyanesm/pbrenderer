@@ -13,6 +13,8 @@ class IOManager
 	float4 wsWorkingDimension;	// Workspace working dimensions (outside this range it moves the workspace)
 
 	LYHapticInterface *_device;	// This will not be modifiable just to be read from
+	
+	StopWatchInterface *timer;
 
 public:
 	IOManager(void);
@@ -24,5 +26,9 @@ public:
 
 	void setSurfaceNormal(float4 sn) { surfaceNormal = sn; }
 	void setSurfacePosition (float4 sp) { surfacePosition = sp; }
+
+	LYHapticInterface *getDevice() { return _device; }
+
+	void setTimer(StopWatchInterface *t) { timer = t; _device->setTimer(timer); }
 };
 

@@ -5,13 +5,13 @@ void LYHapticInterface::setPosition( float3 pos )
 	// Haptics only
 	glm::mat4 inverseTransformation = glm::inverse(this->m_ViewMatrix * this->m_ModelMatrix);
 	glm::vec3 p = glm::vec3(inverseTransformation * glm::vec4(pos.x, pos.y, pos.z, 1));
-	m_collider.m_pos = make_float3(p.x, p.y, p.z);
+	m_collider.hapticPosition = make_float3(p.x, p.y, p.z);
 
 	// Graphics only
 	glm::mat4 finalTransformation = glm::translate(this->m_ModelMatrix, p);
 	m_HIPMatrix = finalTransformation;
 	p = glm::vec3(finalTransformation * glm::vec4(glm::vec3(0,0,0),1.0));
-	finalTransformation = glm::translate(this->m_ModelMatrix, glm::vec3(m_collider.m_normal.x, m_collider.m_normal.y, m_collider.m_normal.z));
+	finalTransformation = glm::translate(this->m_ModelMatrix, glm::vec3(m_collider.scpPosition.x, m_collider.scpPosition.y, m_collider.scpPosition.z));
 	m_ProxyMatrix = finalTransformation;
 }
 
@@ -97,7 +97,7 @@ glm::mat4 LYHapticInterface::getProxyMatrix() const
 
 float3 LYHapticInterface::getPosition() const
 {
-	return m_collider.m_pos;
+	return m_collider.hapticPosition;
 }
 
 float LYHapticInterface::getSpeed() const
