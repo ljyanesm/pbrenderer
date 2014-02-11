@@ -109,5 +109,5 @@ private:
 
 	device_mesh2_t m_device_quad;
 
-	LYHapticInterface const* m_collider;
+	LYHapticInterface const* haptic_interface;
 };

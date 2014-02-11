@@ -100,6 +100,12 @@
     <ClCompile Include="LYWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LYHapticInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Collider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LYWorld.h">
@@ -158,6 +164,9 @@
     </ClInclude>
     <ClInclude Include="LYSpaceHandler.h">
       <Filter>Space Partitioning</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

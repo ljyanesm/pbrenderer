@@ -16,4 +16,5 @@ wsWorkingDimension(wsWD)
 
 IOManager::~IOManager(void)
 {
+	delete _device;
 }

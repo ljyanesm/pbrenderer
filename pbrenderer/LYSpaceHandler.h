@@ -3,6 +3,7 @@
 #include <helper_functions.h>
 
 #include "LYVertex.h"
+#include "Collider.h"
 
 /*
 	Abstract class for the space handling techniques classes to be implemented on the GPU or the CPU
@@ -18,7 +19,7 @@ public:
 
 	virtual void setDeviceVertices(LYVertex *hostVertices) = 0;
 
-	virtual float3	calculateFeedbackUpdateProxy(LYVertex *pos) = 0;
+	virtual float3	calculateFeedbackUpdateProxy(Collider *pos) = 0;
 	virtual void	calculateCollisions(float3 pos) = 0;
 	virtual void	setInfluenceRadius(float r) = 0;
 };

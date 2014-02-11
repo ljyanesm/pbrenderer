@@ -9,7 +9,7 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 	COLLISION_FORCEFEEDBACK = true;
 	m_spaceHandler		= sh;
 	m_deviceType		= LYHapticInterface::HAPTIC_DEVICE;
-	m_collider			= LYVertex();
+	m_collider			= Collider();
 	m_speed				= 0.001f;
 	m_size				= 0.03f;
 	m_workspaceScale	= make_float3(0.3f);
@@ -21,9 +21,6 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 	m_HIPMatrix = glm::mat4();
 	m_ProxyMatrix = glm::mat4();
 	m_ViewMatrix = glm::mat4();
-
-	LYVertex proxy;
-	proxy.m_pos = m_collider.m_normal;
 
 	std::vector<LYVertex> Vertices;
 	std::vector<unsigned int> Indices;

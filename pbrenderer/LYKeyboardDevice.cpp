@@ -5,7 +5,7 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 {
 	m_spaceHandler = sh;
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
-	m_collider =	LYVertex();
+	m_collider =	Collider();
 	m_speed =		0.1f;
 	m_size	=		0.03f;
 
@@ -18,9 +18,6 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	m_HIPMatrix = glm::mat4();
 	m_ProxyMatrix = glm::mat4();
 	m_ViewMatrix = glm::mat4();
-
-	LYVertex proxy;
-	proxy.m_pos = m_collider.m_normal;
 
 	std::vector<LYVertex> Vertices;
 	std::vector<unsigned int> Indices;

@@ -10,6 +10,7 @@
 #include "glm/glm.hpp"
 #include "defines.h"
 
+#include "Collider.h"
 #include "LYCudaHelper.cuh"
 #include "LYSpaceHandler.h"
 #include "LYSpatialHash.cuh"
@@ -32,7 +33,7 @@ public:
 	void	setInfluenceRadius(float r);
 
 	void	calculateCollisions(float3 pos);
-	float3	calculateFeedbackUpdateProxy(LYVertex *pos);
+	float3	calculateFeedbackUpdateProxy(Collider *pos);
 
 	void	dump();
 
