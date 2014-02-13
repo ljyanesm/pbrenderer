@@ -14,7 +14,7 @@ class LYShader{
 	unsigned int loadShader(std::string& source,unsigned int mode);
 	public:
 		LYShader();
-		LYShader(const char* vss,const char* fss, const char *attribLoc);
+		LYShader(const char* vss,const char* fss);
 		~LYShader();
 		void useShader();
 		void delShader();

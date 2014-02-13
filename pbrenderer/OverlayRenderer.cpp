@@ -3,7 +3,7 @@
 
 OverlayRenderer::OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam)
 {
-	normalShader = new LYShader("./shaders/regularShader.vs", "./shaders/regularShader.frag", "Normal");
+	normalShader = new LYShader("./shaders/regularShader.vs", "./shaders/regularShader.frag");
 	vectorObject = ply_loader->getInstance().readPolygonData("arrow.ply");
 	surfaceObject = ply_loader->getInstance().readPolygonData("surface.ply");
 	hapticWorkspaceObject = ply_loader->getInstance().readPolygonData("cube-wire.ply");
@@ -20,7 +20,6 @@ OverlayRenderer::~OverlayRenderer(void)
 
 void OverlayRenderer::display() const {
 	
-	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_depthFBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	int width(m_camera->getWidth());
@@ -28,15 +27,44 @@ void OverlayRenderer::display() const {
 	glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, 
 		GL_DEPTH_BUFFER_BIT, GL_NEAREST);	
 	normalShader->useShader();
-	glm::mat4 model =  glm::mat4();
-	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"model"),1,GL_FALSE, &model[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"view"),1,GL_FALSE, &m_camera->getViewMatrix()[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"projection"),1,GL_FALSE, &m_camera->getProjection()[0][0]);
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glm::mat4 modelView;
+	glm::mat4 mvpMat;
+	glm::mat4 model;
 
-		_drawTriangles(vectorObject);
-		//_drawTriangles(surfaceObject);
-	//	_drawTriangles(hapticWorkspaceObject);
+	model = glm::mat4();
+	//model *= glm::scale(0.1f, 0.1f, 0.1f);
+	modelView = m_camera->getViewMatrix() * model;
+	mvpMat = m_camera->getProjection() * modelView;
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &m_camera->getProjection()[0][0]);
+	glUniform4fv( glGetUniformLocation(normalShader->getProgramId(), "lightDir"), 1, &m_camera->getLightDir()[0]);
+
+	_drawTriangles(vectorObject);
+
+	//model = glm::mat4();
+	//model *= glm::scale(0.1f, 0.1f, 0.1f);
+	//modelView = m_camera->getViewMatrix() * model;
+	//mvpMat = m_camera->getProjection() * modelView;
+	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
+	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
+	//_drawTriangles(surfaceObject);
+
+	//model = glm::mat4();
+	//model *= glm::scale(0.1f, 0.1f, 0.1f);
+	//modelView = m_camera->getViewMatrix() * model;
+	//mvpMat = m_camera->getProjection() * modelView;
+	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
+	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
+	//_drawTriangles(hapticWorkspaceObject);
 	normalShader->delShader();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
 }
 
 void OverlayRenderer::_drawTriangles(LYMesh *m_mesh) const
@@ -49,9 +77,9 @@ void OverlayRenderer::_drawTriangles(LYMesh *m_mesh) const
 	int vbo = m_mesh->getVBO();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
 	int ib = m_mesh->getIB();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 

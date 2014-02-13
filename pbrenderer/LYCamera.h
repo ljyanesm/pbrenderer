@@ -6,8 +6,7 @@
 class LYCamera
 {
 public:
-	LYCamera(int w, int h) { m_width = w ; m_height = h; }
-	LYCamera(void);
+	LYCamera(int w, int h, glm::vec4 lightPosition) { m_width = w ; m_height = h; lightDir = lightPosition;}
 	~LYCamera(void);
 
 	void setViewMatrix(glm::mat4 v){ view = v; }
@@ -41,9 +40,14 @@ public:
 	float getNear() const { return m_near; }
 	float getFar() const { return m_far; }
 
+	const glm::vec4 getLightDir() const { return lightDir; }
+
 private:
 	glm::mat4 view;
 	glm::mat4 projection;
+
+	glm::vec4 lightDir;
+
 	float m_fov;
 	float m_near;
 	float m_far;

@@ -35,10 +35,10 @@ void main()
 			vec2 samp = vec2(fs_Texcoord.s + x*blurRadius, fs_Texcoord.t + y*blurRadius);
 			float sampleDepth = texture(u_Depthtex, samp).r;
 			
-			if(sampleDepth < 0.999999){
+			if(sampleDepth < 0.99999){
 				//Spatial
 				float r = length(vec2(x,y)) * 0.01;
-				float w = exp(-r*r);
+				float w = exp(- (r*r));
 			
 				sum += sampleDepth * w ;
 				wsum += w ;
@@ -46,7 +46,7 @@ void main()
 		}
     }
     
-    if(wsum > 0.0f){
+    if(wsum > 0.0001f){
 		sum = sum/wsum;
     }
     

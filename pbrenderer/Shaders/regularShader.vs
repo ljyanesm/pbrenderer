@@ -1,15 +1,23 @@
 #version 330
 
-layout(location = 0) in vec3 vert;
-/*layout(location = 1) in vec2 tex;
-layout(location = 2) in vec3 nrm;
-layout(location = 3) in vec3 col;*/
+layout (location = 0) in vec3 Position;
+layout (location = 1) in vec3 Normal;
+layout (location = 2) in vec3 Color;
+layout (location = 3) in vec2 TexCoord;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
+uniform mat4 MVPMat;
+uniform mat4 modelViewMat;
+uniform mat4 u_Persp;
 
+out vec3 N;
+out vec4 inColor;
+out vec3 Pos;
+out vec3 fs_posEye;
 void main()
 {
-    gl_Position = projection * view * model * vec4(vert, 1.0);
+	N = Normal;
+	inColor = vec4(Color, 1.0f);
+    gl_Position = MVPMat * vec4(Position, 1.0f);
+	Pos = vec3(gl_Position.xyz);
+	fs_posEye = vec3(modelViewMat * vec4(Position, 1.0f));
 }
