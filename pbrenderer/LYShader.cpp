@@ -32,7 +32,7 @@ unsigned int LYShader::loadShader(std::string& source,unsigned int mode)
 	return id;
 }
 
-LYShader::LYShader(const char* vss,const char* fss, const char *attribLoc)
+LYShader::LYShader(const char* vss,const char* fss)
 {
 	std::cout << "Compiling: " << vss << " and " << fss << std::endl;
 	std::string source;
@@ -41,15 +41,26 @@ LYShader::LYShader(const char* vss,const char* fss, const char *attribLoc)
 	source="";
 	loadFile(fss,source);
 	fs=loadShader(source,GL_FRAGMENT_SHADER);
-	
+
 	program=glCreateProgram();
 	glAttachShader(program,vs);
 	glAttachShader(program,fs);
-	
+
 	glBindAttribLocation(program, 0, "Position");
-	glBindAttribLocation(program, 1, attribLoc);
+	glBindAttribLocation(program, 1, "Normal");
+	glBindAttribLocation(program, 2, "Color");
+	glBindAttribLocation(program, 3, "TexCoord");
 
 	glLinkProgram(program);
+	char error[1024];
+	int len;
+	GLint link_ok = GL_FALSE;
+	glGetProgramiv(program, GL_LINK_STATUS, &link_ok);
+	if (!link_ok) 
+	{
+		glGetProgramInfoLog(program, sizeof(error), &len, error);
+		std::cout << "Could not link basic shaders!" << error << std::endl;
+	}
 }
 
 LYShader::~LYShader()

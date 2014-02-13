@@ -47,8 +47,8 @@ float	pointScale = 0.01f;
 float	influenceRadius = 0.2f;
 int		pointDiv = 0;
 
-const float NEARP = 0.1f;
-const float FARP = 1000.0f;
+const float NEARP = 1.0f;
+const float FARP = 100.0f;
 
 // view params
 int ox, oy;
@@ -179,7 +179,7 @@ void initCUDA(int argc, char **argv)
 
 void initGL(int *argc, char **argv){
 	glutInit(argc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
 	glutCreateWindow(fps_string);
 
@@ -211,7 +211,7 @@ void initGL(int *argc, char **argv){
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 
-	m_pCamera = new LYCamera(width, height);
+	m_pCamera = new LYCamera(width, height, glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
@@ -234,7 +234,7 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer->setCollider(ioInterface->getDevice());
 	screenspace_renderer->setPointRadius(pointRadius);
 	ioInterface->setTimer(hapticTimer);
-	regularShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
+	regularShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag");
 
 	glutReportErrors();
 }
@@ -462,11 +462,11 @@ void key(unsigned char key, int x, int y)
 		ioInterface->getDevice()->setSpeed(ioInterface->getDevice()->getSpeed()*0.9f);
 		break;
 	case '+':
-		pointRadius += 0.001f;
+		pointRadius *= 1.1f;
 		screenspace_renderer->setPointRadius(pointRadius);
 		break;
 	case '-':
-		pointRadius -= 0.001f;
+		pointRadius *= 0.9f;
 		screenspace_renderer->setPointRadius(pointRadius);
 		break;
 	case '>':
@@ -570,14 +570,17 @@ void display()
 	Setup the view matrix
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewTransformation = glm::mat4();
-	viewMatrix *= glm::lookAt(glm::vec3(0,0,15), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewMatrix *= glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
 	viewTransformation *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	viewTransformation *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	viewTransformation *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
 	viewMatrix *= viewTransformation;
 	viewMatrix *= glm::scale(glm::vec3(local_point_scale));
+
+	// Final transformation of the camera without scaling / translations
+	ioInterface->getDevice()->setCameraMatrix(viewTransformation);
+
 	m_pCamera->setViewMatrix(viewMatrix);
-	ioInterface->getDevice()->setCameraMatrix(viewTransformation);		// Camera matrix is the final transformation of the screen!
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	// update the simulation
@@ -607,6 +610,7 @@ void display()
 	float displayTimer = sdkGetAverageTimerValue(&graphicsTimer);
 	glutSwapBuffers();
 	glutReportErrors();
+
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
 	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f", modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime);
 	static int measureNum = 0;

@@ -33,6 +33,8 @@ uniform float u_Near;
 uniform float u_Aspect;
 uniform int u_DisplayType;
 
+uniform vec4 lightDir;
+
 in vec2 fs_Texcoord;
 in vec3 fs_Position;
 
@@ -61,9 +63,6 @@ vec3 uvToEye(vec2 texCoord, float depth){
 
 void main()
 {
-	//Uniform Light Direction (Billboard)
-    vec4 lightDir = vec4(2.4f, 4.0f, 0.0f, 0.0f);
-
     //Get Texture Information about the Pixel
     vec3 N = texture(u_Normaltex,fs_Texcoord).xyz;
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;

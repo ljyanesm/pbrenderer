@@ -74,10 +74,10 @@ LYScreenspaceRenderer::~LYScreenspaceRenderer(void)
 
 void LYScreenspaceRenderer::_initShaders() 
 {
-	depthShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag", "Color");
-	normalShader = new LYShader("./shaders/normal_pass.vs", "./shaders/normal_pass.frag", "Texcoord");
-	blurDepthShader = new LYShader("./shaders/blur_pass.vs", "./shaders/blur_pass.frag", "Texcoord");
-	totalShader = new LYShader("./shaders/shader.vs", "./shaders/shader.frag", "Texcoord");
+	depthShader = new LYShader("./shaders/depth_pass.vs", "./shaders/depth_pass.frag");
+	normalShader = new LYShader("./shaders/normal_pass.vs", "./shaders/normal_pass.frag");
+	blurDepthShader = new LYShader("./shaders/blur_pass.vs", "./shaders/blur_pass.frag");
+	totalShader = new LYShader("./shaders/shader.vs", "./shaders/shader.frag");
 }
 
 void LYScreenspaceRenderer::_setTextures() {
@@ -279,9 +279,9 @@ void LYScreenspaceRenderer::_drawCollider()
 		int vbo = haptic_interface->getVBO();
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
 		int ib = haptic_interface->getIB();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 		int numIndices = 2;
@@ -303,9 +303,9 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 	int vbo = m_mesh->getVBO();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
 	int ib = m_mesh->getIB();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
@@ -327,9 +327,9 @@ void LYScreenspaceRenderer::_drawTriangles(LYMesh *m_mesh)
 	int vbo = m_mesh->getVBO();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
 	int ib = m_mesh->getIB();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
@@ -542,6 +542,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_InvTrans"),1,GL_FALSE, &inverse_transposed[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(totalShader->getProgramId(),"u_InvProj"),1,GL_FALSE,&inverse_projectiond[0][0]);
+	glUniform4fv( glGetUniformLocation(totalShader->getProgramId(), "lightDir"), 1, &m_camera->getLightDir()[0]);
 
 	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Far"), m_camera->getFar());
 	glUniform1f( glGetUniformLocation(totalShader->getProgramId(), "u_Near"), m_camera->getNear());
@@ -559,9 +560,6 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 void LYScreenspaceRenderer::dumpIntoPdb(std::string outputFilename)
 {
-/************************************************************************/
-/* Change function to work with a LYMesh* vector!
-/************************************************************************/
 	for(std::vector<LYMesh*>::iterator it = m_objects.begin(); it != m_objects.end(); ++it)
 	{
 		std::ofstream outFile;
