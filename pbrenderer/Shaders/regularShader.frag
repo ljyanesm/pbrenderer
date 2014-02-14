@@ -18,7 +18,6 @@ void main()
     vec3 incident = normalize(lightDir.xyz);
     vec3 viewer = normalize(Pos.xyz);
 
-
     //calculate depth
     vec4 pixelPos = vec4(fs_posEye + normalize(N),1.0f);
     vec4 clipSpacePos = u_Persp * pixelPos;
@@ -28,6 +27,7 @@ void main()
     float specular = pow(max(0.0f, dot(H,N)),50.0f);
     float diffuse = max(0.0f, dot(incident, N));
 
-	vec4 finalColor = vec4(inColor.rgb * diffuse + specular * vec3(1.0f), 1.0f);
-    gl_FragColor = finalColor;
+//	vec4 finalColor = vec4(inColor.rgb * diffuse + specular * vec3(1.0f), 1.0f);
+	vec4 finalColor = vec4(vec3(1.0) * diffuse + specular * vec3(1.0f), 1.0f);
+    gl_FragColor = vec4(gl_FragDepth);
 }

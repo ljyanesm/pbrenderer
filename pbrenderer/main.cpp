@@ -601,7 +601,11 @@ void display()
 	// Start displaying Workspace Box / Surface Tangent Plane
 	///////////////////////////////////////////////////////////////////////////////////////////
 	overlay_renderer->setDepthFBO(screenspace_renderer->getDepthFBO());
-	overlay_renderer->setSceneModelMatrix(modelMatrix);
+	overlay_renderer->setSceneViewMatrix(viewMatrix);
+	overlay_renderer->setSCPPositionMatrix(ioInterface->getSCPPositionMatrix());
+	overlay_renderer->setSurfacePosition(ioInterface->getSurfacePosition());
+	overlay_renderer->setSurfaceNormal(ioInterface->getSurfaceNormal());
+	overlay_renderer->setForceVector(ioInterface->getForceVector());
 	overlay_renderer->display();
 	
 	/////////////////////////////////////////////////////////////////////////////////////////// 

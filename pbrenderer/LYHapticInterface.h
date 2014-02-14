@@ -33,9 +33,12 @@ public:
 	virtual void	pause(bool p);
 
 
+	virtual float3			getPosition() const;
+	virtual float3			getSurfacePosition() const;
+	virtual float3			getSurfaceNormal() const;
+	virtual float3			getForceVector() const;
 	virtual glm::mat4		getHIPMatrix() const;
 	virtual glm::mat4		getProxyMatrix() const;
-	virtual float3			getPosition() const;
 	virtual float			getSpeed() const;
 	virtual float			getSize()	const;
 	virtual LYDEVICE_TYPE	getDeviceType() const;
@@ -56,6 +59,7 @@ protected:
 	bool COLLISION_FORCEFEEDBACK;
 	
 	Collider		m_collider;
+	float3			m_forceVector;
 	float3			m_workspaceScale;
 	float3			m_relativePosition;
 	float			m_speed;
