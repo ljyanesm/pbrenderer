@@ -16,7 +16,11 @@ class OverlayRenderer
 
 	GLuint m_depthFBO;
 
-	glm::mat4 sceneModelMatrix;
+	glm::mat4 sceneViewMatrix;
+	glm::mat4 SCPPositionMatrix;
+	float4	surfacePosition;
+	float4	surfaceNormal;
+	float4	forceVector;
 public:
 	OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam);
 	~OverlayRenderer(void);
@@ -24,7 +28,11 @@ public:
 	void display() const;
 
 	void setDepthFBO(GLuint dFBO) { m_depthFBO = dFBO; }
-	void setSceneModelMatrix (glm::mat4 mMat) { sceneModelMatrix = mMat; }
+	void setSceneViewMatrix(glm::mat4 mMat) { sceneViewMatrix = mMat; }
+	void setSCPPositionMatrix(glm::mat4 scpMat) { SCPPositionMatrix = scpMat; }
+	void setSurfacePosition(float4 p) { surfacePosition = p; }
+	void setSurfaceNormal(float4 n) {surfaceNormal = n; }
+	void setForceVector(float4 f) { forceVector = f; }
 private:
 	void _drawTriangles(LYMesh *m_mesh) const;
 };

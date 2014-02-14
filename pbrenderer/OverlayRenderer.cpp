@@ -34,24 +34,40 @@ void OverlayRenderer::display() const {
 	glm::mat4 mvpMat;
 	glm::mat4 model;
 
+	/*
+	 Surface object:
+		Is located at the surface point and its oriented by the surface normal
+	 */
+	glm::vec3 surface_normal = -glm::vec3(surfaceNormal.x, surfaceNormal.y, surfaceNormal.z);
 	model = glm::mat4();
-	//model *= glm::scale(0.1f, 0.1f, 0.1f);
-	modelView = m_camera->getViewMatrix() * model;
+	model *= SCPPositionMatrix; //glm::translate(glm::vec3(surfacePosition.x, surfacePosition.y, surfacePosition.z));
+	model *= glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
+	model *= glm::scale(0.1f, 0.1f, 0.1f);
+	modelView = sceneViewMatrix * model;
+	mvpMat = m_camera->getProjection() * modelView;
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
+	_drawTriangles(surfaceObject);
+
+	/*
+	Force vector:
+		Goes from the position of the surface point with the direction of the surface normal
+		and has the size of its magnitude.
+	*/
+	float force_mag = length(forceVector);
+	model = glm::mat4();
+	model *= SCPPositionMatrix;
+	model *= glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
+	model *= glm::scale(glm::vec3(0.5f, 0.5f, 0.5f));
+	model *= glm::scale(glm::vec3(1.f, 1.f, 0.5f+force_mag));
+	modelView = sceneViewMatrix * model;
 	mvpMat = m_camera->getProjection() * modelView;
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &m_camera->getProjection()[0][0]);
 	glUniform4fv( glGetUniformLocation(normalShader->getProgramId(), "lightDir"), 1, &m_camera->getLightDir()[0]);
 
-	_drawTriangles(vectorObject);
-
-	//model = glm::mat4();
-	//model *= glm::scale(0.1f, 0.1f, 0.1f);
-	//modelView = m_camera->getViewMatrix() * model;
-	//mvpMat = m_camera->getProjection() * modelView;
-	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
-	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
-	//_drawTriangles(surfaceObject);
+	if ( force_mag > 0.01f) _drawTriangles(vectorObject);
 
 	//model = glm::mat4();
 	//model *= glm::scale(0.1f, 0.1f, 0.1f);

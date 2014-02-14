@@ -66,8 +66,8 @@ void LYHapticInterface::setSpeed( float s )
 
 float3 LYHapticInterface::calculateFeedbackUpdateProxy()
 {
-	float3 force = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
-	return force;
+	m_forceVector = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
+	return m_forceVector;
 }
 
 void LYHapticInterface::pause()
@@ -168,4 +168,19 @@ size_t LYHapticInterface::getHIPNumVertices() const
 bool LYHapticInterface::isEnabled() const
 {
 	return COLLISION_FORCEFEEDBACK;
+}
+
+float3 LYHapticInterface::getSurfacePosition() const
+{
+	return m_collider.scpPosition;
+}
+
+float3 LYHapticInterface::getSurfaceNormal() const
+{
+	return m_collider.surfaceTgPlane;
+}
+
+float3 LYHapticInterface::getForceVector() const
+{
+	return m_forceVector;
 }

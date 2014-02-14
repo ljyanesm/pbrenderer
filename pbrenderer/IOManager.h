@@ -5,8 +5,9 @@ class IOManager
 {
 	float4 inputPosition;		// This is the input value from the device
 
-	float4 surfacePosition;		// This value is to be set at a 1kHz (Haptic) rate and read at about 60fps (Graphics)
-	float4 surfaceNormal;		// This value is to be set at a 1kHz (Haptic) rate and read at about 60fps (Graphics)
+	//float4 surfacePosition;		// This value is to be set at a 1kHz (Haptic) rate and read at about 60fps (Graphics)
+	//float4 surfaceNormal;		// This value is to be set at a 1kHz (Haptic) rate and read at about 60fps (Graphics)
+	//float4 forceVector;			// Force vector for rendering purposes
 
 	float4 wsPosition;			// Workspace center position
 	float4 wsDimension;			// Workspace total dimensions
@@ -21,11 +22,10 @@ public:
 	IOManager(LYHapticInterface *_d, float4 wsDim, float4 wsWD);
 	~IOManager(void);
 
-	const float4 getSurfacePosition() const { return surfacePosition; }
-	const float4 getSurfaceNormal() const { return surfaceNormal; }
-
-	void setSurfaceNormal(float4 sn) { surfaceNormal = sn; }
-	void setSurfacePosition (float4 sp) { surfacePosition = sp; }
+	const float4 getSurfacePosition() const { return make_float4(_device->getSurfacePosition(), 1.0f); }
+	const float4 getSurfaceNormal() const { return make_float4(_device->getSurfaceNormal(), 0.0f); }
+	const float4 getForceVector() const { return make_float4(_device->getForceVector(), 0.0f); }
+	const glm::mat4 getSCPPositionMatrix() const { return _device->getProxyMatrix(); }
 
 	LYHapticInterface *getDevice() { return _device; }
 
