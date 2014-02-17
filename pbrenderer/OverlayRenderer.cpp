@@ -28,7 +28,7 @@ void OverlayRenderer::display() const {
 		GL_DEPTH_BUFFER_BIT, GL_NEAREST);	
 	normalShader->useShader();
 	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glm::mat4 modelView;
 	glm::mat4 mvpMat;
