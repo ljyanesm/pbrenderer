@@ -27,7 +27,8 @@ void main()
     float specular = pow(max(0.0f, dot(H,N)),50.0f);
     float diffuse = max(0.0f, dot(incident, N));
 
-//	vec4 finalColor = vec4(inColor.rgb * diffuse + specular * vec3(1.0f), 1.0f);
-	vec4 finalColor = vec4(vec3(1.0) * diffuse + specular * vec3(1.0f), 1.0f);
-    gl_FragColor = vec4(gl_FragDepth);
+	vec4 finalColor = vec4(inColor.rgb * diffuse + specular * vec3(1.0f), 1.0f);
+//	vec4 finalColor = vec4(vec3(1.0) * diffuse + specular * vec3(1.0f), 1.0f);
+//	vec4 finalColor = vec4(gl_FragDepth);
+	gl_FragColor = finalColor;
 }

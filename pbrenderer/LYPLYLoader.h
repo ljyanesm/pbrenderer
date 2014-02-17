@@ -116,7 +116,7 @@ public:
 		std::string currentLine;
 		unsigned long numVertices(0);
 
-		scene = aiImportFile(filename.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
+		scene = aiImportFile(filename.c_str(), aiProcess_Triangulate);
 
 		std::vector<LYVertex> m_Vertices;
 		std::vector<unsigned int> m_Indices;
