@@ -32,6 +32,8 @@ public:
 
 	glm::mat4	getModelMatrix() { return modelMatrix; }
 	glm::vec3	getModelCentre() { return modelCentre; }
+	glm::vec3	getMinPoint() { return minP; }
+	glm::vec3	getMaxPoint() { return maxP; }
 	float		getScale() { return modelScale; }
 	GLuint		getVBO() { return VB; }
 	GLuint		getIB() { return IB; }
@@ -39,6 +41,7 @@ public:
 	size_t		getNumVertices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
 	bool		getRenderPoints(){ return m_points; }
 	std::vector<LYVertex> *getVertices() { return &m_Vertices; }
+	
 	void setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
 	void setRenderMode(bool points){ m_points = points; }
 
@@ -48,6 +51,7 @@ private:
     std::vector<LYVertex> m_Vertices;
 	glm::mat4	modelMatrix;
 	glm::vec3	modelCentre;
+	glm::vec3	minP, maxP;
 	float		modelScale;
 	GLuint VB;
 	GLuint IB;

@@ -186,14 +186,10 @@ public:
 		}
 
 		ret = new LYMesh(m_Vertices, Indices);
-		LYPLYLoader::nX = 0;
-		LYPLYLoader::nY = 0;
-		LYPLYLoader::nZ = 0;
-		LYPLYLoader::nNX = 0;
-		LYPLYLoader::nNY = 0;
-		LYPLYLoader::nNZ = 0;
-		LYPLYLoader::nR = 0; 
-		LYPLYLoader::nG = 0; 
+		LYPLYLoader::nX  = LYPLYLoader::nY = 0;
+		LYPLYLoader::nZ	 = LYPLYLoader::nNX = 0;
+		LYPLYLoader::nNY = LYPLYLoader::nNZ = 0;
+		LYPLYLoader::nR  = LYPLYLoader::nG = 0; 
 		LYPLYLoader::nB = 0;
 		m_Vertices.resize(0);
 		Indices.resize(0);

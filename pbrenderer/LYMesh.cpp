@@ -44,6 +44,8 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
 	if (maxDist < dY) maxDist = dY;
 	if (maxDist < dZ) maxDist = dZ;
 	float factor = maxDist;
+	minP = min;
+	maxP = max;
 	modelScale = factor;
 	modelMatrix = glm::translate(modelMatrix, -modelCentre);
 }
