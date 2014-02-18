@@ -179,7 +179,7 @@ void initCUDA(int argc, char **argv)
 
 void initGL(int *argc, char **argv){
 	glutInit(argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GL_MULTISAMPLE);
 	glutInitWindowSize(width, height);
 	glutCreateWindow(fps_string);
 
@@ -191,6 +191,7 @@ void initGL(int *argc, char **argv){
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.75, 0.75, 0.75, 1);
+	glEnable(GL_MULTISAMPLE_ARB);
 
 	setlocale(LC_ALL, "");
 	config4cpp::Configuration *cfg = config4cpp::Configuration::create();
@@ -492,10 +493,10 @@ void key(unsigned char key, int x, int y)
 		std::cout << "Influence Radius: " << influenceRadius << std::endl;
 		break;
 	case ':':
-		global_point_scale += 0.01f;
+		global_point_scale += 0.1f;
 		break;
 	case '@':
-		global_point_scale -= 0.01f;
+		global_point_scale -= 0.1f;
 		break;
 	case ';':
 		local_point_scale += 0.1f;
@@ -557,6 +558,12 @@ void display()
 	modelMatrix *= glm::translate(-modelCentre);
 	m_pMesh->setModelMatrix(modelMatrix);
 	ioInterface->getDevice()->setModelMatrix(modelMatrix);
+	ioInterface->getDevice()->setWorkspaceScale(
+		make_float3(
+		m_pMesh->getMaxPoint().x - m_pMesh->getMinPoint().x,
+		m_pMesh->getMaxPoint().y - m_pMesh->getMinPoint().y,
+		m_pMesh->getMaxPoint().z - m_pMesh->getMinPoint().z
+		));
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	/*/////////////////////////////////////////////////////////////////////////////////////////
