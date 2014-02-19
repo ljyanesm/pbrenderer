@@ -80,8 +80,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\tools\boost_1_50_0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\tools\boost_1_50_0\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -168,7 +168,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./project libraries\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;.\project libraries\freeglut\include;./project libraries\Assimp\include;.\project libraries\config4cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./project libraries\boost\include;./project libraries\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;.\project libraries\freeglut\include;./project libraries\Assimp\include;.\project libraries\config4cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -176,7 +176,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x64;.\project libraries\x64;.\project libraries\config4cpp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>./project libraries\boost\lib;./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x64;.\project libraries\x64;.\project libraries\config4cpp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut64.lib;glew64.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
