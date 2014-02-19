@@ -253,7 +253,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 
 	if (dist < R)
 	{
-		w = KernelQuintic(dist,R);
+		w = wendlandWeight(dist/R);
 		Ax += w * pos2.m_pos;
 		Nx += w * pos2.m_normal;
 		wn = length(Nx);
