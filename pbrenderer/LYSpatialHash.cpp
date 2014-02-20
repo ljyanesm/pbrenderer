@@ -51,6 +51,7 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(LYVertex));
 
 	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_pointGridIndex, m_numVertices*sizeof(uint));
@@ -145,6 +146,12 @@ void	LYSpatialHash::update()
 			m_numVertices,
 			m_numGridCells);
 
+		updatePositions(
+			m_sorted_points,
+			m_point_force,
+			dPos,
+			m_numVertices);
+
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
 		m_dirtyPos = false;
 	}
@@ -191,6 +198,10 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			Pseed = Ax;
 			Psurface = Pseed;
 			pos->scpPosition = Psurface;
+			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
+				Nx = make_float3(0.0f);
+				printf("Normal is NaN\n");
+			}
 			tgPlaneNormal = Nx;
 			pos->surfaceTgPlane = Nx;
 			float3 f = (Psurface - colliderPos);
@@ -220,6 +231,10 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			} while (length(dP) > 0.001);
 			Psurface = Pseed;
 			pos->scpPosition = Psurface;
+			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
+				Nx = make_float3(0.0f);
+				printf("Normal is NaN\n");
+			}
 			tgPlaneNormal = Nx;
 			pos->surfaceTgPlane = Nx;
 			float3 f = (Psurface - colliderPos);

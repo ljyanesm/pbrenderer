@@ -191,7 +191,7 @@ void initGL(int *argc, char **argv){
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.75, 0.75, 0.75, 1);
-	glEnable(GL_MULTISAMPLE_ARB);
+	//glEnable(GL_MULTISAMPLE_ARB);
 
 	setlocale(LC_ALL, "");
 	config4cpp::Configuration *cfg = config4cpp::Configuration::create();
