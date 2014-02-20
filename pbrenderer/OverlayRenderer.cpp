@@ -1,6 +1,5 @@
 #include "OverlayRenderer.h"
 
-
 OverlayRenderer::OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam)
 {
 	normalShader = new LYShader("./shaders/regularShader.vs", "./shaders/regularShader.frag");
@@ -41,7 +40,7 @@ void OverlayRenderer::display() const {
 	glm::vec3 surface_normal = -glm::vec3(surfaceNormal.x, surfaceNormal.y, surfaceNormal.z);
 	model = glm::mat4();
 	model *= SCPPositionMatrix; //glm::translate(glm::vec3(surfacePosition.x, surfacePosition.y, surfacePosition.z));
-	model *= glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
+	if( glm::length(surface_normal)) model *= glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
 	model *= glm::scale(0.1f, 0.1f, 0.1f);
 	modelView = sceneViewMatrix * model;
 	mvpMat = m_camera->getProjection() * modelView;
@@ -57,7 +56,7 @@ void OverlayRenderer::display() const {
 	float force_mag = length(forceVector);
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
-	model *= glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
+	if( glm::length(surface_normal)) model *= glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
 	model *= glm::scale(glm::vec3(0.5f, 0.5f, 0.5f));
 	model *= glm::scale(glm::vec3(1.f, 1.f, 0.5f+force_mag));
 	modelView = sceneViewMatrix * model;
