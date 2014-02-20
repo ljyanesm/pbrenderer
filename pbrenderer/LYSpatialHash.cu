@@ -139,8 +139,6 @@ extern "C" {
 #endif
 	}
 	
-}
-
 	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)
 	{
 #if USE_TEX
@@ -156,7 +154,7 @@ extern "C" {
 		// execute the kernel
         _updatePositions<<< numBlocks, numThreads >>>(
 												(LYVertex *) sortedPos,
-												(LYVertex *) force,
+												(float4 *) force,
 												(LYVertex *) oldPos,
 												numVertices);
 
