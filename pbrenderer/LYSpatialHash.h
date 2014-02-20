@@ -42,6 +42,7 @@ private:
 
 	LYVertex	*m_src_points;			// Source points saved in the GPU
 	LYVertex	*m_sorted_points;		// Sorted points saved in the GPU
+	float4		*m_point_force;			// Forces applied to the points...
 
 	uint		*m_hCellStart;
 	uint		*m_hCellEnd;

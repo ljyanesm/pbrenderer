@@ -257,6 +257,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 		Ax += w * pos2.m_pos;
 		Nx += w * pos2.m_normal;
 		wn = length(Nx);
+		//force += pos2.m_pos - pos2.m_normal*0.01f;
 	}
 	else {
 		return;
@@ -270,4 +271,17 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uin
 	atomicAdd(&dev_params->Nx.z, Nx.z);
 	atomicAdd(&dev_params->w_tot, w);
 	atomicAdd(&dev_params->wn_tot, wn);
+}
+
+__global__
+void _updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, size_t numVertices)
+{
+		uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+    if (index >= numVertices) return;
+
+    // read particle data from sorted arrays
+	LYVertex pos2 = FETCH(oldPos, index);
+	float3	F = make_float3(FETCH(forces, index));
+	pos2.m_pos -= pos2.m_normal*F;
 }
