@@ -63,6 +63,7 @@ private:
 	float3		*m_uForceFeedback;
 	float3		*m_forceFeedback;
 
+	bool		m_touched;
 	bool		m_dirtyPos;
 
 	SimParams	m_params;

@@ -107,7 +107,7 @@ extern "C" {
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, float4 *force, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	void collisionCheck(float3 pos, LYVertex *sortedPos, float4 *force, bool inContact, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 	{
 #if USE_TEX
         checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numVertices*sizeof(float4)));
@@ -120,14 +120,15 @@ extern "C" {
         computeGridSize(numVertices, 256, numBlocks, numThreads);
 
 		// execute the kernel
-        _collisionCheckD<<< numBlocks, numThreads >>>(pos,
-											(LYVertex *)sortedPos,
-											(float4 *) force,
-                                              gridParticleIndex,
-                                              cellStart,
-                                              cellEnd,
-											  dev_params,
-                                              numVertices);
+        _collisionCheckD<<< numBlocks, numThreads >>>(	pos,
+														(LYVertex *)sortedPos,
+														(float4 *) force,
+														inContact,
+														gridParticleIndex,
+														cellStart,
+														cellEnd,
+														dev_params,
+														numVertices);
 
         // check if kernel invocation generated an error
         getLastCudaError("Kernel execution failed");
