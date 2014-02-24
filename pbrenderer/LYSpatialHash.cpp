@@ -51,7 +51,9 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
-	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(LYVertex));
+
+	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(float4));
+	cudaMemset(m_point_force, 0, m_numVertices*sizeof(float4));
 
 	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_pointGridIndex, m_numVertices*sizeof(uint));
@@ -166,7 +168,7 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	
 	
-	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
+	collisionCheck(pos, m_sorted_points, m_point_force, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 
 
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));

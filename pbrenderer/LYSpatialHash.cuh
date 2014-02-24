@@ -20,8 +20,8 @@ extern "C"
 
 	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices);
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
-	void _collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
+	void collisionCheck(float3 pos, LYVertex *sortedPos, float4 *force, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
+	void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 	void _collisionCheck_cellsD(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numCells);
 
 	void updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, size_t numVertices);
