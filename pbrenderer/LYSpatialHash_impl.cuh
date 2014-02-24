@@ -228,7 +228,7 @@ void _collisionCheck_cellsD(float3 pos, LYVertex *oldPos, uint *gridParticleInde
 	}
 }
 __global__
-void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, bool inContact, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
@@ -256,7 +256,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, uint *gridPar
 		Nx += w * pos2.m_normal;
 		wn = length(Nx);
 		uint sortedIndex = gridParticleIndex[index];
-		force[sortedIndex] += make_float4(0.001f);
+		if (inContact) force[sortedIndex] += make_float4(0.001f);
 	}
 	else {
 		return;
@@ -280,7 +280,6 @@ void _updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, siz
     if (index >= numVertices) return;
 
     // read particle data from sorted arrays
-	LYVertex pos2 = FETCH(sortedPos, index);
 	float3	F = make_float3(FETCH(forces, index));
 	float3 new_pos = F;
 	oldPos[index].m_pos -= new_pos*oldPos[index].m_normal;

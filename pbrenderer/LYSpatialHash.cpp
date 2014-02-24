@@ -36,6 +36,7 @@ m_gridSize(gridSize)
 	m_hParams->Ax			= make_float3(0.0f);
 	m_hParams->Nx			= make_float3(0.0f);
 
+	m_touched				= false;
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -167,9 +168,7 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	
-	
-	collisionCheck(pos, m_sorted_points, m_point_force, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
-
+	collisionCheck(pos, m_sorted_points, m_point_force, m_touched, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }
@@ -188,7 +187,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 	float3 Ax, Nx;
 	float Fx;
 
-	if (!touched){
+	if (!m_touched){
 		calculateCollisions(colliderPos);
 		Ax = m_hParams->Ax/m_hParams->w_tot;
 		Nx = m_hParams->Nx/length(m_hParams->Nx);
@@ -196,27 +195,25 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 		Fx = dot(Nx, colliderPos - Ax);
 
 		if (Fx < 0.0f){
-			touched = true;
+			m_touched = true;
 			Pseed = Ax;
-			Psurface = Pseed;
-			pos->scpPosition = Psurface;
+			pos->scpPosition = Pseed;
 			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
 				Nx = make_float3(0.0f);
 				printf("Normal is NaN\n");
 			}
-			tgPlaneNormal = Nx;
 			pos->surfaceTgPlane = Nx;
-			float3 f = (Psurface - colliderPos);
+			float3 f = (Pseed - colliderPos);
 			return f;
 		} else {
 			pos->scpPosition = colliderPos;
-			touched = false;
+			m_touched = false;
 		}
 	} else {
-		float dist = dot(colliderPos - Psurface, tgPlaneNormal);
+		float dist = dot(colliderPos - pos->scpPosition, pos->surfaceTgPlane);
 		if (dist <= 0)
 		{
-			Pseed = colliderPos - dist*tgPlaneNormal;
+			Pseed = colliderPos - dist*pos->surfaceTgPlane;
 			do{
 				calculateCollisions(Pseed);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
@@ -231,18 +228,16 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				dP *= 0.01f;
 				Pseed += dP;
 			} while (length(dP) > 0.001);
-			Psurface = Pseed;
-			pos->scpPosition = Psurface;
+			pos->scpPosition = Pseed;
 			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
 				Nx = make_float3(0.0f);
 				printf("Normal is NaN\n");
 			}
-			tgPlaneNormal = Nx;
 			pos->surfaceTgPlane = Nx;
-			float3 f = (Psurface - colliderPos);
+			float3 f = (Pseed - colliderPos);
 			return f;
 		} else {
-			touched = false;
+			m_touched = false;
 			pos->scpPosition = colliderPos;
 		}
 	}
