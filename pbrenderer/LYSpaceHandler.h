@@ -22,4 +22,6 @@ public:
 	virtual float3	calculateFeedbackUpdateProxy(Collider *pos) = 0;
 	virtual void	calculateCollisions(float3 pos) = 0;
 	virtual void	setInfluenceRadius(float r) = 0;
+	virtual void	toggleUpdatePositions() = 0;
+	virtual void	resetPositions() = 0;
 };

@@ -37,6 +37,8 @@ public:
 
 	void	dump();
 
+	void	resetPositions();
+	void	toggleUpdatePositions();
 private:
 	cudaGraphicsResource *m_vboRes;
 
@@ -63,6 +65,7 @@ private:
 	float3		*m_uForceFeedback;
 	float3		*m_forceFeedback;
 
+	bool		m_updatePositions;
 	bool		m_touched;
 	bool		m_dirtyPos;
 

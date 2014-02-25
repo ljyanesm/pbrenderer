@@ -418,9 +418,6 @@ void key(unsigned char key, int x, int y)
 		mode = (LYScreenspaceRenderer::DisplayMode)
 			((mode+ 1) % LYScreenspaceRenderer::NUM_DISPLAY_MODES);
 		break;
-	case 'r':
-		displayEnabled = !displayEnabled;
-		break;
 	case GLUT_KEY_UP:
 		camera_trans[2] += 0.5f;
 		break;
@@ -503,6 +500,12 @@ void key(unsigned char key, int x, int y)
 		break;
 	case '\'':
 		local_point_scale -= 0.1f;
+		break;
+	case 'r':
+		space_handler->resetPositions();
+		break;
+	case '#':
+		space_handler->toggleUpdatePositions();
 		break;
 	}
 	devPosition += pos;

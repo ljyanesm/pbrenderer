@@ -11,7 +11,6 @@ m_gridSize(gridSize)
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	m_srcVBO		= vbo;
 	m_numVertices	= numVertices;
-	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
 	m_forceFeedback = new float3[1];
 	m_hParams	=	new SimParams();
@@ -37,6 +36,7 @@ m_gridSize(gridSize)
 	m_hParams->Nx			= make_float3(0.0f);
 
 	m_touched				= false;
+	m_updatePositions		= false;
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -44,7 +44,12 @@ m_gridSize(gridSize)
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 	
-	size_t classSize = m_numVertices*sizeof(LYVertex) + m_numVertices*sizeof(uint)*2 + m_numGridCells*sizeof(uint)*2;
+	size_t classSize = 
+		m_numVertices*sizeof(LYVertex)*2 
+		+ m_numVertices*sizeof(uint)*2 
+		+ m_numGridCells*sizeof(uint)*2
+		+ m_numVertices*sizeof(float4);
+
 	(classSize > 1024*1024) ? 
 		printf("This mesh requires: %d MB\n", classSize / (1024*1024)) :
 	(classSize > 1024) ? printf("This mesh requires: %d Kb\n", classSize / (1024)):
@@ -52,6 +57,7 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_src_points, m_numVertices*sizeof(LYVertex));
 
 	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(float4));
 	cudaMemset(m_point_force, 0, m_numVertices*sizeof(float4));
@@ -64,6 +70,16 @@ m_gridSize(gridSize)
 	LYCudaHelper::allocateArray((void **)&m_dForceFeedback, sizeof(float3));
 	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
 	LYCudaHelper::printMemInfo();
+
+	
+	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
+
+	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+
+	checkCudaErrors(cudaMemcpy(m_src_points, dPos, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
+
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
+
 
 	cudaDeviceSynchronize();
 	m_dirtyPos = true;
@@ -102,7 +118,6 @@ void	LYSpatialHash::setVBO(uint vbo)
 {
 	m_srcVBO = vbo;
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&m_vboRes, vbo, cudaGraphicsMapFlagsWriteDiscard));
-
 }
 
 void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
@@ -149,11 +164,14 @@ void	LYSpatialHash::update()
 			m_numVertices,
 			m_numGridCells);
 
-		updatePositions(
-			m_sorted_points,
-			m_point_force,
-			dPos,
-			m_numVertices);
+		if (m_updatePositions)
+		{
+			updatePositions(
+				m_sorted_points,
+				m_point_force,
+				dPos,
+				m_numVertices);
+		}
 
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
 		m_dirtyPos = false;
@@ -265,4 +283,16 @@ void LYSpatialHash::dump()
 		}
 	}
 	printf("maximum particles per cell = %d\n", maxCellSize);
+}
+
+void LYSpatialHash::toggleUpdatePositions()
+{
+	m_updatePositions = !m_updatePositions;
+}
+
+void LYSpatialHash::resetPositions()
+{
+	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+	checkCudaErrors(cudaMemcpy(dPos, m_src_points, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
 }
