@@ -63,7 +63,7 @@ private:
 
 	float3		*m_dForceFeedback;
 	float3		*m_uForceFeedback;
-	float3		*m_forceFeedback;
+	float4		m_forceFeedback;
 
 	bool		m_updatePositions;
 	bool		m_touched;

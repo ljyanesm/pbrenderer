@@ -212,7 +212,7 @@ void initGL(int *argc, char **argv){
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 
-	m_pCamera = new LYCamera(width, height, glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
+	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
@@ -580,7 +580,7 @@ void display()
 	Setup the view matrix
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewTransformation = glm::mat4();
-	viewMatrix *= glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewMatrix *= glm::lookAt(m_pCamera->getPosition(), glm::vec3(0,0,0), glm::vec3(0,1,0));
 	viewTransformation *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	viewTransformation *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	viewTransformation *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));

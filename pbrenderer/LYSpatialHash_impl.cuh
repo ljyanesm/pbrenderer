@@ -183,52 +183,55 @@ float3 _collideCell(int3    gridPos,
     return Ax;
 }
 
+//__global__
+//void _collisionCheck_cellsD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numCells)
+//
+//{
+//	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+//	if (index >= numCells) return;
+//	int start = cellStart[index];
+//	int end   = cellEnd  [index];
+//	for (int i = start; i < end; i++)
+//	{
+//		LYVertex pos2 = FETCH(oldPos, index);
+//		float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
+//
+//		float3 force = make_float3(0.0f, 0.0f, 0.0f);
+//
+//		float3 Ax = make_float3(0.0f);
+//		float3 Nx = make_float3(0.0f);
+//
+//		float3 npos;
+//		float w = 0.0f;
+//		npos = pos2.m_pos - pos;
+//		float dist = length(npos);
+//		float R = params.R;
+//
+//		if (dist < R)
+//		{
+//			w= KernelQuintic(dist,R);
+//			Ax += w * pos2.m_pos;
+//			float3 Ntmp = w * pos2.m_normal;
+//			Nx += Ntmp;
+//		}
+//		else {
+//			return;
+//		}
+//
+//		atomicAdd(&dev_params->Ax.x, Ax.x);
+//		atomicAdd(&dev_params->Ax.y, Ax.y);
+//		atomicAdd(&dev_params->Ax.z, Ax.z);
+//		atomicAdd(&dev_params->Nx.x, Nx.x);
+//		atomicAdd(&dev_params->Nx.y, Nx.y);
+//		atomicAdd(&dev_params->Nx.z, Nx.z);
+//		atomicAdd(&dev_params->w_tot, w);
+//	}
+//}
+
+
+
 __global__
-void _collisionCheck_cellsD(float3 pos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numCells)
-
-{
-	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	if (index >= numCells) return;
-	int start = cellStart[index];
-	int end   = cellEnd  [index];
-	for (int i = start; i < end; i++)
-	{
-		LYVertex pos2 = FETCH(oldPos, index);
-		float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
-
-		float3 force = make_float3(0.0f, 0.0f, 0.0f);
-
-		float3 Ax = make_float3(0.0f);
-		float3 Nx = make_float3(0.0f);
-
-		float3 npos;
-		float w = 0.0f;
-		npos = pos2.m_pos - pos;
-		float dist = length(npos);
-		float R = params.R;
-
-		if (dist < R)
-		{
-			w= KernelQuintic(dist,R);
-			Ax += w * pos2.m_pos;
-			float3 Ntmp = w * pos2.m_normal;
-			Nx += Ntmp;
-		}
-		else {
-			return;
-		}
-
-		atomicAdd(&dev_params->Ax.x, Ax.x);
-		atomicAdd(&dev_params->Ax.y, Ax.y);
-		atomicAdd(&dev_params->Ax.z, Ax.z);
-		atomicAdd(&dev_params->Nx.x, Nx.x);
-		atomicAdd(&dev_params->Nx.y, Nx.y);
-		atomicAdd(&dev_params->Nx.z, Nx.z);
-		atomicAdd(&dev_params->w_tot, w);
-	}
-}
-__global__
-void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, bool inContact, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
@@ -256,7 +259,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, bool inContac
 		Nx += w * pos2.m_normal;
 		wn = length(Nx);
 		uint sortedIndex = gridParticleIndex[index];
-		if (inContact) force[sortedIndex] += make_float4(0.001f);
+		if (length(forceVector) > 0.03) force[sortedIndex] += forceVector*0.001f;
 	}
 	else {
 		return;
@@ -272,6 +275,39 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, bool inContac
 	atomicAdd(&dev_params->wn_tot, wn);
 }
 
+//__device__
+//	float3 normalField(int3     gridPos,
+//	uint    index,
+//	float3  pos,
+//	float4* oldPos,
+//	float*  oldMass,
+//	float* oldPressure,
+//	float4* oldVel,
+//	uint*   cellStart,
+//	uint*   cellEnd)
+//{
+//	uint gridHash = calcGridHash(gridPos);
+//	float r = params.R;
+//	// get start of bucket for this cell
+//	uint startIndex = FETCH(cellStart, gridHash);
+//	float3 normal = make_float3(0.0f);
+//	if (startIndex != 0xffffffff) {        // cell is not empty
+//		// iterate over particles in this cell
+//		uint endIndex = FETCH(cellEnd, gridHash);
+//		for(uint j=startIndex; j<endIndex; j++) {
+//			if (j != index) {              // check not colliding with self
+//				float3 pos2 = make_float3(FETCH(oldPos, j));
+//				float rho_j = FETCH(oldMass, j);
+//				rho_j = 1.0f/rho_j;
+//				float dist = length(pos - pos2);
+//				normal += wendlandWeight(dist/R); * params.defaultKernelGradient * rho_j;
+//			}
+//		}
+//	}
+//
+//	return force;
+//}
+
 __global__
 void _updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, size_t numVertices)
 {
@@ -281,8 +317,33 @@ void _updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, siz
 
     // read particle data from sorted arrays
 	float3	F = make_float3(FETCH(forces, index));
+	if (length(F) < 0.0001) return;
+
 	float3 new_pos = F;
-	oldPos[index].m_pos -= new_pos*oldPos[index].m_normal;
+	float3 pos = oldPos[index].m_pos;
+	oldPos[index].m_pos -= new_pos;
+
+	int3 gridPos = calcGridPos(pos);
+	
 	//sortedPos[index].m_pos -= new_pos;
+	
+	//for(int z=-1; z<=1; z++) {
+	//	for(int y=-1; y<=1; y++) {
+	//		for(int x=-1; x<=1; x++) {
+	//			int3 neighbourPos = gridPos + make_int3(x, y, z);
+	//			normal += normalField(neighbourPos, index, pos, oldPos, oldMass, oldPressure, oldVel, cellStart, cellEnd);
+	//		}
+	//	}
+	//}
+
+	//// write new velocity back to original unsorted location
+	//uint originalIndex = gridParticleIndex[index];
+	////printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
+	//newForce[originalIndex] = make_float4(force, 0.0f);
+	//oldNor[index] = make_float4(normal, 0.0f);
+	//newNor[originalIndex] = make_float4(normal, 0.0f);
+
 	forces[index] = make_float4(0.0f);
+
+	__syncthreads ();
 }
