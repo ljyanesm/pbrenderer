@@ -12,7 +12,7 @@ m_gridSize(gridSize)
 	m_srcVBO		= vbo;
 	m_numVertices	= numVertices;
 
-	m_forceFeedback = new float3[1];
+	m_forceFeedback = make_float4(0.0f);
 	m_hParams	=	new SimParams();
 
 	m_params.gridSize = m_gridSize;
@@ -90,7 +90,6 @@ LYSpatialHash::~LYSpatialHash(void)
 {
 	delete m_hCellEnd;
 	delete m_hCellStart;
-	delete m_forceFeedback;
 	delete m_hParams;	
 
 	LYCudaHelper::freeArray(m_sorted_points);
@@ -186,7 +185,7 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	
-	collisionCheck(pos, m_sorted_points, m_point_force, m_touched, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
+	collisionCheck(pos, m_sorted_points, m_point_force, m_forceFeedback, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }
@@ -207,8 +206,14 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 
 	if (!m_touched){
 		calculateCollisions(colliderPos);
+
+		//if (m_hParams->w_tot < 0.00001){
+		//	return make_float3(m_forceFeedback);
+		//}
+
 		Ax = m_hParams->Ax/m_hParams->w_tot;
-		Nx = m_hParams->Nx/length(m_hParams->Nx);
+		float nLength = length(m_hParams->Nx);
+		Nx = m_hParams->Nx/nLength;
 
 		Fx = dot(Nx, colliderPos - Ax);
 
@@ -221,8 +226,8 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				printf("Normal is NaN\n");
 			}
 			pos->surfaceTgPlane = Nx;
-			float3 f = (Pseed - colliderPos);
-			return f;
+			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			return make_float3(m_forceFeedback);
 		} else {
 			pos->scpPosition = colliderPos;
 			m_touched = false;
@@ -252,15 +257,16 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				printf("Normal is NaN\n");
 			}
 			pos->surfaceTgPlane = Nx;
-			float3 f = (Pseed - colliderPos);
-			return f;
+			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			return make_float3(m_forceFeedback);
 		} else {
 			m_touched = false;
 			pos->scpPosition = colliderPos;
 		}
 	}
 
-	return make_float3(0.0f);
+	m_forceFeedback = make_float4(0.0f);
+	return make_float3(m_forceFeedback);
 }
 
 void LYSpatialHash::dump()
