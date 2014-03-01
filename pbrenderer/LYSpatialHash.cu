@@ -81,7 +81,6 @@ extern "C" {
 
 #if USE_TEX
 		checkCudaErrors(cudaBindTexture(0, oldPosTex, oldPos, numVertices*sizeof(float4)));
-		checkCudaErrors(cudaBindTexture(0, oldVelTex, oldVel, numVertices*sizeof(float4)));
 #endif
 
 		uint smemSize = sizeof(uint)*(numThreads+1);
@@ -108,13 +107,12 @@ extern "C" {
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	void collisionCheck(float3 pos, LYVertex *sortedPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 	{
 #if USE_TEX
-        checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numParticles*sizeof(float4)));
-        checkCudaErrors(cudaBindTexture(0, oldVelTex, sortedVel, numParticles*sizeof(float4)));
-        checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
-        checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+        checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numVertices*sizeof(float4)));
+        checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, 1*sizeof(uint)));
+        checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, 1*sizeof(uint)));
 #endif
 
         // thread per particle
@@ -122,20 +120,50 @@ extern "C" {
         computeGridSize(numVertices, 256, numBlocks, numThreads);
 
 		// execute the kernel
-        _collisionCheckD<<< numBlocks, numThreads >>>(pos,
-											(LYVertex *)sortedPos,
-                                              gridParticleIndex,
-                                              cellStart,
-                                              cellEnd,
-											  dev_params,
-                                              numVertices);
+        _collisionCheckD<<< numBlocks, numThreads >>>(	pos,
+														(LYVertex *)sortedPos,
+														(float4 *) force,
+														forceVector,
+														gridParticleIndex,
+														cellStart,
+														cellEnd,
+														dev_params,
+														numVertices);
 
         // check if kernel invocation generated an error
         getLastCudaError("Kernel execution failed");
 
 #if USE_TEX
         checkCudaErrors(cudaUnbindTexture(oldPosTex));
-        checkCudaErrors(cudaUnbindTexture(oldVelTex));
+        checkCudaErrors(cudaUnbindTexture(cellStartTex));
+        checkCudaErrors(cudaUnbindTexture(cellEndTex));
+#endif
+	}
+
+	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)
+	{
+#if USE_TEX
+        checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numVertices*sizeof(float4)));
+        checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, 1*sizeof(uint)));
+        checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, 1*sizeof(uint)));
+#endif
+
+        // thread per particle
+        uint numThreads, numBlocks;
+        computeGridSize(numVertices, 256, numBlocks, numThreads);
+
+		// execute the kernel
+        _updatePositions<<< numBlocks, numThreads >>>(
+												(LYVertex *) sortedPos,
+												(float4 *) force,
+												(LYVertex *) oldPos,
+												numVertices);
+
+        // check if kernel invocation generated an error
+        getLastCudaError("Kernel execution failed");
+
+#if USE_TEX
+        checkCudaErrors(cudaUnbindTexture(oldPosTex));
         checkCudaErrors(cudaUnbindTexture(cellStartTex));
         checkCudaErrors(cudaUnbindTexture(cellEndTex));
 #endif

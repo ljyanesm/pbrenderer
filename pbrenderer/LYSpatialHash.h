@@ -37,11 +37,14 @@ public:
 
 	void	dump();
 
+	void	resetPositions();
+	void	toggleUpdatePositions();
 private:
 	cudaGraphicsResource *m_vboRes;
 
 	LYVertex	*m_src_points;			// Source points saved in the GPU
 	LYVertex	*m_sorted_points;		// Sorted points saved in the GPU
+	float4		*m_point_force;			// Forces applied to the points...
 
 	uint		*m_hCellStart;
 	uint		*m_hCellEnd;
@@ -60,8 +63,10 @@ private:
 
 	float3		*m_dForceFeedback;
 	float3		*m_uForceFeedback;
-	float3		*m_forceFeedback;
+	float4		m_forceFeedback;
 
+	bool		m_updatePositions;
+	bool		m_touched;
 	bool		m_dirtyPos;
 
 	SimParams	m_params;
