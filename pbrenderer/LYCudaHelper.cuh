@@ -16,6 +16,7 @@
 namespace LYCudaHelper
 {
 	void allocateHostArray(void **devPtr, size_t size, unsigned int flag = cudaHostAllocPortable);
+	void memsetDeviceArray(void **devPtr, size_t size, int value);
 	void freeHostArray(void *devPtr);
 	void allocateArray(void **devPtr, size_t size);
 	void freeArray(void *devPtr);

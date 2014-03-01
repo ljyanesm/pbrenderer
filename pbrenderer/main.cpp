@@ -191,7 +191,7 @@ void initGL(int *argc, char **argv){
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.75, 0.75, 0.75, 1);
-	glEnable(GL_MULTISAMPLE_ARB);
+	//glEnable(GL_MULTISAMPLE_ARB);
 
 	setlocale(LC_ALL, "");
 	config4cpp::Configuration *cfg = config4cpp::Configuration::create();
@@ -212,7 +212,7 @@ void initGL(int *argc, char **argv){
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 
-	m_pCamera = new LYCamera(width, height, glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
+	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
@@ -418,9 +418,6 @@ void key(unsigned char key, int x, int y)
 		mode = (LYScreenspaceRenderer::DisplayMode)
 			((mode+ 1) % LYScreenspaceRenderer::NUM_DISPLAY_MODES);
 		break;
-	case 'r':
-		displayEnabled = !displayEnabled;
-		break;
 	case GLUT_KEY_UP:
 		camera_trans[2] += 0.5f;
 		break;
@@ -504,6 +501,12 @@ void key(unsigned char key, int x, int y)
 	case '\'':
 		local_point_scale -= 0.1f;
 		break;
+	case 'r':
+		space_handler->resetPositions();
+		break;
+	case '#':
+		space_handler->toggleUpdatePositions();
+		break;
 	}
 	devPosition += pos;
 	glutPostRedisplay();
@@ -577,7 +580,7 @@ void display()
 	Setup the view matrix
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewTransformation = glm::mat4();
-	viewMatrix *= glm::lookAt(glm::vec3(0,0,50), glm::vec3(0,0,0), glm::vec3(0,1,0));
+	viewMatrix *= glm::lookAt(m_pCamera->getPosition(), glm::vec3(0,0,0), glm::vec3(0,1,0));
 	viewTransformation *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	viewTransformation *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	viewTransformation *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));

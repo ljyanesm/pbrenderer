@@ -5,6 +5,11 @@ void LYCudaHelper::allocateHostArray(void **devPtr, size_t size, unsigned int fl
 	checkCudaErrors(cudaHostAlloc(devPtr, size, cudaHostAllocMapped));
 }
 
+void LYCudaHelper::memsetDeviceArray(void **devPtr, size_t size, int value)
+{
+	checkCudaErrors(cudaMemset(devPtr, value, size));
+}
+
 void LYCudaHelper::freeHostArray(void *devPtr)
 {
 	checkCudaErrors(cudaFreeHost(devPtr));

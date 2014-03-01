@@ -11,9 +11,8 @@ m_gridSize(gridSize)
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	m_srcVBO		= vbo;
 	m_numVertices	= numVertices;
-	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
-	m_forceFeedback = new float3[1];
+	m_forceFeedback = make_float4(0.0f);
 	m_hParams	=	new SimParams();
 
 	m_params.gridSize = m_gridSize;
@@ -36,6 +35,8 @@ m_gridSize(gridSize)
 	m_hParams->Ax			= make_float3(0.0f);
 	m_hParams->Nx			= make_float3(0.0f);
 
+	m_touched				= false;
+	m_updatePositions		= false;
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -43,7 +44,12 @@ m_gridSize(gridSize)
 	m_hCellEnd = new uint[m_numGridCells];
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 	
-	size_t classSize = m_numVertices*sizeof(LYVertex) + m_numVertices*sizeof(uint)*2 + m_numGridCells*sizeof(uint)*2;
+	size_t classSize = 
+		m_numVertices*sizeof(LYVertex)*2 
+		+ m_numVertices*sizeof(uint)*2 
+		+ m_numGridCells*sizeof(uint)*2
+		+ m_numVertices*sizeof(float4);
+
 	(classSize > 1024*1024) ? 
 		printf("This mesh requires: %d MB\n", classSize / (1024*1024)) :
 	(classSize > 1024) ? printf("This mesh requires: %d Kb\n", classSize / (1024)):
@@ -51,6 +57,10 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_src_points, m_numVertices*sizeof(LYVertex));
+
+	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(float4));
+	cudaMemset(m_point_force, 0, m_numVertices*sizeof(float4));
 
 	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_pointGridIndex, m_numVertices*sizeof(uint));
@@ -61,6 +71,16 @@ m_gridSize(gridSize)
 	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
 	LYCudaHelper::printMemInfo();
 
+	
+	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
+
+	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+
+	checkCudaErrors(cudaMemcpy(m_src_points, dPos, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
+
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
+
+
 	cudaDeviceSynchronize();
 	m_dirtyPos = true;
 }
@@ -70,7 +90,6 @@ LYSpatialHash::~LYSpatialHash(void)
 {
 	delete m_hCellEnd;
 	delete m_hCellStart;
-	delete m_forceFeedback;
 	delete m_hParams;	
 
 	LYCudaHelper::freeArray(m_sorted_points);
@@ -98,7 +117,6 @@ void	LYSpatialHash::setVBO(uint vbo)
 {
 	m_srcVBO = vbo;
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&m_vboRes, vbo, cudaGraphicsMapFlagsWriteDiscard));
-
 }
 
 void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
@@ -145,6 +163,15 @@ void	LYSpatialHash::update()
 			m_numVertices,
 			m_numGridCells);
 
+		if (m_updatePositions)
+		{
+			updatePositions(
+				m_sorted_points,
+				m_point_force,
+				dPos,
+				m_numVertices);
+		}
+
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
 		m_dirtyPos = false;
 	}
@@ -158,9 +185,7 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	
-	
-	collisionCheck(pos, m_sorted_points, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
-
+	collisionCheck(pos, m_sorted_points, m_point_force, m_forceFeedback, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 }
@@ -179,31 +204,39 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 	float3 Ax, Nx;
 	float Fx;
 
-	if (!touched){
+	if (!m_touched){
 		calculateCollisions(colliderPos);
+
+		//if (m_hParams->w_tot < 0.00001){
+		//	return make_float3(m_forceFeedback);
+		//}
+
 		Ax = m_hParams->Ax/m_hParams->w_tot;
-		Nx = m_hParams->Nx/length(m_hParams->Nx);
+		float nLength = length(m_hParams->Nx);
+		Nx = m_hParams->Nx/nLength;
 
 		Fx = dot(Nx, colliderPos - Ax);
 
 		if (Fx < 0.0f){
-			touched = true;
+			m_touched = true;
 			Pseed = Ax;
-			Psurface = Pseed;
-			pos->scpPosition = Psurface;
-			tgPlaneNormal = Nx;
+			pos->scpPosition = Pseed;
+			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
+				Nx = make_float3(0.0f);
+				printf("Normal is NaN\n");
+			}
 			pos->surfaceTgPlane = Nx;
-			float3 f = (Psurface - colliderPos);
-			return f;
+			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			return make_float3(m_forceFeedback);
 		} else {
 			pos->scpPosition = colliderPos;
-			touched = false;
+			m_touched = false;
 		}
 	} else {
-		float dist = dot(colliderPos - Psurface, tgPlaneNormal);
+		float dist = dot(colliderPos - pos->scpPosition, pos->surfaceTgPlane);
 		if (dist <= 0)
 		{
-			Pseed = colliderPos - dist*tgPlaneNormal;
+			Pseed = colliderPos - dist*pos->surfaceTgPlane;
 			do{
 				calculateCollisions(Pseed);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
@@ -218,19 +251,22 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				dP *= 0.01f;
 				Pseed += dP;
 			} while (length(dP) > 0.001);
-			Psurface = Pseed;
-			pos->scpPosition = Psurface;
-			tgPlaneNormal = Nx;
+			pos->scpPosition = Pseed;
+			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
+				Nx = make_float3(0.0f);
+				printf("Normal is NaN\n");
+			}
 			pos->surfaceTgPlane = Nx;
-			float3 f = (Psurface - colliderPos);
-			return f;
+			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			return make_float3(m_forceFeedback);
 		} else {
-			touched = false;
+			m_touched = false;
 			pos->scpPosition = colliderPos;
 		}
 	}
 
-	return make_float3(0.0f);
+	m_forceFeedback = make_float4(0.0f);
+	return make_float3(m_forceFeedback);
 }
 
 void LYSpatialHash::dump()
@@ -253,4 +289,16 @@ void LYSpatialHash::dump()
 		}
 	}
 	printf("maximum particles per cell = %d\n", maxCellSize);
+}
+
+void LYSpatialHash::toggleUpdatePositions()
+{
+	m_updatePositions = !m_updatePositions;
+}
+
+void LYSpatialHash::resetPositions()
+{
+	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+	checkCudaErrors(cudaMemcpy(dPos, m_src_points, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
 }
