@@ -12,3 +12,4 @@ Debug Cuda Release/*
 pbrenderer/Cuda Emulation/*
 *.orig
 *.vsp
+pbrenderer/docs/*
