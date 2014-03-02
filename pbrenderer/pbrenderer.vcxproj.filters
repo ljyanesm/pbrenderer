@@ -49,14 +49,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="OpenGL Renderer\Main Renderer">
-      <UniqueIdentifier>{adfda875-ce12-4c97-94df-07c0675106fd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="IODevices\Haptic">
       <UniqueIdentifier>{76950e44-467d-4c25-a3bb-767b05d12b65}</UniqueIdentifier>
     </Filter>
     <Filter Include="IODevices\Keyboard">
       <UniqueIdentifier>{758a05ef-1514-4796-b142-88a5928e5238}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Renderer\Polygonal Renderer">
+      <UniqueIdentifier>{adfda875-ce12-4c97-94df-07c0675106fd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -86,7 +86,7 @@
       <Filter>File Loaders</Filter>
     </ClCompile>
     <ClCompile Include="OverlayRenderer.cpp">
-      <Filter>OpenGL Renderer\Main Renderer</Filter>
+      <Filter>OpenGL Renderer\Polygonal Renderer</Filter>
     </ClCompile>
     <ClCompile Include="IOManager.cpp">
       <Filter>IODevices</Filter>
@@ -148,7 +148,7 @@
       <Filter>File Loaders</Filter>
     </ClInclude>
     <ClInclude Include="OverlayRenderer.h">
-      <Filter>OpenGL Renderer\Main Renderer</Filter>
+      <Filter>OpenGL Renderer\Polygonal Renderer</Filter>
     </ClInclude>
     <ClInclude Include="IOManager.h">
       <Filter>IODevices</Filter>
