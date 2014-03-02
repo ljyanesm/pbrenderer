@@ -5,7 +5,7 @@ OverlayRenderer::OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam)
 	normalShader = new LYShader("./shaders/regularShader.vs", "./shaders/regularShader.frag");
 	vectorObject = ply_loader->getInstance().readPolygonData("arrow.ply");
 	surfaceObject = ply_loader->getInstance().readPolygonData("surface.ply");
-	hapticWorkspaceObject = ply_loader->getInstance().readPolygonData("cube-wire.ply");
+	cubeObject = ply_loader->getInstance().readPolygonData("cube-wire.ply");
 	m_camera = cam;
 }
 
@@ -14,7 +14,7 @@ OverlayRenderer::~OverlayRenderer(void)
 {
 	delete vectorObject;
 	delete surfaceObject;
-	delete hapticWorkspaceObject;
+	delete cubeObject;
 }
 
 void OverlayRenderer::display() const {
@@ -74,13 +74,13 @@ void OverlayRenderer::display() const {
 
 	if ( force_mag > 0.01f) _drawTriangles(vectorObject);
 
-	//model = glm::mat4();
-	//model *= glm::scale(0.1f, 0.1f, 0.1f);
-	//modelView = m_camera->getViewMatrix() * model;
-	//mvpMat = m_camera->getProjection() * modelView;
-	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
-	//glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
-	//_drawTriangles(hapticWorkspaceObject);
+	model = glm::mat4();
+	model *= glm::scale(0.1f, 0.1f, 0.1f);
+	modelView = m_camera->getViewMatrix() * model;
+	mvpMat = m_camera->getProjection() * modelView;
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
+	_drawTriangles(cubeObject);
 	normalShader->delShader();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -106,6 +106,30 @@ void OverlayRenderer::_drawTriangles(LYMesh *m_mesh) const
 
 	size_t numIndices = m_mesh->getNumIndices();
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+}
+
+void OverlayRenderer::_drawLines(LYMesh *m_mesh) const
+{
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+
+	int vbo = m_mesh->getVBO();
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	int ib = m_mesh->getIB();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+
+	size_t numIndices = m_mesh->getNumIndices();
+	glDrawElements(GL_LINES, numIndices, GL_UNSIGNED_INT, 0);
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);

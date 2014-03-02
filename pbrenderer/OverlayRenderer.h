@@ -6,7 +6,7 @@
 class OverlayRenderer
 {
 	LYMesh *surfaceObject;				// Object to represent the plane and surface point of contact
-	LYMesh *hapticWorkspaceObject;		// Box to show the haptic workspace
+	LYMesh *cubeObject;		// Box to show the haptic workspace
 
 	LYMesh *vectorObject;				// Arrow object to use as vector representation!
 
@@ -35,4 +35,5 @@ public:
 	void setForceVector(float4 f) { forceVector = f; }
 private:
 	void _drawTriangles(LYMesh *m_mesh) const;
+	void _drawLines(LYMesh *m_mesh) const;
 };
