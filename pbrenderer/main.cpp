@@ -179,7 +179,7 @@ void initCUDA(int argc, char **argv)
 
 void initGL(int *argc, char **argv){
 	glutInit(argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GL_MULTISAMPLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
 	glutCreateWindow(fps_string);
 
@@ -225,10 +225,20 @@ void initGL(int *argc, char **argv){
 		m_plyLoader->getInstance().readPointData("proxy.ply"), 
 		m_plyLoader->getInstance().readPointData("hip.ply"));
 	
-	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) 
-		haptic_interface = new LYHapticDevice(space_handler, 
+	if (deviceType == LYHapticInterface::HAPTIC_DEVICE) {
+		LYHapticInterface *newDevice = new LYHapticDevice(space_handler, 
 		m_plyLoader->getInstance().readPointData("proxy.ply"), 
 		m_plyLoader->getInstance().readPointData("hip.ply"));
+		if (!newDevice->isOk())
+		{
+			haptic_interface = new LYKeyboardDevice(space_handler, 
+				m_plyLoader->getInstance().readPointData("proxy.ply"), 
+				m_plyLoader->getInstance().readPointData("hip.ply"));
+		}
+		else {
+			haptic_interface = newDevice;
+		}
+	}
 	
 	ioInterface = new IOManager(haptic_interface, make_float4(0,0,0,0), make_float4(0,0,0,0));
 

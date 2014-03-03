@@ -37,7 +37,7 @@ public:
 	float		getScale() { return modelScale; }
 	GLuint		getVBO() { return VB; }
 	GLuint		getIB() { return IB; }
-	size_t		getNumIndices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
+	size_t		getNumIndices() { return NumIndices; }	// numIndices == numVertices  for our purposes
 	size_t		getNumVertices() { return m_Vertices.size(); }	// numIndices == numVertices  for our purposes
 	bool		getRenderPoints(){ return m_points; }
 	std::vector<LYVertex> *getVertices() { return &m_Vertices; }
@@ -60,6 +60,12 @@ private:
 	unsigned int MaterialIndex;
 
 	bool m_points;
+
+	float4		*pos;
+	float4		*color;
+	float4		*normal;
+	float4		*force;
+	float		*density;
 
 	uint nX, nY, nZ;
 	uint nNX, nNY, nNZ;

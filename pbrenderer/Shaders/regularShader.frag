@@ -4,6 +4,8 @@ uniform mat4 MVPMat;
 uniform mat4 modelViewMat;
 uniform mat4 u_Persp;
 
+uniform int  fragDepth;
+
 uniform vec4 lightDir;
 
 in vec3 Pos;
@@ -21,7 +23,7 @@ void main()
     //calculate depth
     vec4 pixelPos = vec4(fs_posEye + normalize(N),1.0f);
     vec4 clipSpacePos = u_Persp * pixelPos;
-    gl_FragDepth = clipSpacePos.z / clipSpacePos.w;
+    if (fragDepth != 1) gl_FragDepth = clipSpacePos.z / clipSpacePos.w;
 
     vec3 H = normalize(incident + viewer);
     float specular = pow(max(0.0f, dot(H,N)),50.0f);

@@ -53,7 +53,7 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 
 	pState = new LYHapticState();
 
-	initHD();
+	m_ok = initHD();
 }
 
 LYHapticDevice::~LYHapticDevice(void)
@@ -66,7 +66,7 @@ LYHapticDevice::~LYHapticDevice(void)
 	hdDisableDevice(ghHD);
 }
 
-void LYHapticDevice::loadDevices()
+bool LYHapticDevice::loadDevices()
 {
 	HDErrorInfo error;
 
@@ -76,15 +76,18 @@ void LYHapticDevice::loadDevices()
 		//no default device - test another name for the device.
 		ghHD = hdInitDevice("Omni1");
 		if (HD_DEVICE_ERROR(error = hdGetError()))
-		{	
+		{
+			printf("Haptic Initialization Error # %d\n", error);
+			return false;
 		}
 	}
+	return true;
 }
 
-void LYHapticDevice::initHD()
+bool LYHapticDevice::initHD()
 {	
-	loadDevices();
-
+	if (!loadDevices())
+		return false;
 	hdMakeCurrentDevice(ghHD);
 	hdEnable(HD_FORCE_OUTPUT);
 
@@ -92,6 +95,7 @@ void LYHapticDevice::initHD()
 		touchMesh, this, HD_MAX_SCHEDULER_PRIORITY);
 
 	hdStartScheduler();
+	return true;
 }
 
 void LYHapticDevice::touchTool()
@@ -143,6 +147,11 @@ void LYHapticDevice::touchTool()
 	}
 	hdEndFrame(ghHD);
 	sdkStopTimer(&m_timer);
+}
+
+bool LYHapticDevice::isOk() const
+{
+	return m_ok;
 }
 
 /******************** OPEN HAPTICS CALBACK FUNCTIONS **************/

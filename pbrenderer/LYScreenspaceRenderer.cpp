@@ -470,7 +470,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 	glDisable(GL_POINT_SPRITE_ARB);
 
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 
 	//Blur Depth Texture
 	_setTextures();

@@ -8,7 +8,7 @@ struct LYVertex
 	float3	m_normal;
 	float3	m_color;
 	float2	m_tex;
-	int			m_objectID;
+	float	m_density;
 	
 	LYVertex() 
 	{
@@ -16,14 +16,14 @@ struct LYVertex
 		m_normal = float3();
 		m_color = float3();
 		m_tex = float2();
-		m_objectID = 0;
+		m_density = 0;
 	}
-	LYVertex(const float3& pos, const float2& tex, const float3& normal, const float3 color, int id)
+	LYVertex(const float3& pos, const float2& tex, const float3& normal, const float3 color, float density)
 	{
 		m_pos		= pos;
 		m_normal	= normal;
 		m_color		= color;
 		m_tex		= tex;
-		m_objectID	= id;
+		m_density	= density;
 	}
 };

@@ -170,6 +170,24 @@ void	LYSpatialHash::update()
 				m_point_force,
 				dPos,
 				m_numVertices);
+
+			updateDensities(
+				m_sorted_points,
+				dPos,
+				m_pointGridIndex,
+				m_cellStart,
+				m_cellEnd,
+				m_dParams,
+				m_numVertices);
+
+			updateProperties(
+				m_sorted_points,
+				dPos,
+				m_pointGridIndex,
+				m_cellStart,
+				m_cellEnd,
+				m_dParams,
+				m_numVertices);
 		}
 
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
@@ -221,10 +239,6 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			m_touched = true;
 			Pseed = Ax;
 			pos->scpPosition = Pseed;
-			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
-				Nx = make_float3(0.0f);
-				printf("Normal is NaN\n");
-			}
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
 			return make_float3(m_forceFeedback);
@@ -252,10 +266,6 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				Pseed += dP;
 			} while (length(dP) > 0.001);
 			pos->scpPosition = Pseed;
-			if (!_finitef(Nx.x) || !_finitef(Nx.y) || !_finitef(Nx.z) ) {
-				Nx = make_float3(0.0f);
-				printf("Normal is NaN\n");
-			}
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
 			return make_float3(m_forceFeedback);

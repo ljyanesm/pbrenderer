@@ -129,7 +129,7 @@ public:
 				m_Vertices.at(i).m_tex = make_float2(0,0);
 				m_Vertices.at(i).m_normal = make_float3(scene->mMeshes[0]->mNormals[i].x, scene->mMeshes[0]->mNormals[i].y, scene->mMeshes[0]->mNormals[i].z);
 				if (scene->mMeshes[0]->HasVertexColors(i)) m_Vertices.at(i).m_color = make_float3(scene->mMeshes[0]->mColors[i]->r, scene->mMeshes[0]->mColors[i]->g, scene->mMeshes[0]->mColors[i]->b);
-				m_Vertices.at(i).m_objectID = i;
+				m_Vertices.at(i).m_density = 1.0f;
 			}
 
 			for (unsigned int i = 0 ; i < scene->mMeshes[0]->mNumFaces ; i++) {
