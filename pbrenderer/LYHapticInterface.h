@@ -16,6 +16,8 @@ public:
 		HAPTIC_DEVICE
 	}LYDEVICE_TYPE;
 
+	virtual bool	isOk() const = 0;
+
 	virtual void	setPosition(float3 pos);
 	virtual void	setSpaceHandler( LYSpaceHandler *sh );
 	virtual void	setWorkspaceScale(float3 dim);

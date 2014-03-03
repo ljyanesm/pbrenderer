@@ -275,38 +275,36 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceV
 	atomicAdd(&dev_params->wn_tot, wn);
 }
 
-//__device__
-//	float3 normalField(int3     gridPos,
-//	uint    index,
-//	float3  pos,
-//	float4* oldPos,
-//	float*  oldMass,
-//	float* oldPressure,
-//	float4* oldVel,
-//	uint*   cellStart,
-//	uint*   cellEnd)
-//{
-//	uint gridHash = calcGridHash(gridPos);
-//	float r = params.R;
-//	// get start of bucket for this cell
-//	uint startIndex = FETCH(cellStart, gridHash);
-//	float3 normal = make_float3(0.0f);
-//	if (startIndex != 0xffffffff) {        // cell is not empty
-//		// iterate over particles in this cell
-//		uint endIndex = FETCH(cellEnd, gridHash);
-//		for(uint j=startIndex; j<endIndex; j++) {
-//			if (j != index) {              // check not colliding with self
-//				float3 pos2 = make_float3(FETCH(oldPos, j));
-//				float rho_j = FETCH(oldMass, j);
-//				rho_j = 1.0f/rho_j;
-//				float dist = length(pos - pos2);
-//				normal += wendlandWeight(dist/R); * params.defaultKernelGradient * rho_j;
-//			}
-//		}
-//	}
-//
-//	return force;
-//}
+__device__
+	float3 normalField(int3     gridPos,
+	uint    index,
+	float3  pos,
+	LYVertex* oldPos,
+	uint*   cellStart,
+	uint*   cellEnd,
+	float R)
+{
+	uint gridHash = calcGridHash(gridPos);
+	// get start of bucket for this cell
+	uint startIndex = FETCH(cellStart, gridHash);
+	float3 normal = make_float3(0.0f);
+	if (startIndex != 0xffffffff) {        // cell is not empty
+		// iterate over particles in this cell
+		uint endIndex = FETCH(cellEnd, gridHash);
+		for(uint j=startIndex; j<endIndex; j++) {
+			if (j != index) {              // check not colliding with self
+				LYVertex ev_vertex = FETCH(oldPos,j);
+				float3 pos2 = ev_vertex.m_pos;
+				float rho_j = ev_vertex.m_density;
+				rho_j = 1.0f/rho_j;
+				float dist = length(pos - pos2);
+				normal += wendlandWeight(dist/R) * rho_j;
+			}
+		}
+	}
+
+	return normal;
+}
 
 __global__
 void _updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, size_t numVertices)
@@ -320,30 +318,140 @@ void _updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, siz
 	if (length(F) < 0.0001) return;
 
 	float3 new_pos = F;
-	float3 pos = oldPos[index].m_pos;
 	oldPos[index].m_pos -= new_pos;
-
-	int3 gridPos = calcGridPos(pos);
-	
-	//sortedPos[index].m_pos -= new_pos;
-	
-	//for(int z=-1; z<=1; z++) {
-	//	for(int y=-1; y<=1; y++) {
-	//		for(int x=-1; x<=1; x++) {
-	//			int3 neighbourPos = gridPos + make_int3(x, y, z);
-	//			normal += normalField(neighbourPos, index, pos, oldPos, oldMass, oldPressure, oldVel, cellStart, cellEnd);
-	//		}
-	//	}
-	//}
-
-	//// write new velocity back to original unsorted location
-	//uint originalIndex = gridParticleIndex[index];
-	////printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
-	//newForce[originalIndex] = make_float4(force, 0.0f);
-	//oldNor[index] = make_float4(normal, 0.0f);
-	//newNor[originalIndex] = make_float4(normal, 0.0f);
 
 	forces[index] = make_float4(0.0f);
 
+	__syncthreads ();
+}
+
+
+__global__
+void _updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+	if (index >= numVertices) return;
+	// read particle data from sorted arrays
+	float3 pos = oldPos[index].m_pos;
+
+	int3 gridPos = calcGridPos(pos);
+
+	//sortedPos[index].m_pos -= new_pos;
+
+	float3 normal = make_float3(0.0f);
+	for(int z=-1; z<=1; z++) {
+		for(int y=-1; y<=1; y++) {
+			for(int x=-1; x<=1; x++) {
+				int3 neighbourPos = gridPos + make_int3(x, y, z);
+				normal += normalField(neighbourPos, index, pos, oldPos, cellStart, cellEnd, dev_params->R);
+			}
+		}
+	}
+
+	// write new velocity back to original unsorted location
+	uint originalIndex = gridParticleIndex[index];
+	//printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
+	oldPos[index].m_normal = normal;
+	sortedPos[originalIndex].m_normal = normal;
+
+}
+
+__global__
+	void _updateDensities(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+	if (index >= numVertices) return;
+	// read particle data from sorted arrays
+	float3 pos = oldPos[index].m_pos;
+
+	int3 gridPos = calcGridPos(pos);
+
+	//sortedPos[index].m_pos -= new_pos;
+
+	float3 normal = make_float3(0.0f);
+	for(int z=-1; z<=1; z++) {
+		for(int y=-1; y<=1; y++) {
+			for(int x=-1; x<=1; x++) {
+				int3 neighbourPos = gridPos + make_int3(x, y, z);
+				normal += normalField(neighbourPos, index, pos, oldPos, cellStart, cellEnd, dev_params->R);
+			}
+		}
+	}
+
+	// write new velocity back to original unsorted location
+	uint originalIndex = gridParticleIndex[index];
+	//printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
+	oldPos[index].m_normal = normal;
+	sortedPos[originalIndex].m_normal = normal;
+
+}
+
+// collide a particle against all other particles in a given cell to calculate Mass-Density
+__device__
+	float calculateCellDensity(int3 gridPos,
+	uint    index,
+	float3  pos,
+	LYVertex* oldPos,
+	uint*   cellStart,
+	uint*   cellEnd)
+{
+	uint gridHash = calcGridHash(gridPos);
+
+	// get start of bucket for this cell
+	uint startIndex = FETCH(cellStart, gridHash);
+	float h2 = params.R;
+	float mass = 0.0f;
+	float dsq;
+	float3 dist = make_float3(0.0f);
+	if (startIndex != 0xffffffff) {        // cell is not empty
+		// iterate over particles in this cell
+		uint endIndex = FETCH(cellEnd, gridHash);
+		for(uint j=startIndex; j<endIndex; j++) {
+			if (j != index) {              // check not colliding with self
+				float3 pos2 = FETCH(oldPos, j).m_pos;
+				dist = (pos - pos2);
+				dsq = length(dist);
+				if (dsq < h2){
+					mass += wendlandWeight(dsq/h2);
+				}
+			}
+		}
+	}
+	return mass;
+}
+
+
+__global__
+	void _updateDensities(
+	LYVertex* oldPos,					// output: new mass
+	LYVertex* sortedPos,				// input: sorted positions
+	uint*   gridParticleIndex,			// input: sorted particle indices
+	uint*   cellStart,
+	uint*   cellEnd,
+	uint    numVertices)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	if (index >= numVertices) return;
+
+	// read particle data from sorted arrays
+	float3 pos = FETCH(oldPos, index).m_pos;
+	int3 gridPos = calcGridPos(pos);
+	float mass = 0.0f;
+	for(int z=-1; z<=1; z++) {
+		for(int y=-1; y<=1; y++) {
+			for(int x=-1; x<=1; x++) {
+				int3 neighbourPos = gridPos + make_int3(x, y, z);
+				mass += calculateCellDensity(neighbourPos, index, pos, oldPos, cellStart, cellEnd);
+			}
+		}
+	}
+
+	// write new velocity back to original unsorted location
+	uint originalIndex = gridParticleIndex[index];
+	if(mass <= 0.0f) mass = 1.0f;
+	oldPos[index].m_density = mass;
+	sortedPos[originalIndex].m_density = mass;
 	__syncthreads ();
 }

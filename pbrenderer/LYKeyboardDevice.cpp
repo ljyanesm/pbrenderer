@@ -55,3 +55,8 @@ LYKeyboardDevice::~LYKeyboardDevice(void)
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ib);
 }
+
+bool LYKeyboardDevice::isOk() const
+{
+	return true;
+}

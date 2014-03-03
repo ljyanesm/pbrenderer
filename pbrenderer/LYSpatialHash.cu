@@ -35,7 +35,7 @@ extern "C" {
 
 
 	//Round a / b to nearest higher integer value
-	uint iDivUp(uint a, uint b)
+	uint iDivUp(size_t a, uint b)
 	{
 		return (a % b != 0) ? (a / b + 1) : (a / b);
 	}
@@ -168,5 +168,41 @@ extern "C" {
         checkCudaErrors(cudaUnbindTexture(cellEndTex));
 #endif
 	}
+
+	void updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	{
+
+		uint numThreads, numBlocks;
+		computeGridSize(numVertices, 256, numBlocks, numThreads);
+
+		// execute the kernel
+		_updateProperties<<< numBlocks, numThreads>>>(
+														(LYVertex*) sortedPos,
+														(LYVertex*) oldPos,
+														gridParticleIndex,
+														cellStart,
+														cellEnd,
+														dev_params,
+														numVertices);
+		// check if kernel invocation generated an error
+		getLastCudaError("Kernel _updateProperties failed!");
+	}
 	
+	void updateDensities(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	{
+		uint numThreads, numBlocks;
+		computeGridSize(numVertices, 256, numBlocks, numThreads);
+
+		// execute the kernel
+		_updateDensities<<< numBlocks, numThreads>>>(
+			(LYVertex*) sortedPos,
+			(LYVertex*) oldPos,
+			gridParticleIndex,
+			cellStart,
+			cellEnd,
+			dev_params,
+			numVertices);
+		// check if kernel invocation generated an error
+		getLastCudaError("Kernel _updateDensities failed!");
+	}
 }

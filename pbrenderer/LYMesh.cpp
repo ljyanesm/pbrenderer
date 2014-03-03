@@ -13,17 +13,18 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
 		printf("This mesh requires: %d MB\n", classSize / (1024*1024)) :
 		(classSize > 1024) ? printf("This mesh requires: %d Kb\n", classSize / (1024)):
 							 printf("This mesh requires: %d Bytes\n", classSize);
-    glGenBuffers(1, &VB);
-  	glBindBuffer(GL_ARRAY_BUFFER, VB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * Vertices.size(), &Vertices[0], GL_STATIC_DRAW);
 
-    glGenBuffers(1, &IB);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IB);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * NumIndices, &Indices[0], GL_STATIC_DRAW);
 	glm::vec3 max, min;
 	max = glm::vec3(-99999999.9f);
 	min = glm::vec3( 99999999.9f);
-	for (std::vector<LYVertex>::const_iterator i = Vertices.begin(); i != Vertices.end(); ++i){
+	int ii = 0;
+	for (std::vector<LYVertex>::const_iterator i = Vertices.begin(); i != Vertices.end(); ++i, ii++){
+		//pos[ii] = make_float4(i->m_pos);
+		//color[ii] = make_float4(i->m_color);
+		//normal[ii] = make_float4(i->m_normal);
+		//force[ii] = make_float4(0.0f);
+		//density[ii] = 0.0f;
+
 		if (max.x < i->m_pos.x) max.x = i->m_pos.x;
 		if (max.y < i->m_pos.y) max.y = i->m_pos.y;
 		if (max.z < i->m_pos.z) max.z = i->m_pos.z;
@@ -48,6 +49,14 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
 	maxP = max;
 	modelScale = factor;
 	modelMatrix = glm::translate(modelMatrix, -modelCentre);
+
+	glGenBuffers(1, &VB);
+  	glBindBuffer(GL_ARRAY_BUFFER, VB);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * Vertices.size(), &Vertices[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &IB);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IB);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * NumIndices, &Indices[0], GL_STATIC_DRAW);
 }
 
 LYMesh::LYMesh() : m_points(true)

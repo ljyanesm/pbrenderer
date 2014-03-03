@@ -28,14 +28,15 @@ private:
 	HDSchedulerHandle hUpdateDeviceCallback;
 
 	LYHapticState* pState;
+	bool m_ok;
 public:
 	LYHapticDevice(LYSpaceHandler *sh, LYMesh *p, LYMesh *h);
 	~LYHapticDevice();
 
-
+	bool isOk() const;
 	void obtainHapticState();
-	void initHD();
-	void loadDevices();
+	bool initHD();
+	bool loadDevices();
 	void touchTool();
 };
 #endif _OPEN_HAPTICS_H

@@ -24,24 +24,6 @@
     <Filter Include="IODevices">
       <UniqueIdentifier>{ab5d2065-5f1c-4fd1-ae1b-6f402551538e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="OpenGL Renderer">
-      <UniqueIdentifier>{a41ce26e-5c62-42e8-8e87-03f470c22e21}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="OpenGL Renderer\Mesh">
-      <UniqueIdentifier>{223e6c8f-61ce-4dde-bd44-56731f431c73}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="OpenGL Renderer\Mesh\Header">
-      <UniqueIdentifier>{3c0f86f3-47e8-4428-b45e-8db3a757a64b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="OpenGL Renderer\Mesh\Source">
-      <UniqueIdentifier>{72ac7e43-4c97-46b5-be59-d50915051b3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="OpenGL Renderer\Camera">
-      <UniqueIdentifier>{a8ecdd03-c53d-4605-a914-4fbc9216f020}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="OpenGL Renderer\Screenspace Renderer">
-      <UniqueIdentifier>{7ac0a39a-1d7a-4759-91ed-bad703c5f9c8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="File Loaders">
       <UniqueIdentifier>{3e7f7c23-0a3f-449c-8571-ff51fb38cd36}</UniqueIdentifier>
     </Filter>
@@ -55,7 +37,25 @@
     <Filter Include="IODevices\Keyboard">
       <UniqueIdentifier>{758a05ef-1514-4796-b142-88a5928e5238}</UniqueIdentifier>
     </Filter>
-    <Filter Include="OpenGL Renderer\Polygonal Renderer">
+    <Filter Include="OpenGL Display">
+      <UniqueIdentifier>{a41ce26e-5c62-42e8-8e87-03f470c22e21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Display\Mesh">
+      <UniqueIdentifier>{223e6c8f-61ce-4dde-bd44-56731f431c73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Display\Mesh\Header">
+      <UniqueIdentifier>{3c0f86f3-47e8-4428-b45e-8db3a757a64b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Display\Mesh\Source">
+      <UniqueIdentifier>{72ac7e43-4c97-46b5-be59-d50915051b3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Display\Camera">
+      <UniqueIdentifier>{a8ecdd03-c53d-4605-a914-4fbc9216f020}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Display\Screenspace Renderer">
+      <UniqueIdentifier>{7ac0a39a-1d7a-4759-91ed-bad703c5f9c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL Display\Polygonal Renderer">
       <UniqueIdentifier>{adfda875-ce12-4c97-94df-07c0675106fd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -71,22 +71,22 @@
       <Filter>IODevices\Keyboard</Filter>
     </ClCompile>
     <ClCompile Include="LYScreenspaceRenderer.cpp">
-      <Filter>OpenGL Renderer\Screenspace Renderer</Filter>
+      <Filter>OpenGL Display\Screenspace Renderer</Filter>
     </ClCompile>
     <ClCompile Include="LYShader.cpp">
-      <Filter>OpenGL Renderer\Mesh\Source</Filter>
+      <Filter>OpenGL Display\Mesh\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYTexture.cpp">
-      <Filter>OpenGL Renderer\Mesh\Source</Filter>
+      <Filter>OpenGL Display\Mesh\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYCamera.cpp">
-      <Filter>OpenGL Renderer\Camera</Filter>
+      <Filter>OpenGL Display\Camera</Filter>
     </ClCompile>
     <ClCompile Include="rply.c">
       <Filter>File Loaders</Filter>
     </ClCompile>
     <ClCompile Include="OverlayRenderer.cpp">
-      <Filter>OpenGL Renderer\Polygonal Renderer</Filter>
+      <Filter>OpenGL Display\Polygonal Renderer</Filter>
     </ClCompile>
     <ClCompile Include="IOManager.cpp">
       <Filter>IODevices</Filter>
@@ -95,7 +95,7 @@
       <Filter>IODevices\Haptic</Filter>
     </ClCompile>
     <ClCompile Include="LYMesh.cpp">
-      <Filter>OpenGL Renderer\Mesh</Filter>
+      <Filter>OpenGL Display\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="LYWorld.cpp">
       <Filter>Source Files</Filter>
@@ -127,19 +127,19 @@
       <Filter>IODevices\Haptic</Filter>
     </ClInclude>
     <ClInclude Include="LYTexture.h">
-      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+      <Filter>OpenGL Display\Mesh\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYVertex.h">
-      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+      <Filter>OpenGL Display\Mesh\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYCamera.h">
-      <Filter>OpenGL Renderer\Camera</Filter>
+      <Filter>OpenGL Display\Camera</Filter>
     </ClInclude>
     <ClInclude Include="LYShader.h">
-      <Filter>OpenGL Renderer\Mesh\Header</Filter>
+      <Filter>OpenGL Display\Mesh\Header</Filter>
     </ClInclude>
     <ClInclude Include="LYScreenspaceRenderer.h">
-      <Filter>OpenGL Renderer\Screenspace Renderer</Filter>
+      <Filter>OpenGL Display\Screenspace Renderer</Filter>
     </ClInclude>
     <ClInclude Include="rply.h">
       <Filter>File Loaders</Filter>
@@ -148,7 +148,7 @@
       <Filter>File Loaders</Filter>
     </ClInclude>
     <ClInclude Include="OverlayRenderer.h">
-      <Filter>OpenGL Renderer\Polygonal Renderer</Filter>
+      <Filter>OpenGL Display\Polygonal Renderer</Filter>
     </ClInclude>
     <ClInclude Include="IOManager.h">
       <Filter>IODevices</Filter>
@@ -160,7 +160,7 @@
       <Filter>IODevices</Filter>
     </ClInclude>
     <ClInclude Include="LYMesh.h">
-      <Filter>OpenGL Renderer\Mesh</Filter>
+      <Filter>OpenGL Display\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="LYSpaceHandler.h">
       <Filter>Space Partitioning</Filter>
