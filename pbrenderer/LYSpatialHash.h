@@ -32,7 +32,7 @@ public:
 
 	void	setInfluenceRadius(float r);
 
-	void	calculateCollisions(float3 pos);
+	float calculateCollisions(float3 pos);
 	float3	calculateFeedbackUpdateProxy(Collider *pos);
 
 	void	dump();

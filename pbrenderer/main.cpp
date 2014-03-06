@@ -36,6 +36,7 @@
 #include "OverlayRenderer.h"
 #include "LYScreenspaceRenderer.h"
 #include "LYSpatialHash.h"
+#include "ZorderCPU.h"
 #include "LYKeyboardDevice.h"
 #include "LYPLYLoader.h"
 
@@ -143,7 +144,10 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 		fs::recursive_directory_iterator endit;
 		while(it != endit)
 		{
-			if (fs::is_regular_file(*it) && it->path().extension() == ext && it->path().filename() != "proxy.ply" && it->path().filename() != "hip.ply")
+			if (fs::is_regular_file(*it) && it->path().extension() == ext 
+				&& it->path().filename() != "proxy.ply" 
+				&& it->path().filename() != "hip.ply"
+				&& it->path().filename() != "bbox.ply")
 			{
 
 				ret.push_back(it->path().filename());
@@ -218,7 +222,8 @@ void initGL(int *argc, char **argv){
 
 	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
-	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
+	space_handler = new ZorderCPU(m_pMesh);
+	//space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 

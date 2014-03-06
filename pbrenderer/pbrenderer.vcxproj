@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug Cuda|Win32">
+      <Configuration>Debug Cuda</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug Cuda|x64">
+      <Configuration>Debug Cuda</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -40,7 +48,19 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -59,7 +79,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -78,7 +104,17 @@
     <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
     <LibraryPath>C:\tools\boost_1_53_0\lib\win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\tools\boost_1_53_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\tools\boost_1_53_0\lib\win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
@@ -159,6 +195,32 @@
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>./project libraries\SDL-1.2.15\include;.\project libraries\boost\include;./project libraries\common\inc;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\config4cpp/include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;./project libraries\freeglut\include;./project libraries\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>./project libraries/boost/lib;./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\Win32\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\Win32\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x86;./project libraries\freeglut\lib;./project libraries\glew-1.9.0\lib;.\project libraries\Assimp\lib\x86;.\project libraries\config4cpp\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libboost_filesystem-vc100-mt-1_50.lib;assimp.lib;config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut.lib;glew32.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
+    </Link>
+    <CudaCompile>
+      <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -185,6 +247,34 @@
       <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>./project libraries\boost\include;./project libraries\common\inc;./project libraries\SDL-1.2.15\include;./project libraries\OpenHaptics\Academic\3.1\utilities\include;./project libraries\OpenHaptics\Academic\3.1\include;./project libraries\glm-0.9.4.6;.\project libraries\freeglut\include;./project libraries\Assimp\include;.\project libraries\config4cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>./project libraries\boost\lib;./project libraries\common\lib;./project libraries\OpenHaptics\Academic\3.1\utilities\lib\x64\ReleaseAcademicEdition;./project libraries\OpenHaptics\Academic\3.1\lib\x64\ReleaseAcademicEdition;./project libraries\SDL-1.2.15\lib\x64;./project libraries\Assimp\lib\x64;.\project libraries\x64;.\project libraries\config4cpp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>config4cpp.lib;hdu.lib;hd.lib;cudart.lib;freeglut64.lib;glew64.lib;assimp.lib;sdl.lib;sdl_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
+    </Link>
+    <CudaCompile>
+      <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35</CodeGeneration>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GPUDebugInfo>true</GPUDebugInfo>
+    </CudaCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="IOManager.cpp" />
@@ -202,6 +292,7 @@
     <ClCompile Include="LYHapticDevice.cpp" />
     <ClCompile Include="OverlayRenderer.cpp" />
     <ClCompile Include="rply.c" />
+    <ClCompile Include="ZorderCPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Collider.h" />
@@ -224,6 +315,7 @@
     <ClInclude Include="LYHapticDevice.h" />
     <ClInclude Include="OverlayRenderer.h" />
     <ClInclude Include="rply.h" />
+    <ClInclude Include="ZorderCPU.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LYCudaHelper.cu" />
@@ -232,6 +324,7 @@
     </CudaCompile>
     <None Include="app.cfg">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="LYCudaHelper.cuh" />
     <None Include="LYSpatialHash.cuh">

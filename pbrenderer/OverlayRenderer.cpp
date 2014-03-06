@@ -66,7 +66,7 @@ OverlayRenderer::OverlayRenderer(LYPLYLoader *ply_loader, LYCamera *cam)
 	qb_indices.push_back(3);
 	qb_indices.push_back(7);
 
-	cubeObject = new LYMesh(qb_vertices, qb_indices);
+	cubeObject = ply_loader->getInstance().readPolygonData("bbox.ply");
 	m_camera = cam;
 }
 
@@ -115,7 +115,7 @@ void OverlayRenderer::display() const {
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &projection[0][0]);
 	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 0);
-	_drawLines(cubeObject);
+	_drawTriangles(cubeObject);
 
 	/*
 	 Surface object:
@@ -126,7 +126,7 @@ void OverlayRenderer::display() const {
 
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
-	if( glm::length(surface_normal)) model *= modelOrientation;
+	model *= modelOrientation;
 	model *= glm::scale(0.1f, 0.1f, 0.1f);
 	modelView = sceneViewMatrix * model;
 	mvpMat = m_camera->getProjection() * modelView;
@@ -144,8 +144,8 @@ void OverlayRenderer::display() const {
 	float force_mag = length(forceVector);
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
-	model *= glm::translate((-surface_normal)*0.1f);
-	if( glm::length(surface_normal)) model *= modelOrientation;
+//	model *= glm::translate((-surface_normal)*0.1f);
+	model *= modelOrientation;
 	model *= glm::scale(glm::vec3(0.5f, 0.5f, 0.5f));
 	model *= glm::scale(glm::vec3(1.f, 1.f, 0.5f+force_mag));
 	modelView = sceneViewMatrix * model;

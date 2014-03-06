@@ -26,4 +26,23 @@ struct LYVertex
 		m_tex		= tex;
 		m_density	= density;
 	}
+
+	bool operator<(const LYVertex& rhs) const
+	{
+		return ( 
+			m_pos.x < rhs.m_pos.x &&
+			m_pos.y < rhs.m_pos.y &&
+			m_pos.z < rhs.m_pos.z 
+			);
+	}
+
+	bool operator==(const LYVertex& rhs) const
+	{
+		float eps = 0.000001f;
+		return ( 
+			(m_pos.x - rhs.m_pos.x) < eps &&
+			(m_pos.y - rhs.m_pos.y) < eps &&
+			(m_pos.z - rhs.m_pos.z) < eps 
+			);
+	}
 };
