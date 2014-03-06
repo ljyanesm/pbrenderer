@@ -13,3 +13,5 @@ pbrenderer/Cuda Emulation/*
 *.orig
 *.vsp
 pbrenderer/docs/*
+pbrenderer.suo
+pbrenderer/vc100.pdb

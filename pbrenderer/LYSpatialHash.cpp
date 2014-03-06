@@ -196,7 +196,7 @@ void	LYSpatialHash::update()
 }
 
 
-void LYSpatialHash::calculateCollisions( float3 pos )
+float LYSpatialHash::calculateCollisions( float3 pos )
 {
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
@@ -206,6 +206,7 @@ void LYSpatialHash::calculateCollisions( float3 pos )
 	collisionCheck(pos, m_sorted_points, m_point_force, m_forceFeedback, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
 
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
+	return m_hParams->w_tot;
 }
 
 
@@ -251,8 +252,9 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 		if (dist <= 0)
 		{
 			Pseed = colliderPos - dist*pos->surfaceTgPlane;
+			int iterations(0);
 			do{
-				calculateCollisions(Pseed);
+				while(calculateCollisions(Pseed) < 0.001f && ++iterations < 5);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
 				Nx = m_hParams->Nx;
 				float dNx = length(Nx);
@@ -261,7 +263,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				dP.x = -Fx * Nx.x;
 				dP.y = -Fx * Nx.y;
 				dP.z = -Fx * Nx.z;
-				dP = dP/ fmaxf(dNx, 0.1f);
+				dP = dP/fmaxf(dNx, 0.1f);
 				dP *= 0.01f;
 				Pseed += dP;
 			} while (length(dP) > 0.001);
@@ -270,6 +272,13 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
 			return make_float3(m_forceFeedback);
 		} else {
+			printf("Contact lost!  ");
+			Ax = pos->scpPosition;
+			Nx = pos->surfaceTgPlane;
+			Fx = dist;
+			printf("Ax = (%f, %f, %f)  ", Ax.x, Ax.y, Ax.z);
+			printf("Nx = (%f, %f, %f)  ", Nx.x, Nx.y, Nx.z);
+			printf("Fx = %f\n", Fx);
 			m_touched = false;
 			pos->scpPosition = colliderPos;
 		}

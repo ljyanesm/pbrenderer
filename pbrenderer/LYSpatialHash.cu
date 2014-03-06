@@ -187,7 +187,7 @@ extern "C" {
 		// check if kernel invocation generated an error
 		getLastCudaError("Kernel _updateProperties failed!");
 	}
-	
+
 	void updateDensities(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
 	{
 		uint numThreads, numBlocks;
