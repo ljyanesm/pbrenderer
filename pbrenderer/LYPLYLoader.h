@@ -111,6 +111,7 @@ public:
 
 	LYMesh* readPolygonData(const std::string &filename)
 	{
+		printf("Reading polygon model file:  %s  ", filename.c_str());
 		LYMesh *ret;
 
 		std::string currentLine;
@@ -149,6 +150,8 @@ public:
 
 	LYMesh* readPointData(const std::string &filename)
 	{
+		printf("Reading point model file:  %s  ", filename.c_str());
+
 		LYMesh *ret;
 		std::string currentLine;
 		unsigned long numVertices(0);

@@ -290,6 +290,7 @@
     <ClCompile Include="LYScreenspaceRenderer.cpp" />
     <ClCompile Include="LYTexture.cpp" />
     <ClCompile Include="LYHapticDevice.cpp" />
+    <ClCompile Include="ModelVoxelization.cpp" />
     <ClCompile Include="OverlayRenderer.cpp" />
     <ClCompile Include="rply.c" />
     <ClCompile Include="ZorderCPU.cpp" />
@@ -313,6 +314,7 @@
     <ClInclude Include="LYScreenspaceRenderer.h" />
     <ClInclude Include="LYTexture.h" />
     <ClInclude Include="LYHapticDevice.h" />
+    <ClInclude Include="ModelVoxelization.h" />
     <ClInclude Include="OverlayRenderer.h" />
     <ClInclude Include="rply.h" />
     <ClInclude Include="ZorderCPU.h" />
