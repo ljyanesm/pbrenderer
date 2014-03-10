@@ -40,6 +40,8 @@
 #include "LYKeyboardDevice.h"
 #include "LYPLYLoader.h"
 
+#include "ModelVoxelization.h"
+
 int width = 1024;
 int height = 768;
 
@@ -94,9 +96,11 @@ LYScreenspaceRenderer *screenspace_renderer;
 OverlayRenderer *overlay_renderer;
 LYSpaceHandler *space_handler;
 LYMesh* m_pMesh;
+LYMesh* m_physModel;
 LYCamera *m_pCamera;
 LYHapticInterface *haptic_interface;
 IOManager *ioInterface;
+ModelVoxelization *modelVoxelizer;
 ///////////////////////////////////////////////////////
 
 // Variables to load from the cfg file
@@ -222,8 +226,11 @@ void initGL(int *argc, char **argv){
 
 	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
-	space_handler = new ZorderCPU(m_pMesh);
-	//space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
+
+	modelVoxelizer = new ModelVoxelization(m_pMesh, 32);
+	m_physModel = modelVoxelizer->getModel();
+
+	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 
@@ -554,6 +561,7 @@ int sleep_time = 0;
 static int hapticFPS = 0;
 void display()
 {
+	LYMesh *displayMesh = m_physModel;
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
 	// render
@@ -569,18 +577,18 @@ void display()
 	/*/////////////////////////////////////////////////////////////////////////////////////////
 	Setup the model matrix
 	/////////////////////////////////////////////////////////////////////////////////////////*/
-	glm::vec3 modelCentre(m_pMesh->getModelCentre());
+	glm::vec3 modelCentre(displayMesh->getModelCentre());
 
 	glm::mat4 modelMatrix;
 	modelMatrix *= glm::scale(glm::vec3(global_point_scale));
 	modelMatrix *= glm::translate(-modelCentre);
-	m_pMesh->setModelMatrix(modelMatrix);
+	displayMesh->setModelMatrix(modelMatrix);
 	ioInterface->getDevice()->setModelMatrix(modelMatrix);
 	ioInterface->getDevice()->setWorkspaceScale(
 		make_float3(
-		m_pMesh->getMaxPoint().x - m_pMesh->getMinPoint().x,
-		m_pMesh->getMaxPoint().y - m_pMesh->getMinPoint().y,
-		m_pMesh->getMaxPoint().z - m_pMesh->getMinPoint().z
+		displayMesh->getMaxPoint().x - displayMesh->getMinPoint().x,
+		displayMesh->getMaxPoint().y - displayMesh->getMinPoint().y,
+		displayMesh->getMaxPoint().z - displayMesh->getMinPoint().z
 		));
 	//////////////////////////////////////////////////////////////////////////////////////////
 
@@ -619,7 +627,7 @@ void display()
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
-	screenspace_renderer->addDisplayMesh(m_pMesh);
+	screenspace_renderer->addDisplayMesh(displayMesh);
 	screenspace_renderer->display(mode);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
