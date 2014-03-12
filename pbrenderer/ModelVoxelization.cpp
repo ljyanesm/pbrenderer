@@ -21,10 +21,10 @@ ModelVoxelization::ModelVoxelization(LYMesh *mesh, uint gSz)
 
 void ModelVoxelization::_initialize( LYMesh *mesh, uint gSz )
 {
-	gridSize2 = gSz*gSz;
-	numVoxels = gSz*gSz*gSz;
-	data.resize(numVoxels);
-	ignorePixels.resize(numVoxels);
+	gridSize2 = (gridSize)*(gridSize);
+	numVoxels = (gridSize)*(gridSize2);
+	data.resize(gSz*gSz*gSz);
+	ignorePixels.resize(gSz*gSz*gSz);
 	std::fill(data.begin(), data.end(), NON_FILLED);
 	std::fill(ignorePixels.begin(), ignorePixels.end(), false);
 	for (uint i = 0; i < mesh->getNumVertices(); i++)
@@ -32,7 +32,7 @@ void ModelVoxelization::_initialize( LYMesh *mesh, uint gSz )
 		glm::vec3 modelPos(mesh->getVertices()->at(i).m_pos.x, mesh->getVertices()->at(i).m_pos.y, mesh->getVertices()->at(i).m_pos.z);
 		modelPos =  ( modelPos - mesh->getMinPoint() ) / (mesh->getScale());
 
-		glm::vec3 voxelPosition(floor(modelPos.x*gridSize), floor(modelPos.y*gridSize), floor(modelPos.z*gridSize));
+		glm::vec3 voxelPosition(floor(modelPos.x*(gridSize)), floor(modelPos.y*(gridSize)), floor(modelPos.z* (gridSize)));
 		uint index = getIndex(voxelPosition);
 		data[index] = FILLED;
 	}
@@ -124,7 +124,7 @@ bool ModelVoxelization::_floodFill()
 	}
 }
 
-LYMesh		* ModelVoxelization::getModel()
+LYMesh *ModelVoxelization::getModel()
 {
 	std::vector<LYVertex>	modelVertices;
 	std::vector<uint>		modelIndices;
@@ -140,8 +140,7 @@ LYMesh		* ModelVoxelization::getModel()
 			modelIndices.push_back(numIndices);
 			numIndices++;
 		}
-
 	}
-
+	std::cout << "The voxelized model contains #" << numIndices << " points" << std::endl;
 	return new LYMesh(modelVertices, modelIndices);
 }

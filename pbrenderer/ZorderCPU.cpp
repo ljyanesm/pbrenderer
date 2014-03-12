@@ -108,6 +108,4 @@ void ZorderCPU::updateStructure()
 	std::sort(sortedPoints.begin(), sortedPoints.end(), zOrderCmp(minValue->m_pos, maxValue->m_pos));
 	}
 
-
-
 }

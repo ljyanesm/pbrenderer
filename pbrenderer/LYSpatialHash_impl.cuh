@@ -227,7 +227,7 @@ void _updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticle
 		for(int y=-1; y<=1; y++) {
 			for(int x=-1; x<=1; x++) {
 				int3 neighbourPos = gridPos + make_int3(x, y, z);
-				normal += normalField(neighbourPos, index, pos, sortedPos, cellStart, cellEnd,  0.08f);
+				normal += normalField(neighbourPos, index, pos, sortedPos, cellStart, cellEnd,  0.03f);
 			}
 		}
 	}
@@ -252,7 +252,7 @@ __device__
 
 	// get start of bucket for this cell
 	uint startIndex = FETCH(cellStart, gridHash);
-	float h2 = 0.08f;
+	float h2 = 0.03f;
 	float mass = 0.0f;
 	float dsq;
 	float3 dist = make_float3(0.0f);
