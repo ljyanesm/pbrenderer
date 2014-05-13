@@ -86,6 +86,8 @@ void OverlayRenderer::display() const {
 	int height(m_camera->getHeight());
 	glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, 
 		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	normalShader->useShader();
 	glActiveTexture(GL_TEXTURE0);
 
@@ -115,7 +117,7 @@ void OverlayRenderer::display() const {
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &projection[0][0]);
 	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 0);
-	_drawTriangles(cubeObject);
+	cubeObject->draw(LYMesh::TRIANGLES);
 
 	/*
 	 Surface object:
@@ -127,14 +129,14 @@ void OverlayRenderer::display() const {
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
 	model *= modelOrientation;
-	model *= glm::scale(0.1f, 0.1f, 0.1f);
+	//model *= glm::scale(0.1f, 0.1f, 0.1f);
 	modelView = sceneViewMatrix * model;
 	mvpMat = m_camera->getProjection() * modelView;
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &projection[0][0]);
 	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 1);
-	_drawTriangles(surfaceObject);
+	surfaceObject->draw(LYMesh::TRIANGLES);
 
 	/*
 	Force vector:
@@ -156,7 +158,7 @@ void OverlayRenderer::display() const {
 	glUniform4fv( glGetUniformLocation(normalShader->getProgramId(), "lightDir"), 1, &m_camera->getLightDir()[0]);
 	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 1);
 
-	if ( force_mag > 0.01f) _drawTriangles(vectorObject);
+	if ( force_mag > 0.01f) vectorObject->draw(LYMesh::TRIANGLES);
 
 
 	normalShader->delShader();

@@ -86,3 +86,39 @@ void LYMesh::Clear()
 		glDeleteBuffers(1, &IB);
 	}
 }
+
+void LYMesh::draw( RenderType renderType )
+{
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+
+	int vbo = this->getVBO();
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
+	int ib = this->getIB();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+
+	size_t numIndices = this->getNumIndices();
+	switch (renderType)
+	{
+	case POINTS:
+		numIndices = numVertices;
+		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, nullptr);
+		break;
+	case TRIANGLES:
+		glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, nullptr);
+		break;
+	case LINES:
+		glDrawElements(GL_LINES, numIndices, GL_UNSIGNED_INT, nullptr);
+		break;
+	}
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+}

@@ -30,6 +30,12 @@ public:
 		const std::vector<unsigned int>& Indices);
     ~LYMesh();
 
+	enum RenderType{
+		TRIANGLES,
+		LINES,
+		POINTS
+	};
+
 	glm::mat4	getModelMatrix() { return modelMatrix; }
 	glm::vec3	getModelCentre() { return modelCentre; }
 	glm::vec3	getMinPoint() { return minP; }
@@ -44,6 +50,8 @@ public:
 	
 	void setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
 	void setRenderMode(bool points){ m_points = points; }
+
+	void draw( RenderType renderType );
 
 private:
     void Clear();
