@@ -17,15 +17,15 @@
 #include <helper_cuda.h>    // includes cuda.h and cuda_runtime_api.h
 #include <helper_cuda_gl.h> // includes cuda_gl_interop.h// includes cuda_gl_interop.h
 
+#include <vector_functions.h>
+#include <vector_types.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
 #include <config4cpp/Configuration.h>
-
-#include <vector_functions.h>
-#include <vector_types.h>
 
 #include "IOManager.h"
 #include "LYHapticDevice.h"
@@ -60,6 +60,8 @@ float camera_trans[] = {0, 0, 0};
 float camera_rot[]   = {0, 0, 0};
 float camera_trans_lag[] = {0, 0, 0};
 float camera_rot_lag[] = {0, 0, 0};
+
+bool	keyboard[256];
 
 bool wireframe = false;
 bool displayEnabled = true;
@@ -371,7 +373,7 @@ void motion(int x, int y)
 	glutPostRedisplay();
 }
 
-void key(unsigned char key, int x, int y)
+void keyboardFunc(unsigned char key, int x, int y)
 {
 	LYMesh *tmpModel = m_pMesh;
 	LYSpaceHandler *tmpSpace = space_handler;
@@ -462,6 +464,7 @@ void key(unsigned char key, int x, int y)
 		pos.x -= ioInterface->getDevice()->getSpeed();
 		break;
 	case 's':
+		// Move collider down
 		pos.y -= ioInterface->getDevice()->getSpeed();
 		break;
 	case 'd':
@@ -469,16 +472,19 @@ void key(unsigned char key, int x, int y)
 		pos.x += ioInterface->getDevice()->getSpeed();
 		break;
 	case 'z':
+		// Move collider in
 		pos.z += ioInterface->getDevice()->getSpeed();
 		break;
 	case 'c':
+		// Move collider out
 		pos.z -= ioInterface->getDevice()->getSpeed();
 		break;
 	case 'W':
-		// Move collider up
+		// Speed up collider
 		ioInterface->getDevice()->setSpeed(ioInterface->getDevice()->getSpeed()*1.1f);
 		break;
 	case 'S':
+		// Speed down collider
 		ioInterface->getDevice()->setSpeed(ioInterface->getDevice()->getSpeed()*0.9f);
 		break;
 	case '+':
@@ -561,7 +567,7 @@ int sleep_time = 0;
 static int hapticFPS = 0;
 void display()
 {
-	LYMesh *displayMesh = m_physModel;
+	LYMesh *displayMesh = m_pMesh;
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
 	// render
@@ -670,7 +676,7 @@ int main(int argc, char **argv)
 	glutReshapeFunc(reshape);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
-	glutKeyboardFunc(key);
+	glutKeyboardFunc(keyboardFunc);
 	glutSpecialFunc(special);
 	glutIdleFunc(idle);
 
