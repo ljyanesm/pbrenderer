@@ -185,24 +185,9 @@ void initCUDA(int argc, char **argv)
 	sdkCreateTimer(&hapticTimer);
 	sdkCreateTimer(&graphicsTimer);
 }
-// initialize OpenGL
 
-void initGL(int *argc, char **argv){
-	glutInit(argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-	glutInitWindowSize(width, height);
-	glutCreateWindow(fps_string);
-
-	glewInit();
-	if (!glewIsSupported("GL_VERSION_2_0 GL_VERSION_1_5 GL_ARB_multitexture GL_ARB_vertex_buffer_object")) {
-		fprintf(stderr, "Required OpenGL extensions missing.");
-		exit(-1);
-	}
-
-	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.75, 0.75, 0.75, 1);
-	//glEnable(GL_MULTISAMPLE_ARB);
-
+void loadConfigFile( char ** argv )
+{
 	setlocale(LC_ALL, "");
 	config4cpp::Configuration *cfg = config4cpp::Configuration::create();
 	try
@@ -221,6 +206,31 @@ void initGL(int *argc, char **argv){
 	get_all(".", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
+}
+
+// initialize OpenGL
+
+void initGL(int *argc, char **argv){
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Initialize OpenGL and glew
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	glutInit(argc, argv);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+	glutInitWindowSize(width, height);
+	glutCreateWindow(fps_string);
+
+	glewInit();
+	if (!glewIsSupported("GL_VERSION_2_0 GL_VERSION_1_5 GL_ARB_multitexture GL_ARB_vertex_buffer_object")) {
+		fprintf(stderr, "Required OpenGL extensions missing.");
+		exit(-1);
+	}
+
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.75, 0.75, 0.75, 1);
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	loadConfigFile(argv);
 
 	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
@@ -633,8 +643,13 @@ void display()
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	// Display the interaction model
+	///////////////////////////////////////////////////////////////////////////////////////////
 	screenspace_renderer->addDisplayMesh(displayMesh);
 	screenspace_renderer->display(mode);
+	///////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Start displaying Workspace Box / Surface Tangent Plane
@@ -646,7 +661,7 @@ void display()
 	overlay_renderer->setSurfaceNormal(ioInterface->getSurfaceNormal());
 	overlay_renderer->setForceVector(ioInterface->getForceVector());
 	overlay_renderer->display();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////////// 
 	
 	sdkStopTimer(&graphicsTimer);

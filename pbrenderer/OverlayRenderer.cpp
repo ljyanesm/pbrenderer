@@ -92,12 +92,13 @@ void OverlayRenderer::display() const {
 	glActiveTexture(GL_TEXTURE0);
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_TRUE);
 
+	glm::mat4 viewMat = sceneViewMatrix;
 	glm::mat4 modelView;
 	glm::mat4 mvpMat;
 	glm::mat4 model;
-	glm::mat4 projection;
+	glm::mat4 projection = m_camera->getProjection();
+	glm::mat4 nullProjection;
 
 	glm::mat4 modelOrientation;
 
@@ -108,34 +109,21 @@ void OverlayRenderer::display() const {
 		modelOrientation = glm::transpose(glm::lookAt(glm::vec3(0,0,0), m_camera->getPosition(), glm::vec3(0,1,0)));
 
 	/*
-		Wire frame cube for model
-	*/
-	model = glm::mat4();
-	modelView = m_camera->getViewMatrix() * model;
-	mvpMat = m_camera->getProjection() * modelView;
-	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &projection[0][0]);
-	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 0);
-	cubeObject->draw(LYMesh::TRIANGLES);
-
-	/*
 	 Surface object:
 		Is located at the surface point and its oriented by the surface normal
 	 */
 
-	projection = m_camera->getProjection();
-
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
 	model *= modelOrientation;
-	//model *= glm::scale(0.1f, 0.1f, 0.1f);
-	modelView = sceneViewMatrix * model;
-	mvpMat = m_camera->getProjection() * modelView;
+	model *= glm::scale(0.1f, 0.1f, 0.1f);
+	modelView = viewMat * model;
+	mvpMat = projection * modelView;
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &projection[0][0]);
-	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 1);
+	glUniform4fv( glGetUniformLocation(normalShader->getProgramId(), "lightDir"), 1, &m_camera->getLightDir()[0]);
+	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 0);
 	surfaceObject->draw(LYMesh::TRIANGLES);
 
 	/*
@@ -146,17 +134,16 @@ void OverlayRenderer::display() const {
 	float force_mag = length(forceVector);
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
-//	model *= glm::translate((-surface_normal)*0.1f);
 	model *= modelOrientation;
 	model *= glm::scale(glm::vec3(0.5f, 0.5f, 0.5f));
 	model *= glm::scale(glm::vec3(1.f, 1.f, 0.5f+force_mag));
-	modelView = sceneViewMatrix * model;
-	mvpMat = m_camera->getProjection() * modelView;
+	modelView = viewMat * model;
+	mvpMat = projection * modelView;
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"MVPMat"),1,GL_FALSE, &mvpMat[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"u_Persp"),1,GL_FALSE, &projection[0][0]);
 	glUniform4fv( glGetUniformLocation(normalShader->getProgramId(), "lightDir"), 1, &m_camera->getLightDir()[0]);
-	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 1);
+	glUniform1i(glGetUniformLocation(normalShader->getProgramId(),"fragDepth"), 0);
 
 	if ( force_mag > 0.01f) vectorObject->draw(LYMesh::TRIANGLES);
 
@@ -167,53 +154,4 @@ void OverlayRenderer::display() const {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 
-}
-
-void OverlayRenderer::_drawTriangles(LYMesh *m_mesh) const
-{
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-
-	int vbo = m_mesh->getVBO();
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
-	int ib = m_mesh->getIB();
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-
-	size_t numIndices = m_mesh->getNumIndices();
-	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-	glDisableVertexAttribArray(3);
-}
-
-void OverlayRenderer::_drawLines(LYMesh *m_mesh) const
-{
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-
-	int vbo = m_mesh->getVBO();
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
-	int ib = m_mesh->getIB();
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-
-	size_t numIndices = m_mesh->getNumIndices();
-
-	glDrawElements(GL_LINES, numIndices, GL_UNSIGNED_INT, 0);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-	glDisableVertexAttribArray(3);
 }

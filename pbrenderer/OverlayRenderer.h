@@ -33,7 +33,4 @@ public:
 	void setSurfacePosition(float4 p) { surfacePosition = p; }
 	void setSurfaceNormal(float4 n) {surfaceNormal = n; }
 	void setForceVector(float4 f) { forceVector = f; }
-private:
-	void _drawTriangles(LYMesh *m_mesh) const;
-	void _drawLines(LYMesh *m_mesh) const;
 };

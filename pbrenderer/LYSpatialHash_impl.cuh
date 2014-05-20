@@ -237,6 +237,7 @@ void _updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticle
 	//printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
 	oldPos[originalIndex].m_normal = normal;
 	sortedPos[index].m_normal = normal;
+	__syncthreads ();
 }
 
 // collide a particle against all other particles in a given cell to calculate Mass-Density
