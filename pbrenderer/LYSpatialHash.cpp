@@ -139,7 +139,7 @@ void	LYSpatialHash::update()
 	m_hParams->Nx = make_float3(0.0f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (true || m_dirtyPos) {
+	if (m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
@@ -242,6 +242,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			pos->scpPosition = Pseed;
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
 			return make_float3(m_forceFeedback);
 		} else {
 			pos->scpPosition = colliderPos;
@@ -270,6 +271,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			pos->scpPosition = Pseed;
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
 			return make_float3(m_forceFeedback);
 		} else {
 			printf("Contact lost!  ");
