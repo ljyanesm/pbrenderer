@@ -15,3 +15,7 @@ pbrenderer/Cuda Emulation/*
 pbrenderer/docs/*
 pbrenderer.suo
 pbrenderer/vc100.pdb
+pbrenderer/x64/Debug sm20/*
+pbrenderer/x64/Release sm20/*
+x64/Debug sm20/*
+x64/Release sm20/*

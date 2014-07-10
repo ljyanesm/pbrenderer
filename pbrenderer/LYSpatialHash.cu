@@ -33,20 +33,6 @@ extern "C" {
 		checkCudaErrors( cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)) );
 	}
 
-
-	//Round a / b to nearest higher integer value
-	uint iDivUp(size_t a, uint b)
-	{
-		return (a % b != 0) ? (a / b + 1) : (a / b);
-	}
-
-	// compute grid and thread block size for a given number of elements
-	void computeGridSize(size_t n, uint blockSize, uint &numBlocks, uint &numThreads)
-	{
-		numThreads = min(blockSize, static_cast<uint>(n));
-		numBlocks = iDivUp(n, numThreads);
-	}
-
 	void calcHash(uint  *gridParticleHash,
 		uint  *gridParticleIndex,
 		LYVertex *pos,
@@ -107,47 +93,52 @@ extern "C" {
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(float3 pos, LYVertex *sortedPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	void collisionCheck(ccConfiguration &arguments)
 	{
-#if USE_TEX
-        checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numVertices*sizeof(float4)));
-        checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, 1*sizeof(uint)));
-        checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, 1*sizeof(uint)));
-#endif
 
         // thread per particle
         uint numThreads, numBlocks;
-        computeGridSize(numVertices, 256, numBlocks, numThreads);
+        computeGridSize(arguments.numVertices, 256, numBlocks, numThreads);
+
+		// Get the size of the collision radius
+		float3 QP = arguments.pos;
+		float r = arguments.R;
+		// Calculate the size of the neighborhood based on the radius
+		int nSize = round(arguments.voxSize*r);
+		// Calculate the voxel position of the query point
+		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
+
+		getLastCudaError("Before Kernel execution failed");
+
+		// Using dynamic parallelism only execute threads on the neighborhood of the selected QP
+		//_dynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
+		//		(LYVertex *) arguments.sortedPos,
+		//		(float4 *) arguments.force,
+		//		arguments.forceVector,
+		//		arguments.gridParticleIndex,
+		//		arguments.cellStart,
+		//		arguments.cellEnd,
+		//		arguments.dev_params,
+		//		arguments.numVertices);
 
 		// execute the kernel
-        _collisionCheckD<<< numBlocks, numThreads >>>(	pos,
-														(LYVertex *)sortedPos,
-														(float4 *) force,
-														forceVector,
-														gridParticleIndex,
-														cellStart,
-														cellEnd,
-														dev_params,
-														numVertices);
+		_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
+			(LYVertex *) arguments.sortedPos,
+			(float4 *) arguments.force,
+			arguments.forceVector,
+			arguments.gridParticleIndex,
+			arguments.cellStart,
+			arguments.cellEnd,
+			arguments.dev_params,
+			arguments.numVertices);
 
         // check if kernel invocation generated an error
         getLastCudaError("Kernel execution failed");
 
-#if USE_TEX
-        checkCudaErrors(cudaUnbindTexture(oldPosTex));
-        checkCudaErrors(cudaUnbindTexture(cellStartTex));
-        checkCudaErrors(cudaUnbindTexture(cellEndTex));
-#endif
 	}
 
 	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)
 	{
-#if USE_TEX
-        checkCudaErrors(cudaBindTexture(0, oldPosTex, sortedPos, numVertices*sizeof(float4)));
-        checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, 1*sizeof(uint)));
-        checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, 1*sizeof(uint)));
-#endif
-
         // thread per particle
         uint numThreads, numBlocks;
         computeGridSize(numVertices, 256, numBlocks, numThreads);
@@ -162,11 +153,6 @@ extern "C" {
         // check if kernel invocation generated an error
         getLastCudaError("Kernel execution failed");
 
-#if USE_TEX
-        checkCudaErrors(cudaUnbindTexture(oldPosTex));
-        checkCudaErrors(cudaUnbindTexture(cellStartTex));
-        checkCudaErrors(cudaUnbindTexture(cellEndTex));
-#endif
 	}
 
 	void updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)

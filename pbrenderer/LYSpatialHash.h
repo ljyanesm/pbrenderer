@@ -42,6 +42,8 @@ public:
 private:
 	cudaGraphicsResource *m_vboRes;
 
+	float		neighborhoodRadius;		// Local neighborhood radius
+
 	LYVertex	*m_src_points;			// Source points saved in the GPU
 	LYVertex	*m_sorted_points;		// Sorted points saved in the GPU
 	float4		*m_point_force;			// Forces applied to the points...
@@ -69,7 +71,12 @@ private:
 	bool		m_touched;
 	bool		m_dirtyPos;
 
-	SimParams	m_params;
-	SimParams	*m_hParams;
-	SimParams	*m_dParams;
+	CollisionInfo	*m_dCollisionInfo;
+	CollisionInfo	*m_hCollisionInfo;
+
+	SimParams		m_params;
+	SimParams		*m_hParams;
+	SimParams		*m_dParams;
+
+	ccConfiguration collisionCheckArgs;
 };

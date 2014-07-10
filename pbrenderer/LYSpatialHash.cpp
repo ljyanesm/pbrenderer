@@ -14,24 +14,25 @@ m_gridSize(gridSize)
 
 	m_forceFeedback = make_float4(0.0f);
 	m_hParams	=	new SimParams();
+	m_hCollisionInfo = new CollisionInfo();
 
 	m_params.gridSize = m_gridSize;
 	m_params.numCells = m_numGridCells;
-	m_params.cellSize = make_float3(0.03f, 0.03f, 0.03f);
+	m_params.cellSize = make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
 	m_params.numBodies = m_numVertices;
-	m_params.R			= 0.2f;
+	m_params.R			= 0.02f;
+	neighborhoodRadius	= 0.02f;
 
 	m_hParams->gridSize		= m_gridSize;
 	m_hParams->numCells		= m_numGridCells;
-	m_hParams->cellSize		= make_float3(0.03f, 0.03f, 0.03f);
+	m_hParams->cellSize		= make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
 	m_hParams->numBodies	= m_numVertices;
 
 	m_hParams->dmin			= 0.75f;
 	m_hParams->w_tot		= 0.0f;
-	m_hParams->R			= 0.2f;
-	m_hParams->Xc			= make_float3(INF);
+	m_hParams->R			= 0.02f;
 	m_hParams->RMAX			= 2.0f;
-	m_hParams->RMIN			= 0.2f;
+	m_hParams->RMIN			= 0.02f;
 	m_hParams->Ax			= make_float3(0.0f);
 	m_hParams->Nx			= make_float3(0.0f);
 
@@ -69,6 +70,7 @@ m_gridSize(gridSize)
 	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_dForceFeedback, sizeof(float3));
 	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
+	LYCudaHelper::allocateArray((void **)&m_dCollisionInfo, sizeof(CollisionInfo));
 	LYCudaHelper::printMemInfo();
 
 	
@@ -80,7 +82,18 @@ m_gridSize(gridSize)
 
 	LYCudaHelper::unmapGLBufferObject(m_vboRes);
 
-
+	collisionCheckArgs.sortedPos = m_sorted_points;
+	collisionCheckArgs.forceVector = m_forceFeedback;
+	collisionCheckArgs.force = m_point_force;
+	collisionCheckArgs.gridParticleIndex = m_pointGridIndex;
+	collisionCheckArgs.cellStart = m_cellStart;
+	collisionCheckArgs.cellEnd = m_cellEnd;
+	collisionCheckArgs.dev_params = m_dParams;
+	collisionCheckArgs.numVertices = m_numVertices;
+	
+	setParameters(&m_params);
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+	
 	cudaDeviceSynchronize();
 	m_dirtyPos = true;
 }
@@ -92,6 +105,7 @@ LYSpatialHash::~LYSpatialHash(void)
 	delete m_hCellStart;
 	delete m_hParams;	
 
+	std::cout << "Freeing Hash info ->" << std::endl;
 	LYCudaHelper::freeArray(m_sorted_points);
 	std::cout << "m_sorted_points" << std::endl;
 	LYCudaHelper::freeArray(m_pointHash);
@@ -106,6 +120,8 @@ LYSpatialHash::~LYSpatialHash(void)
 	std::cout << "m_dForceFeedback" << std::endl;
 	LYCudaHelper::freeArray(m_dParams);
 	std::cout << "m_dParams" << std::endl;
+	LYCudaHelper::freeArray(m_dCollisionInfo);
+	std::cout << "m_dCollisionInfo" << std::endl;
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
 
@@ -127,7 +143,8 @@ void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
 void LYSpatialHash::setInfluenceRadius(float r){
 	m_params.R = r;
 	this->m_hParams->R = r;
-	setParameters(&m_params);
+	neighborhoodRadius = r;
+
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 }
 
@@ -139,7 +156,7 @@ void	LYSpatialHash::update()
 	m_hParams->Nx = make_float3(0.0f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (m_dirtyPos) {
+	if (true || m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
@@ -201,9 +218,11 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
-	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	
-	collisionCheck(pos, m_sorted_points, m_point_force, m_forceFeedback, m_pointGridIndex, m_cellStart, m_cellEnd, m_dParams, m_numVertices);
+	collisionCheckArgs.pos = pos;
+
+	//LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+
+	collisionCheck(collisionCheckArgs);
 
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 	return m_hParams->w_tot;
@@ -225,11 +244,6 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 
 	if (!m_touched){
 		calculateCollisions(colliderPos);
-
-		//if (m_hParams->w_tot < 0.00001){
-		//	return make_float3(m_forceFeedback);
-		//}
-
 		Ax = m_hParams->Ax/m_hParams->w_tot;
 		float nLength = length(m_hParams->Nx);
 		Nx = m_hParams->Nx/nLength;
@@ -255,7 +269,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			Pseed = colliderPos - dist*pos->surfaceTgPlane;
 			int iterations(0);
 			do{
-				while(calculateCollisions(Pseed) < 0.001f && ++iterations < 5);
+				while(calculateCollisions(Pseed) < 0.001f && ++iterations < 10);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
 				Nx = m_hParams->Nx;
 				float dNx = length(Nx);
@@ -265,9 +279,9 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 				dP.y = -Fx * Nx.y;
 				dP.z = -Fx * Nx.z;
 				dP = dP/fmaxf(dNx, 0.1f);
-				dP *= 0.01f;
+				dP *= 0.001f;
 				Pseed += dP;
-			} while (length(dP) > 0.001);
+			} while (length(dP) > 0.001f);
 			pos->scpPosition = Pseed;
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
