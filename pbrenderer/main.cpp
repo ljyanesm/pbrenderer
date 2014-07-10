@@ -174,8 +174,6 @@ void cudaInit(int argc, char **argv)
 		printf("No CUDA Capable devices found, exiting...\n");
 		exit(EXIT_SUCCESS);
 	}
-	checkCudaErrors(cudaSetDevice(devID));
-	checkCudaErrors(cudaSetDeviceFlags(cudaDeviceMapHost));
 }
 
 
@@ -239,7 +237,7 @@ void initGL(int *argc, char **argv){
 	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
 
-	modelVoxelizer = new ModelVoxelization(m_pMesh, 32);
+	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
 	m_physModel = modelVoxelizer->getModel();
 
 	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));

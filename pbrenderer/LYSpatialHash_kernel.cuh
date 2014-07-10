@@ -12,6 +12,7 @@
 #define INF 0x7f800000
 #define NINF 0xff800000
 
+#include <glm\glm.hpp>
 #include "defines.h"
 #include "LYVertex.h"
 #include "vector_types.h"
@@ -23,12 +24,19 @@ typedef unsigned int uint;
 
 // simulation parameters
 
+typedef struct _CollisionInfo{
+	glm::vec4 Ax;
+	glm::vec4 Nx;
+	glm::vec4 force;
+
+	float w_tot;
+	float wn_tot;
+
+} CollisionInfo;
+
 typedef struct ALIGN(16) _SimParams
 {
 	float3 force;
-	float3 colliderPos;
-	float3 Xc;
-    float3 worldOrigin;
     float3 cellSize;
 	float3 Ax;
 	float3 Nx;
@@ -49,5 +57,22 @@ typedef struct ALIGN(16) _SimParams
 
 	
 }SimParams;
+
+
+class ccConfiguration { // Collision check configuration call object
+public:
+	float3		pos;
+	LYVertex	*sortedPos; 
+	float4		*force; 
+	float4		forceVector; 
+	uint		*gridParticleIndex; 
+	uint		*cellStart; 
+	uint		*cellEnd; 
+	SimParams	*dev_params; 
+	size_t		numVertices;
+
+	float		R;
+	float		voxSize;
+};
 
 #endif

@@ -928,6 +928,7 @@ inline int findCudaDevice(int argc, const char **argv)
         // Otherwise pick the device with highest Gflops/s
         devID = gpuGetMaxGflopsDeviceId();
         checkCudaErrors(cudaSetDevice(devID));
+		checkCudaErrors(cudaSetDeviceFlags(cudaDeviceMapHost));
         checkCudaErrors(cudaGetDeviceProperties(&deviceProp, devID));
         printf("GPU Device %d: \"%s\" with compute capability %d.%d\n\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
     }
