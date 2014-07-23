@@ -73,6 +73,8 @@ public:
 
 	float		R;
 	float		voxSize;
+
+	bool naiveDynamicCollisionCheck;
 };
 
 #endif

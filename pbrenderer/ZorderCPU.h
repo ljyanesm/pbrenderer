@@ -27,6 +27,7 @@ public:
 	void	setInfluenceRadius(float r) {}
 	void	toggleUpdatePositions() {}
 	void	resetPositions() {}
+	LYSpaceHandler::SpaceHandlerType	getType() { return LYSpaceHandler::CPU_Z_ORDER;}
 
 	ZorderCPU(LYMesh *mesh);
 	~ZorderCPU(void);

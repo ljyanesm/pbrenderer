@@ -96,6 +96,9 @@ m_gridSize(gridSize)
 	
 	cudaDeviceSynchronize();
 	m_dirtyPos = true;
+
+	sdkCreateTimer(&collisionCheckTimer);
+
 }
 
 
@@ -156,7 +159,7 @@ void	LYSpatialHash::update()
 	m_hParams->Nx = make_float3(0.0f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (true || m_dirtyPos) {
+	if (m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
@@ -219,6 +222,7 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	collisionCheckArgs.pos = pos;
+	collisionCheckArgs.naiveDynamicCollisionCheck = this->m_collisionCheckType;
 
 	//LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
@@ -231,6 +235,10 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 
 float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 {
+
+	sdkResetTimer(&collisionCheckTimer);
+	sdkStartTimer(&collisionCheckTimer);
+
 	static float3 tgPlaneNormal = make_float3(0.0f);
 	static float3 Psurface  = make_float3(0.0f);
 	static bool touched = false;
@@ -286,6 +294,10 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
 			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
+
+			sdkStopTimer(&collisionCheckTimer);
+			printf("%f ms\n", sdkGetTimerValue(&collisionCheckTimer));
+
 			return make_float3(m_forceFeedback);
 		} else {
 			printf("Contact lost!  ");
@@ -299,6 +311,9 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			pos->scpPosition = colliderPos;
 		}
 	}
+
+	sdkStopTimer(&collisionCheckTimer);
+	printf("%f ms\n", sdkGetTimerValue(&collisionCheckTimer));
 
 	m_forceFeedback = make_float4(0.0f);
 	return make_float3(m_forceFeedback);
@@ -336,4 +351,9 @@ void LYSpatialHash::resetPositions()
 	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 	checkCudaErrors(cudaMemcpy(dPos, m_src_points, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
 	LYCudaHelper::unmapGLBufferObject(m_vboRes);
+}
+
+void LYSpatialHash::toggleCollisionCheckType()
+{
+	m_collisionCheckType = !m_collisionCheckType;
 }
