@@ -543,6 +543,11 @@ void keyboardFunc(unsigned char key, int x, int y)
 	case '#':
 		space_handler->toggleUpdatePositions();
 		break;
+	case 'D':
+		if (space_handler->getType() == LYSpaceHandler::GPU_SPATIAL_HASH){
+			LYSpatialHash* spH = dynamic_cast<LYSpatialHash*> (space_handler);
+			spH->toggleCollisionCheckType();
+		}
 	}
 	devPosition += pos;
 	glutPostRedisplay();

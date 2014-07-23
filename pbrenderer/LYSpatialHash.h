@@ -30,6 +30,8 @@ public:
 	void	setVBO(uint vbo);
 	void	setDeviceVertices(LYVertex *hostVertices);
 
+	void	toggleCollisionCheck();
+
 	void	setInfluenceRadius(float r);
 
 	float calculateCollisions(float3 pos);
@@ -39,6 +41,9 @@ public:
 
 	void	resetPositions();
 	void	toggleUpdatePositions();
+	void	toggleCollisionCheckType();
+
+	LYSpatialHash::SpaceHandlerType getType() { return LYSpatialHash::GPU_SPATIAL_HASH; }
 private:
 	cudaGraphicsResource *m_vboRes;
 
@@ -70,6 +75,7 @@ private:
 	bool		m_updatePositions;
 	bool		m_touched;
 	bool		m_dirtyPos;
+	bool		m_collisionCheckType;
 
 	CollisionInfo	*m_dCollisionInfo;
 	CollisionInfo	*m_hCollisionInfo;
@@ -79,4 +85,5 @@ private:
 	SimParams		*m_dParams;
 
 	ccConfiguration collisionCheckArgs;
+	StopWatchInterface *collisionCheckTimer;
 };

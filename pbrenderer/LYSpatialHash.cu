@@ -95,7 +95,6 @@ extern "C" {
 
 	void collisionCheck(ccConfiguration &arguments)
 	{
-
         // thread per particle
         uint numThreads, numBlocks;
         computeGridSize(arguments.numVertices, 256, numBlocks, numThreads);
@@ -111,30 +110,42 @@ extern "C" {
 		getLastCudaError("Before Kernel execution failed");
 
 		// Using dynamic parallelism only execute threads on the neighborhood of the selected QP
-		//_dynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
-		//		(LYVertex *) arguments.sortedPos,
-		//		(float4 *) arguments.force,
-		//		arguments.forceVector,
-		//		arguments.gridParticleIndex,
-		//		arguments.cellStart,
-		//		arguments.cellEnd,
-		//		arguments.dev_params,
-		//		arguments.numVertices);
-
+		if (arguments.naiveDynamicCollisionCheck)
+		{
+			_naiveDynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
+				(LYVertex *) arguments.sortedPos,
+				(float4 *) arguments.force,
+				arguments.forceVector,
+				arguments.gridParticleIndex,
+				arguments.cellStart,
+				arguments.cellEnd,
+				arguments.dev_params,
+				arguments.numVertices);
+		}
+		else 
+		{
+			_dynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
+				(LYVertex *) arguments.sortedPos,
+				(float4 *) arguments.force,
+				arguments.forceVector,
+				arguments.gridParticleIndex,
+				arguments.cellStart,
+				arguments.cellEnd,
+				arguments.dev_params,
+				arguments.numVertices);
+		}
 		// execute the kernel
-		_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
-			(LYVertex *) arguments.sortedPos,
-			(float4 *) arguments.force,
-			arguments.forceVector,
-			arguments.gridParticleIndex,
-			arguments.cellStart,
-			arguments.cellEnd,
-			arguments.dev_params,
-			arguments.numVertices);
-
-        // check if kernel invocation generated an error
+		//_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
+		//	(LYVertex *) arguments.sortedPos,
+		//	(float4 *) arguments.force,
+		//	arguments.forceVector,
+		//	arguments.gridParticleIndex,
+		//	arguments.cellStart,
+		//	arguments.cellEnd,
+		//	arguments.dev_params,
+		//	arguments.numVertices);
+         //check if kernel invocation generated an error
         getLastCudaError("Kernel execution failed");
-
 	}
 
 	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)

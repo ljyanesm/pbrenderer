@@ -21,7 +21,6 @@ extern "C"
 	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices);
 
 	void collisionCheck  (ccConfiguration &arguments);
-	void _dynamicCollisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 	void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 
 	void updatePositions(LYVertex *sortedPos, float4 *forces, LYVertex *oldPos, size_t numVertices);
@@ -32,4 +31,7 @@ extern "C"
 
 	void updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 	void _updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
+
+	void _naiveDynamicCollisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
+	void _dynamicCollisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 }
