@@ -276,13 +276,13 @@ void LYScreenspaceRenderer::_drawCollider()
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
-		int vbo = haptic_interface->getVBO();
+		uint vbo = haptic_interface->getVBO();
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
 		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
-		int ib = haptic_interface->getIB();
+		uint ib = haptic_interface->getIB();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 		int numIndices = 2;
 		glDrawElements(GL_POINTS, numIndices, GL_UNSIGNED_INT, 0);
@@ -300,13 +300,13 @@ void LYScreenspaceRenderer::_drawPoints(LYMesh *m_mesh)
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	int vbo = m_mesh->getVBO();
+	uint vbo = m_mesh->getVBO();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
-	int ib = m_mesh->getIB();
+	uint ib = m_mesh->getIB();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
 	size_t numIndices = m_mesh->getNumIndices();
@@ -324,13 +324,13 @@ void LYScreenspaceRenderer::_drawTriangles(LYMesh *m_mesh)
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	int vbo = m_mesh->getVBO();
+	uint vbo = m_mesh->getVBO();
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), 0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)12);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)24);
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(LYVertex), (const GLvoid*)32);
-	int ib = m_mesh->getIB();
+	uint ib = m_mesh->getIB();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 
 	size_t numIndices = m_mesh->getNumIndices();

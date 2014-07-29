@@ -13,6 +13,13 @@ void LYHapticInterface::setPosition( float3 pos )
 	p = glm::vec3(finalTransformation * glm::vec4(glm::vec3(0,0,0),1.0));
 	finalTransformation = glm::translate(this->m_ModelMatrix, glm::vec3(m_collider.scpPosition.x, m_collider.scpPosition.y, m_collider.scpPosition.z));
 	m_ProxyMatrix = finalTransformation;
+
+	if (bPause) {
+		m_collider.scpPosition = m_collider.hapticPosition;
+		m_collider.surfaceTgPlane = make_float3(0,1,0);
+		m_ProxyMatrix = m_HIPMatrix;
+	}
+
 }
 
 void LYHapticInterface::setSpaceHandler( LYSpaceHandler *sh )
