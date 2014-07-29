@@ -90,7 +90,6 @@ bool ModelVoxelization::_floodFill()
 					// ignore this pixel in future
 					ignorePixels[sampleIndex] = true;
 					// get the x, y, z index components
-					int iX = 0, iY = 0, iZ = 0;
 					glm::vec3 iIndex(getIndex(sampleIndex));
 					// get 4-connectivity neighbourhood
 					uint neighbourhood[6];

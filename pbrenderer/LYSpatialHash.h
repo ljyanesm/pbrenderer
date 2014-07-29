@@ -34,7 +34,7 @@ public:
 
 	void	setInfluenceRadius(float r);
 
-	float calculateCollisions(float3 pos);
+	float	calculateCollisions(float3 pos);
 	float3	calculateFeedbackUpdateProxy(Collider *pos);
 
 	void	dump();
@@ -53,6 +53,8 @@ private:
 	LYVertex	*m_sorted_points;		// Sorted points saved in the GPU
 	float4		*m_point_force;			// Forces applied to the points...
 
+	glm::vec4	*m_collisionPoints;		// Collider 'tool' positions
+
 	uint		*m_hCellStart;
 	uint		*m_hCellEnd;
 
@@ -65,20 +67,17 @@ private:
 	uint		m_srcVBO;
 	size_t		m_numVertices;
 
+	size_t		m_numToolVertices;		// Collider 'tool' vertices count
+
 	uint3		m_gridSize;
 	uint 		m_numGridCells;
 
-	float3		*m_dForceFeedback;
-	float3		*m_uForceFeedback;
 	float4		m_forceFeedback;
 
 	bool		m_updatePositions;
 	bool		m_touched;
 	bool		m_dirtyPos;
 	bool		m_collisionCheckType;
-
-	CollisionInfo	*m_dCollisionInfo;
-	CollisionInfo	*m_hCollisionInfo;
 
 	SimParams		m_params;
 	SimParams		*m_hParams;

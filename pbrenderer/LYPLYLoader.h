@@ -115,7 +115,6 @@ public:
 		LYMesh *ret;
 
 		std::string currentLine;
-		unsigned long numVertices(0);
 
 		scene = aiImportFile(filename.c_str(), aiProcess_Triangulate);
 
@@ -154,7 +153,6 @@ public:
 
 		LYMesh *ret;
 		std::string currentLine;
-		unsigned long numVertices(0);
 
 		unsigned long nvertices;
 		p_ply ply = ply_open(filename.c_str(), NULL, 0, NULL);

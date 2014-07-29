@@ -51,13 +51,13 @@ void LYCudaHelper::unmapGLBufferObject(struct cudaGraphicsResource *cuda_vbo_res
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_vbo_resource, 0));
 }
 
-void LYCudaHelper::copyArrayToDevice(void *device, const void *host, int offset, int size)
+void LYCudaHelper::copyArrayToDevice(void *device, const void *host, int offset, size_t size)
 {
 	checkCudaErrors(cudaMemcpy((char *) device + offset, host, size, cudaMemcpyHostToDevice));
 }
 
 void LYCudaHelper::copyArrayFromDevice(void *host, const void *device,
-struct cudaGraphicsResource **cuda_vbo_resource, int size)
+struct cudaGraphicsResource **cuda_vbo_resource, size_t size)
 {
 	if (cuda_vbo_resource)
 	{

@@ -25,6 +25,16 @@
 
 #include "LYSpatialHash_impl.cuh"
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 extern "C" {
 
 	void setParameters(SimParams *hostParams)
@@ -95,21 +105,58 @@ extern "C" {
 
 	void collisionCheck(ccConfiguration &arguments)
 	{
-        // thread per particle
-        uint numThreads, numBlocks;
-        computeGridSize(arguments.numVertices, 256, numBlocks, numThreads);
-
 		// Get the size of the collision radius
 		float3 QP = arguments.pos;
 		float r = arguments.R;
+
+		// Generate the position of the 'tool' points to calculate the collisions
+		std::vector<glm::vec4> toolVertices(arguments.numToolVertices);
+		for(int i = 0; i < arguments.numToolVertices; i++)
+		{
+			float t = i / arguments.numToolVertices;
+			toolVertices.at(i) = glm::vec4((float)( (-arguments.voxSize*5) * (1-t) + (arguments.voxSize*5)*(t) ) + QP.x, QP.y, QP.z, 0);
+		}
+
+		cudaMemcpy(arguments.toolPos, toolVertices.data(), arguments.numToolVertices*sizeof(glm::vec4), cudaMemcpyHostToDevice);
+
 		// Calculate the size of the neighborhood based on the radius
 		int nSize = round(arguments.voxSize*r);
 		// Calculate the voxel position of the query point
 		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
 
-		getLastCudaError("Before Kernel execution failed");
+		getLastCudaError("Before collisionCheck Kernel execution failed");
+
+		uint numThreads, numBlocks;
+		computeGridSize(arguments.numToolVertices, 256, numBlocks, numThreads);
 
 		// Using dynamic parallelism only execute threads on the neighborhood of the selected QP
+
+		if (arguments.naiveDynamicCollisionCheck)
+		{
+			_naiveDynamicToolCollisionCheckD<<< numBlocks, numThreads>>>(	arguments.toolPos,
+				(LYVertex *) arguments.sortedPos,
+				(float4 *) arguments.force,
+				arguments.forceVector,
+				arguments.gridParticleIndex,
+				arguments.cellStart,
+				arguments.cellEnd,
+				arguments.dev_params,
+				arguments.numVertices,
+				arguments.numToolVertices);
+		}
+		else {
+			_dynamicToolCollisionCheckD<<< numBlocks, numThreads >>>(	arguments.toolPos,
+				(LYVertex *) arguments.sortedPos,
+				(float4 *) arguments.force,
+				arguments.forceVector,
+				arguments.gridParticleIndex,
+				arguments.cellStart,
+				arguments.cellEnd,
+				arguments.dev_params,
+				arguments.numVertices,
+				arguments.numToolVertices);
+		}
+#if 0
 		if (arguments.naiveDynamicCollisionCheck)
 		{
 			_naiveDynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
@@ -134,19 +181,28 @@ extern "C" {
 				arguments.dev_params,
 				arguments.numVertices);
 		}
-		// execute the kernel
-		//_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
-		//	(LYVertex *) arguments.sortedPos,
-		//	(float4 *) arguments.force,
-		//	arguments.forceVector,
-		//	arguments.gridParticleIndex,
-		//	arguments.cellStart,
-		//	arguments.cellEnd,
-		//	arguments.dev_params,
-		//	arguments.numVertices);
-         //check if kernel invocation generated an error
-        getLastCudaError("Kernel execution failed");
-	}
+#endif
+
+		{
+			// thread per particle
+			uint numThreads, numBlocks;
+			computeGridSize(arguments.numVertices, 256, numBlocks, numThreads);
+
+			// execute the kernel
+			//_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
+			//	(LYVertex *) arguments.sortedPos,
+			//	(float4 *) arguments.force,
+			//	arguments.forceVector,
+			//	arguments.gridParticleIndex,
+			//	arguments.cellStart,
+			//	arguments.cellEnd,
+			//	arguments.dev_params,
+			//	arguments.numVertices);
+			 //check if kernel invocation generated an error
+			gpuErrchk(cudaPeekAtLastError());
+			gpuErrchk(cudaDeviceSynchronize());
+		}	
+}
 
 	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)
 	{

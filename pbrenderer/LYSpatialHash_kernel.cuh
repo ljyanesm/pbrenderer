@@ -62,19 +62,20 @@ typedef struct ALIGN(16) _SimParams
 class ccConfiguration { // Collision check configuration call object
 public:
 	float3		pos;
+	float4		forceVector; 
+	size_t		numVertices;
+	size_t		numToolVertices;
+	float		R;
+	float		voxSize;
+	bool naiveDynamicCollisionCheck;
+
+	glm::vec4	*toolPos;
 	LYVertex	*sortedPos; 
 	float4		*force; 
-	float4		forceVector; 
 	uint		*gridParticleIndex; 
 	uint		*cellStart; 
 	uint		*cellEnd; 
-	SimParams	*dev_params; 
-	size_t		numVertices;
-
-	float		R;
-	float		voxSize;
-
-	bool naiveDynamicCollisionCheck;
+	SimParams	*dev_params;
 };
 
 #endif
