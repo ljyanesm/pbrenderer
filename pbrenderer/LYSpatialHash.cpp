@@ -325,8 +325,8 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			int err_iterations(0);
 			int iterations(0);
 			do{
-				//while(calculateCollisions(Pseed) < 0.001f && ++err_iterations < 4);
-				calculateCollisions(Pseed);
+				while(calculateCollisions(Pseed) < 0.001f && ++err_iterations < 4);
+				//calculateCollisions(Pseed);
 				Ax = m_hParams->Ax/m_hParams->w_tot;
 				Nx = m_hParams->Nx;
 				float dNx = length(Nx);
@@ -362,7 +362,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 	}
 
 	sdkStopTimer(&collisionCheckTimer);
-	printf("%s %f ms\n", getCollisionCheckString(), sdkGetTimerValue(&collisionCheckTimer));
+	printf("%s %f ms\n", getCollisionCheckString().c_str(), sdkGetTimerValue(&collisionCheckTimer));
 
 	m_forceFeedback = make_float4(0.0f);
 	return make_float3(m_forceFeedback);
