@@ -132,6 +132,100 @@ __device__ float wendlandWeight(float dist)
 	return ( (a*a*a*a) * ((4*a) + 1) );
 }
 
+__device__ int translateRange(int value, int lMin, int lMax, int rMin, int rMax)
+{
+	int lSpan = lMax-lMin;
+	int rSpan = rMax-rMin;
+
+	float valueScaled = float(value - lMin) / float(lSpan);
+
+	return (int) rMin + (valueScaled * rSpan); 
+}
+
+__global__
+	void _collectInteractionCells(InteractionCellsArgs arguments)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	if (index > arguments.numNeighborCells) return;
+
+	// Get the position of the voxel we are using to calculate force.
+	int3 gridPos = calcGridPos(arguments.pos);
+	float3 nSize = ( arguments.dev_params->R / arguments.dev_params->cellSize );
+	nSize.x = ceil(nSize.x);
+	nSize.y = ceil(nSize.y);
+	nSize.z = ceil(nSize.z);
+
+	uint maxSearchRange = arguments.maxSearchRange;
+	uint maxSearchRangeSq = arguments.maxSearchRangeSq;
+	uint iX, iY, iZ;
+	iX = (int)(index % maxSearchRange);
+	iY = (int)((index/maxSearchRange) % maxSearchRange);
+	iZ = (int)(index / (maxSearchRangeSq));
+
+	if (iX < nSize.x && iY < nSize.y && iZ < nSize.z)
+	{
+		int x = translateRange(iX, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+		int y = translateRange(iY, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+		int z = translateRange(iZ, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+		int3 neighbourPos = gridPos + make_int3(x , y, z);
+		uint  neighbourGridPos = calcGridHash(neighbourPos);
+		uint cellStartI = FETCH(arguments.cellStart, neighbourGridPos);
+		if (cellStartI == 0xffffffff) return;
+		uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
+		arguments.collectionCellStart[index] = cellStartI;
+		arguments.collectionVertices[index] = N;
+	}
+	__syncthreads();
+}
+
+__global__
+	void _computeCollisionCheck(CollisionCheckArgs arguments)
+{
+	uint blkIdx = blockIdx.x;
+	uint trdIdx = threadIdx.x;
+
+	__shared__ uint blkCellStart;
+	__shared__ uint blkNumVerts;
+
+	if (trdIdx == 0) {
+		blkCellStart = arguments.collectionCellStart[blkIdx];
+		blkNumVerts  = arguments.collectionVertices[blkIdx];
+	}
+	__syncthreads();
+
+	if (trdIdx < blkNumVerts){
+		uint index = blkCellStart+trdIdx;
+		LYVertex pos2 = FETCH(arguments.sortedPos, index);
+		float3 total_force = make_float3(0.0f, 0.0f, 0.0f);
+
+		float3 Ax = make_float3(0.0f);
+		float3 Nx = make_float3(0.0f);
+
+		float3 npos;
+		float w = 0.0f;
+		npos = pos2.m_pos - arguments.pos;
+		float dist = length(npos);
+		float R = params.R;
+
+		if (dist > R) return;
+		else{
+			w = wendlandWeight(dist/R);
+			Ax += w * pos2.m_pos;
+			Nx += w * pos2.m_normal;
+			uint sortedIndex = arguments.gridParticleIndex[index];
+			if (length(arguments.forceVector) > 0.03) arguments.force[sortedIndex] += arguments.forceVector*0.001f;
+			atomicAdd(&arguments.dev_params->Ax.x, Ax.x);
+			atomicAdd(&arguments.dev_params->Ax.y, Ax.y);
+			atomicAdd(&arguments.dev_params->Ax.z, Ax.z);
+			atomicAdd(&arguments.dev_params->Nx.x, Nx.x);
+			atomicAdd(&arguments.dev_params->Nx.y, Nx.y);
+			atomicAdd(&arguments.dev_params->Nx.z, Nx.z);
+			atomicAdd(&arguments.dev_params->w_tot, w);
+		}
+	}
+
+}
+
 __global__
 void naiveChildCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, SimParams *dev_params, int firstVertex, size_t numVertices){
 
@@ -170,13 +264,13 @@ void naiveChildCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, floa
 }
 
 __global__
-	void _naiveDynamicCollisionCheckD(float3 pos, LYVertex *sortedPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	void _naiveDynamicCollisionCheckD(SingleCollisionCheckArgs args)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
 	// Get the position of the voxel we are using to calculate force.
-	int3 gridPos = calcGridPos(pos);
-	float3 nSize = ( dev_params->R / dev_params->cellSize );
+	int3 gridPos = calcGridPos(args.pos);
+	float3 nSize = ( args.dev_params->R / args.dev_params->cellSize );
 	nSize.x = ceil(nSize.x);
 	nSize.y = ceil(nSize.y);
 	nSize.z = ceil(nSize.z);
@@ -190,14 +284,14 @@ __global__
 			for(int x=-nSize.x; x<=nSize.x; x++) {
 				int3 neighbourPos = gridPos + make_int3(x, y, z);
 				uint  neighbourGridPos = calcGridHash(neighbourPos);
-				uint cellStartI = FETCH(cellStart, neighbourGridPos);
+				uint cellStartI = FETCH(args.cellStart, neighbourGridPos);
 				if (cellStartI == 0xffffffff) continue;
-				uint N = FETCH(cellEnd, neighbourGridPos) - cellStartI;
+				uint N = FETCH(args.cellEnd, neighbourGridPos) - cellStartI;
 //				printf("GridPos = %d,  Number particles = %d\n", neighbourGridPos, N);
 				uint numThreads, numBlocks;
 				computeGridSize(N, 16, numBlocks, numThreads);
 				// Launch N child threads to add information from neighbor cells
-				naiveChildCollisionKernel<<<1, N>>>(pos, sortedPos, force, forceVector, gridParticleIndex, dev_params, cellStartI, N);
+				//naiveChildCollisionKernel<<<1, N>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
 				totalVertices += N;
 			}
 		}
@@ -210,15 +304,15 @@ __global__
 }
 
 __global__
-	void _naiveDynamicToolCollisionCheckD(glm::vec4 *toolPos, LYVertex *sortedPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices, size_t numToolVertices)
+	void _naiveDynamicToolCollisionCheckD(ToolCollisionCheckArgs args)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	if (index > numToolVertices) return;
-	float3 pos = make_float3(toolPos[index].x, toolPos[index].y, toolPos[index].z);
+	if (index > args.numToolVertices) return;
+	float3 pos = make_float3(args.toolPos[index].x, args.toolPos[index].y, args.toolPos[index].z);
 
 	// Get the position of the voxel we are using to calculate force.
 	int3 gridPos = calcGridPos(pos);
-	float3 nSize = ( dev_params->R / dev_params->cellSize );
+	float3 nSize = ( args.dev_params->R / args.dev_params->cellSize );
 	nSize.x = ceil(nSize.x);
 	nSize.y = ceil(nSize.y);
 	nSize.z = ceil(nSize.z);
@@ -232,14 +326,14 @@ __global__
 			for(int x=-nSize.x; x<=nSize.x; x++) {
 				int3 neighbourPos = gridPos + make_int3(x, y, z);
 				uint  neighbourGridPos = calcGridHash(neighbourPos);
-				uint cellStartI = FETCH(cellStart, neighbourGridPos);
+				uint cellStartI = FETCH(args.cellStart, neighbourGridPos);
 				if (cellStartI == 0xffffffff) continue;
-				uint N = FETCH(cellEnd, neighbourGridPos) - cellStartI;
+				uint N = FETCH(args.cellEnd, neighbourGridPos) - cellStartI;
 //				printf("GridPos = %d,  Number particles = %d\n", neighbourGridPos, N);
 				uint numThreads, numBlocks;
 				computeGridSize(N, 16, numBlocks, numThreads);
 				// Launch N child threads to add information from neighbor cells
-				naiveChildCollisionKernel<<<1, N>>>(pos, sortedPos, force, forceVector, gridParticleIndex, dev_params, cellStartI, N);
+				//naiveChildCollisionKernel<<<1, N>>>(pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
 				totalVertices += N;
 			}
 		}
@@ -359,13 +453,13 @@ __global__
 }
 
 __global__
-	void _dynamicCollisionCheckD(float3 pos, LYVertex *sortedPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	void _dynamicCollisionCheckD(SingleCollisionCheckArgs args)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
 	// Get the position of the voxel we are using to calculate force.
-	int3 gridPos = calcGridPos(pos);
-	float3 nSize = ( dev_params->R / dev_params->cellSize );
+	int3 gridPos = calcGridPos(args.pos);
+	float3 nSize = ( args.dev_params->R / args.dev_params->cellSize );
 	nSize.x = ceil(nSize.x);
 	nSize.y = ceil(nSize.y);
 	nSize.z = ceil(nSize.z);
@@ -374,17 +468,15 @@ __global__
 	// For all the voxels around currentVoxel go to the neighbors and launch threads on each vertex on them.
 
 	uint totalVertices = 0;
-	uint totalCells = 0;
-
 	//return;
 	for(int z=-nSize.z; z<=nSize.z; z++) {
 		for(int y=-nSize.y; y<=nSize.y; y++) {
 			for(int x=-nSize.x; x<=nSize.x; x++) {
 				int3 neighbourPos = gridPos + make_int3(x, y, z);
 				uint  neighbourGridPos = calcGridHash(neighbourPos);
-				uint cellStartI = FETCH(cellStart, neighbourGridPos);
+				uint cellStartI = FETCH(args.cellStart, neighbourGridPos);
 				if (cellStartI == 0xffffffff) continue;
-				uint N = FETCH(cellEnd, neighbourGridPos) - cellStartI;
+				uint N = FETCH(args.cellEnd, neighbourGridPos) - cellStartI;
 				//printf("GridPos = %d,  Number particles = %d\n", neighbourGridPos, N);
 				// Accumulate information from neighbor cells on 'starts' and 'num_elems' arrays
 
@@ -420,21 +512,21 @@ __global__
 	uint numThreads, numBlocks;
 	computeGridSize(totalVertices, 256, numBlocks, numThreads);
 	// TODO: Improve by making a block per cellToCheck!!
-	childCollisionKernel<<<numBlocks, numThreads>>>(pos, sortedPos, force, forceVector, gridParticleIndex, dev_params, totalCells, totalVertices);
+	//childCollisionKernel<<<numBlocks, numThreads>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
 	__syncthreads();
 }
 
 
 __global__
-	void _dynamicToolCollisionCheckD(glm::vec4 *toolPos, LYVertex *sortedPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices, size_t numToolVertices)
+	void _dynamicToolCollisionCheckD(ToolCollisionCheckArgs args)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	if (index > numToolVertices) return;
-	float3 pos = make_float3(toolPos[index].x, toolPos[index].y, toolPos[index].z);
+	if (index > args.numToolVertices) return;
+	float3 pos = make_float3(args.toolPos[index].x, args.toolPos[index].y, args.toolPos[index].z);
 
 	// Get the position of the voxel we are using to calculate force.
 	int3 gridPos = calcGridPos(pos);
-	float3 nSize = ( dev_params->R / dev_params->cellSize );
+	float3 nSize = ( args.dev_params->R / args.dev_params->cellSize );
 	nSize.x = ceil(nSize.x);
 	nSize.y = ceil(nSize.y);
 	nSize.z = ceil(nSize.z);
@@ -442,17 +534,15 @@ __global__
 	// For all the voxels around currentVoxel go to the neighbors and launch threads on each vertex on them.
 
 	uint totalVertices = 0;
-	uint totalCells = 0;
-
 	//return;
 	for(int z=-nSize.z; z<=nSize.z; z++) {
 		for(int y=-nSize.y; y<=nSize.y; y++) {
 			for(int x=-nSize.x; x<=nSize.x; x++) {
 				int3 neighbourPos = gridPos + make_int3(x, y, z);
 				uint  neighbourGridPos = calcGridHash(neighbourPos);
-				uint cellStartI = FETCH(cellStart, neighbourGridPos);
+				uint cellStartI = FETCH(args.cellStart, neighbourGridPos);
 				if (cellStartI == 0xffffffff) continue;
-				uint N = FETCH(cellEnd, neighbourGridPos) - cellStartI;
+				uint N = FETCH(args.cellEnd, neighbourGridPos) - cellStartI;
 				//printf("GridPos = %d,  Number particles = %d\n", neighbourGridPos, N);
 				// Accumulate information from neighbor cells on 'starts' and 'num_elems' arrays
 
@@ -487,7 +577,7 @@ __global__
 	uint numThreads, numBlocks;
 	computeGridSize(totalVertices, 256, numBlocks, numThreads);
 	// TODO: Improve by making a block per cellToCheck!!
-	childToolCollisionKernel<<<numBlocks, numThreads>>>(pos, sortedPos, index, force, forceVector, gridParticleIndex, dev_params, totalCells, totalVertices);
+	//childToolCollisionKernel<<<numBlocks, numThreads>>>(pos, args.sortedPos, index, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
 	__syncthreads();
 }
 

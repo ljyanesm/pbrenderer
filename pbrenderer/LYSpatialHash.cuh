@@ -32,9 +32,12 @@ extern "C"
 	void updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 	void _updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
 
-	void _naiveDynamicCollisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
-	void _dynamicCollisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);
+	void _naiveDynamicCollisionCheckD(SingleCollisionCheckArgs args);
+	void _dynamicCollisionCheckD(SingleCollisionCheckArgs args);
 
-	void _naiveDynamicToolCollisionCheckD(glm::vec4* toolPos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices, size_t numToolVertices);
-	void _dynamicToolCollisionCheckD(glm::vec4* toolPos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices, size_t numToolVertices);
+	void _naiveDynamicToolCollisionCheckD(ToolCollisionCheckArgs args);
+	void _dynamicToolCollisionCheckD(ToolCollisionCheckArgs args);
+
+	void _collectInteractionCells(InteractionCellsArgs arguments);
+	void _computeCollisionCheck(CollisionCheckArgs arguments);
 }

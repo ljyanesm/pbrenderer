@@ -200,7 +200,7 @@ void loadConfigFile( char ** argv )
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 2;
+	loadedModel = 4;
 	get_all(".", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
@@ -400,7 +400,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 		break;
 	case '[':
 		ioInterface->getDevice()->pause();
-		loadedModel = loadedModel--%modelFiles.size();
+		loadedModel = (--loadedModel)%modelFiles.size();
 		modelFile = modelFiles.at(loadedModel).string();
 		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
 		while (true)
@@ -412,7 +412,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 			}
 			catch (int e){
 				printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
-				loadedModel = loadedModel--%modelFiles.size();
+				loadedModel = (--loadedModel)%modelFiles.size();
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
@@ -424,7 +424,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 		break;
 	case ']':
 		ioInterface->getDevice()->pause();
-		loadedModel = ++loadedModel%modelFiles.size();
+		loadedModel = (++loadedModel)%modelFiles.size();
 		modelFile = modelFiles.at(loadedModel).string();
 		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
 		while (true)
@@ -436,7 +436,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 			}
 			catch (int e){
 				printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
-				loadedModel = ++loadedModel%modelFiles.size();
+				loadedModel = (++loadedModel)%modelFiles.size();
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
@@ -548,6 +548,20 @@ void keyboardFunc(unsigned char key, int x, int y)
 			LYSpatialHash* spH = dynamic_cast<LYSpatialHash*> (space_handler);
 			spH->toggleCollisionCheckType();
 		}
+		break;
+	case 'C':
+		{
+			ioInterface->getDevice()->pause();
+			if (LYSpaceHandler *p = dynamic_cast<LYSpaceHandler*> (space_handler))
+			{
+				space_handler = new ZorderCPU(m_pMesh);
+			} else {
+				space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
+			}
+			ioInterface->getDevice()->setSpaceHandler(space_handler);
+			ioInterface->getDevice()->start();
+			delete tmpSpace;
+		} break;
 	}
 	devPosition += pos;
 	glutPostRedisplay();
