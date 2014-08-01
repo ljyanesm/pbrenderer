@@ -15,6 +15,7 @@
 #include <glm\glm.hpp>
 #include "defines.h"
 #include "LYVertex.h"
+
 #include "vector_types.h"
 #include "helper_math.h"
 #include <math_constants.h>
@@ -58,24 +59,97 @@ typedef struct ALIGN(16) _SimParams
 	
 }SimParams;
 
+enum CollisionCheckType{
+	BASIC,
+	NAIVE,
+	DYNAMIC,
+	TWO_STEP,
+	NUM_TYPES
+};
 
 class ccConfiguration { // Collision check configuration call object
 public:
-	float3		pos;
-	float4		forceVector; 
-	size_t		numVertices;
-	size_t		numToolVertices;
-	float		R;
-	float		voxSize;
-	bool naiveDynamicCollisionCheck;
+	float3					pos;
+	float4					forceVector; 
+	size_t					numVertices;
+	size_t					numToolVertices;
+	float					R;
+	float					voxSize;
+	CollisionCheckType		collisionCheckType;
 
-	glm::vec4	*toolPos;
-	LYVertex	*sortedPos; 
-	float4		*force; 
-	uint		*gridParticleIndex; 
-	uint		*cellStart; 
-	uint		*cellEnd; 
-	SimParams	*dev_params;
+	glm::vec4*	toolPos;
+	LYVertex*	sortedPos; 
+	float4*		force; 
+	uint*		gridParticleIndex; 
+	uint*		cellStart; 
+	uint*		cellEnd; 
+	SimParams*	dev_params;
+
+	uint*		collectionCellStart;
+	uint*		collectionVertices;
+
+	uint*		totalVertices_2Step;
+
+	uint		numNeighborCells;
+	uint		maxSearchRange;	
+	uint		maxSearchRangeSq;
+
+	uint*		totalVertices;
 };
 
+struct InteractionCellsArgs {
+	float3		pos;
+	float4		forceVector;
+	size_t		numNeighborCells;
+	uint		maxSearchRange;
+	uint		maxSearchRangeSq;
+	uint		totalNeighborhoodSize;
+
+	uint*		gridParticleIndex;
+	uint*		cellStart;
+	uint*		cellEnd;
+	LYVertex*	sortedPos;
+	float4*		force;
+	SimParams*	dev_params;
+	uint*		totalVertices;
+
+	uint*		collectionCellStart;
+	uint*		collectionVertices;
+};
+
+struct SingleCollisionCheckArgs {
+	float4		forceVector;
+	size_t		numVertices;
+	float3		pos;
+	LYVertex*	sortedPos;
+	float4*		force;
+	uint*		gridParticleIndex;
+	uint*		cellStart;
+	uint*		cellEnd;
+	SimParams*	dev_params;
+};
+
+struct ToolCollisionCheckArgs {
+	float4			forceVector;
+	size_t			numVertices;
+	size_t			numToolVertices;
+	glm::vec4*		toolPos;
+	LYVertex*		sortedPos;
+	float4*			force;
+	uint*			gridParticleIndex;
+	uint*			cellStart;
+	uint*			cellEnd;
+	SimParams*		dev_params;
+};
+
+struct CollisionCheckArgs{
+	float4			forceVector;
+	float3			pos;
+	uint*			collectionCellStart;
+	uint*			collectionVertices;
+	LYVertex*		sortedPos;
+	float4*			force;
+	uint*			gridParticleIndex;
+	SimParams*		dev_params;
+};
 #endif

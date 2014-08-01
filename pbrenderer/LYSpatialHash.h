@@ -45,24 +45,30 @@ public:
 
 	LYSpatialHash::SpaceHandlerType getType() { return LYSpatialHash::GPU_SPATIAL_HASH; }
 private:
-	cudaGraphicsResource *m_vboRes;
+
+	const std::string getCollisionCheckString() const;
+
+	cudaGraphicsResource* m_vboRes;
 
 	float		neighborhoodRadius;		// Local neighborhood radius
 
-	LYVertex	*m_src_points;			// Source points saved in the GPU
-	LYVertex	*m_sorted_points;		// Sorted points saved in the GPU
-	float4		*m_point_force;			// Forces applied to the points...
+	LYVertex*	m_src_points;			// Source points saved in the GPU
+	LYVertex*	m_sorted_points;		// Sorted points saved in the GPU
+	float4*		m_point_force;			// Forces applied to the points...
 
-	glm::vec4	*m_collisionPoints;		// Collider 'tool' positions
+	glm::vec4*	m_collisionPoints;		// Collider 'tool' positions
 
-	uint		*m_hCellStart;
-	uint		*m_hCellEnd;
+	uint*		m_hCellStart;
+	uint*		m_hCellEnd;
 
-	uint		*m_cellStart;
-	uint		*m_cellEnd;
-	uint		*m_pointHash;
-	uint		*m_pointGridIndex;
+	uint*		m_cellStart;
+	uint*		m_cellEnd;
+	uint*		m_pointHash;
+	uint*		m_pointGridIndex;
 	uint		m_gridSortBits;
+
+	uint*		d_CollectionCellStart;
+	uint*		d_CollectionVertices;
 
 	uint		m_srcVBO;
 	size_t		m_numVertices;
@@ -77,12 +83,18 @@ private:
 	bool		m_updatePositions;
 	bool		m_touched;
 	bool		m_dirtyPos;
-	bool		m_collisionCheckType;
+
+
+	CollisionCheckType	m_collisionCheckType;
 
 	SimParams		m_params;
-	SimParams		*m_hParams;
-	SimParams		*m_dParams;
+	SimParams*		m_hParams;
+	SimParams*		m_dParams;
 
 	ccConfiguration collisionCheckArgs;
-	StopWatchInterface *collisionCheckTimer;
+	StopWatchInterface* collisionCheckTimer;
+
+	const uint maxSearchRange;
+	const uint maxSearchRangeSq;
+	const uint m_maxNumCollectionElements;
 };

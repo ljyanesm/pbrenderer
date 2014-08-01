@@ -32,14 +32,12 @@ void ZorderCPU::updateStructure()
 		{
 		public:
 			// The required constructor for this example.
-			explicit zOrderCmp(float3 m, float3 M)
+			explicit zOrderCmp(float3 mini, float3 Max)
 			{
-				m_dimension = M - m;
+				m_dimension = Max - mini;
 			}
 
-			// The function-call operator prints whether the number is
-			// even or odd. If the number is even, this method updates
-			// the counter.
+			// 
 			bool operator()(const LYVertex &p1, const LYVertex &p2) const
 			{
 				float3 remapPos = p1.m_pos / m_dimension;

@@ -1,18 +1,24 @@
 #include "LYSpatialHash.h"
 
 
-LYSpatialHash::LYSpatialHash(void)
+LYSpatialHash::LYSpatialHash(void) :
+	maxSearchRange(5),
+	maxSearchRangeSq(maxSearchRange*maxSearchRange),
+	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
 {
 }
 
 LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
-m_gridSize(gridSize)
+	m_gridSize(gridSize),
+	maxSearchRange(5),
+	maxSearchRangeSq(maxSearchRange*maxSearchRange),
+	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
 {
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	m_srcVBO		= vbo;
 	m_numVertices	= numVertices;
 	
-	m_numToolVertices = 2048;
+	m_numToolVertices = 1;
 
 	m_forceFeedback = make_float4(0.0f);
 	m_hParams	=	new SimParams();
@@ -31,7 +37,6 @@ m_gridSize(gridSize)
 
 	m_hParams->dmin			= 0.75f;
 	m_hParams->w_tot		= 0.0f;
-	m_hParams->R			= 0.02f;
 	m_hParams->RMAX			= 2.0f;
 	m_hParams->RMIN			= 0.02f;
 	m_hParams->Ax			= make_float3(0.0f);
@@ -39,6 +44,8 @@ m_gridSize(gridSize)
 
 	m_touched				= false;
 	m_updatePositions		= false;
+
+	m_collisionCheckType	= CollisionCheckType::BASIC;
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -73,7 +80,8 @@ m_gridSize(gridSize)
 	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
 	LYCudaHelper::printMemInfo();
-
+	LYCudaHelper::allocateArray((void **)&d_CollectionCellStart, m_maxNumCollectionElements*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&d_CollectionVertices,  m_maxNumCollectionElements*sizeof(uint));
 	
 	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
@@ -94,7 +102,14 @@ m_gridSize(gridSize)
 	collisionCheckArgs.numVertices = m_numVertices;
 	collisionCheckArgs.numToolVertices = m_numToolVertices;
 	collisionCheckArgs.voxSize = 1.0f/gridSize.x;
-	
+	collisionCheckArgs.maxSearchRange = maxSearchRange;
+	collisionCheckArgs.maxSearchRangeSq = maxSearchRangeSq;
+
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.totalVertices_2Step, 1*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionCellStart, m_maxNumCollectionElements*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionVertices, m_maxNumCollectionElements*sizeof(uint));	
+
+	this->setInfluenceRadius(0.02f);
 	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	
@@ -255,7 +270,7 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	collisionCheckArgs.pos = pos;
-	collisionCheckArgs.naiveDynamicCollisionCheck = this->m_collisionCheckType;
+	collisionCheckArgs.collisionCheckType = this->m_collisionCheckType;
 
 	//LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
@@ -264,7 +279,6 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
 	return m_hParams->w_tot;
 }
-
 
 float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 {
@@ -331,7 +345,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
 
 			sdkStopTimer(&collisionCheckTimer);
-			printf("%s %f ms\n", (this->m_collisionCheckType == true) ? "Naive " : "Array based " , sdkGetTimerValue(&collisionCheckTimer));
+			printf("%s %f ms\n", getCollisionCheckString().c_str(), sdkGetTimerValue(&collisionCheckTimer));
 
 			return make_float3(m_forceFeedback);
 		} else {
@@ -348,7 +362,7 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 	}
 
 	sdkStopTimer(&collisionCheckTimer);
-	printf("%s %f ms\n", (this->m_collisionCheckType == true) ? "Naive " : "Array based ", sdkGetTimerValue(&collisionCheckTimer));
+	printf("%s %f ms\n", getCollisionCheckString(), sdkGetTimerValue(&collisionCheckTimer));
 
 	m_forceFeedback = make_float4(0.0f);
 	return make_float3(m_forceFeedback);
@@ -390,5 +404,26 @@ void LYSpatialHash::resetPositions()
 
 void LYSpatialHash::toggleCollisionCheckType()
 {
-	m_collisionCheckType = !m_collisionCheckType;
+	m_collisionCheckType = (CollisionCheckType) 
+		( (m_collisionCheckType+1) % NUM_TYPES);
+}
+
+const std::string LYSpatialHash::getCollisionCheckString() const
+{
+	switch (m_collisionCheckType)
+	{
+		case DYNAMIC:
+			return std::string("Dynamic");
+			break;
+		case NAIVE:
+			return std::string("Naive");
+			break;
+		case TWO_STEP:
+			return std::string("2 Step");
+			break;
+		case BASIC:
+			return std::string("Bruteforce");
+			break;
+	}
+	return std::string("CollisionCheckType doesn't exist");
 }
