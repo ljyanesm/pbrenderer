@@ -107,8 +107,8 @@ void LYHapticDevice::touchTool()
 	int currentButtons;
 	hduVector3Dd position;
 	hduVector3Dd force( 0,0,0 );
-	hdBeginFrame(ghHD);
 	sdkStartTimer(&m_timer);
+	hdBeginFrame(ghHD);
 
 	hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
 
@@ -144,8 +144,8 @@ void LYHapticDevice::touchTool()
 		force[2] = 0;
 		hdSetDoublev(HD_CURRENT_FORCE, force);
 	}
-	sdkStopTimer(&m_timer);
 	hdEndFrame(ghHD);
+	sdkStopTimer(&m_timer);
 }
 
 bool LYHapticDevice::isOk() const
