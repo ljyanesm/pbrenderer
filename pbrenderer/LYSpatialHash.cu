@@ -104,7 +104,7 @@ extern "C" {
 			thrust::device_ptr<uint>(dGridParticleIndex));
 	}
 
-	void collisionCheck(ccConfiguration &arguments)
+	void collisionCheck(const ccConfiguration &arguments)
 	{
 		// Get the size of the collision radius
 		float3 QP = arguments.pos;
@@ -121,14 +121,14 @@ extern "C" {
 		//cudaMemcpy(arguments.toolPos, toolVertices.data(), arguments.numToolVertices*sizeof(glm::vec4), cudaMemcpyHostToDevice);
 
 		// Calculate the size of the neighborhood based on the radius
-		int nSize = round(arguments.voxSize*r);
+		int nSize = round(r / arguments.voxSize);
 		// Calculate the voxel position of the query point
 		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
 
 		getLastCudaError("Before collisionCheck Kernel execution failed");
 
 		uint numThreads, numBlocks;
-		computeGridSize(arguments.numToolVertices, 256, numBlocks, numThreads);
+		computeGridSize(arguments.numToolVertices, 32, numBlocks, numThreads);
 
 		// Using dynamic parallelism only execute threads on the neighborhood of the selected QP
 
@@ -172,8 +172,10 @@ extern "C" {
 			{
 				uint totalNeighborhoodSize = (2*nSize+1);
 				totalNeighborhoodSize = totalNeighborhoodSize*totalNeighborhoodSize*totalNeighborhoodSize;
+				
 				if (totalNeighborhoodSize > arguments.maxNumCollectionElements) totalNeighborhoodSize = arguments.maxNumCollectionElements;
-				computeGridSize(totalNeighborhoodSize, 256, numBlocks, numThreads);
+
+				computeGridSize(totalNeighborhoodSize, 32, numBlocks, numThreads);
 
 				InteractionCellsArgs args;
 				
@@ -223,7 +225,7 @@ extern "C" {
 			{
 				// thread per particle
 				uint numThreads, numBlocks;
-				computeGridSize(arguments.numVertices, 256, numBlocks, numThreads);
+				computeGridSize(arguments.numVertices, 512, numBlocks, numThreads);
 
 				// execute the kernel
 				_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,

@@ -1,16 +1,8 @@
 #include "LYSpatialHash.h"
 
-
-LYSpatialHash::LYSpatialHash(void) :
-	maxSearchRange(5),
-	maxSearchRangeSq(maxSearchRange*maxSearchRange),
-	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
-{
-}
-
 LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	m_gridSize(gridSize),
-	maxSearchRange(5),
+	maxSearchRange(10),
 	maxSearchRangeSq(maxSearchRange*maxSearchRange),
 	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
 {
@@ -346,7 +338,6 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
 
 			sdkStopTimer(&collisionCheckTimer);
-			printf("%s %f ms\n", getCollisionCheckString().c_str(), sdkGetTimerValue(&collisionCheckTimer));
 
 			return make_float3(m_forceFeedback);
 		} else {
@@ -363,7 +354,6 @@ float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
 	}
 
 	sdkStopTimer(&collisionCheckTimer);
-	printf("%s %f ms\n", getCollisionCheckString().c_str(), sdkGetTimerValue(&collisionCheckTimer));
 
 	m_forceFeedback = make_float4(0.0f);
 	return make_float3(m_forceFeedback);
