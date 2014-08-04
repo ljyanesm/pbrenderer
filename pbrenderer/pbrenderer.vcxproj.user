@@ -12,11 +12,11 @@
     <RemoteDebuggerDebuggerType Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'">Auto</RemoteDebuggerDebuggerType>
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'">WindowsRemoteDebugger</DebuggerFlavor>
     <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|x64'">c:\temp\pbrenderer-workdir\</RemoteDebuggerWorkingDirectory>
-    <LocalDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\temp\remote-pbrendererHost\pbrenderer.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\temp\pbrenderer-workdir\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(TargetPath)</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)</LocalDebuggerWorkingDirectory>
     <RemoteDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\temp\remote-pbrendererHost\pbrenderer.exe</RemoteDebuggerCommand>
     <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\temp\pbrenderer-workdir\</RemoteDebuggerWorkingDirectory>
     <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
-    <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WindowsRemoteDebugger</DebuggerFlavor>
+    <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

@@ -101,15 +101,14 @@ bool LYHapticDevice::initHD()
 void LYHapticDevice::touchTool()
 {
 	/* Obtain a thread-safe copy of the current haptic display state. */
-	//if (bPause) return;
 	hdScheduleSynchronous(copyHapticDisplayState, pState,
 		HD_MAX_SCHEDULER_PRIORITY);
 	static float3 oldForce = float3();
 	int currentButtons;
 	hduVector3Dd position;
 	hduVector3Dd force( 0,0,0 );
-	sdkStartTimer(&m_timer);
 	hdBeginFrame(ghHD);
+	sdkStartTimer(&m_timer);
 
 	hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
 
@@ -145,8 +144,8 @@ void LYHapticDevice::touchTool()
 		force[2] = 0;
 		hdSetDoublev(HD_CURRENT_FORCE, force);
 	}
-	hdEndFrame(ghHD);
 	sdkStopTimer(&m_timer);
+	hdEndFrame(ghHD);
 }
 
 bool LYHapticDevice::isOk() const
