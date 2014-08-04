@@ -20,7 +20,6 @@ class LYSpatialHash : public LYSpaceHandler
 {
 
 public:
-	LYSpatialHash(void);
 	LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize);
 	~LYSpatialHash(void);
 

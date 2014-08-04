@@ -358,7 +358,7 @@ __device__ uint numVertsCheck[29791];
 
 __device__ uint vertexIndex[50000];
 
-__device__ uint vertexToolIndex[4096][50000];
+__device__ uint vertexToolIndex[9261][50000];
 
 __global__
 	void childCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, SimParams *dev_params, uint totalCells, uint totalVertices){

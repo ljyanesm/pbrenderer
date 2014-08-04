@@ -240,7 +240,7 @@ void initGL(int *argc, char **argv){
 	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
 	m_physModel = modelVoxelizer->getModel();
 
-	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(64, 64, 64));
+	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 
