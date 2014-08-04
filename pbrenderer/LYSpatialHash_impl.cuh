@@ -15,7 +15,7 @@ __constant__ SimParams params;
 //Round a / b to nearest higher integer value
 __host__ __device__ uint iDivUp(size_t a, uint b)
 {
-	return (a % b != 0) ? (a / b + 1) : (a / b);
+	return ((uint) a % b != 0) ? ((uint) a / b + 1) : ((uint) a / b);
 }
 
 // compute grid and thread block size for a given number of elements
@@ -291,7 +291,9 @@ __global__
 				uint numThreads, numBlocks;
 				computeGridSize(N, 16, numBlocks, numThreads);
 				// Launch N child threads to add information from neighbor cells
-				//naiveChildCollisionKernel<<<1, N>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
+#if (__CUDA_ARCH__ > 350)
+				naiveChildCollisionKernel<<<1, N>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
+#endif
 				totalVertices += N;
 			}
 		}
@@ -333,7 +335,9 @@ __global__
 				uint numThreads, numBlocks;
 				computeGridSize(N, 16, numBlocks, numThreads);
 				// Launch N child threads to add information from neighbor cells
-				//naiveChildCollisionKernel<<<1, N>>>(pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
+#if (__CUDA_ARCH__ > 350)
+				naiveChildCollisionKernel<<<1, N>>>(pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
+#endif
 				totalVertices += N;
 			}
 		}
@@ -512,7 +516,9 @@ __global__
 	uint numThreads, numBlocks;
 	computeGridSize(totalVertices, 256, numBlocks, numThreads);
 	// TODO: Improve by making a block per cellToCheck!!
-	//childCollisionKernel<<<numBlocks, numThreads>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
+#if (__CUDA_ARCH__ > 350)
+	childCollisionKernel<<<numBlocks, numThreads>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
+#endif
 	__syncthreads();
 }
 
@@ -577,7 +583,9 @@ __global__
 	uint numThreads, numBlocks;
 	computeGridSize(totalVertices, 256, numBlocks, numThreads);
 	// TODO: Improve by making a block per cellToCheck!!
-	//childToolCollisionKernel<<<numBlocks, numThreads>>>(pos, args.sortedPos, index, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
+#if (__CUDA_ARCH__ > 350)
+	childToolCollisionKernel<<<numBlocks, numThreads>>>(pos, args.sortedPos, index, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
+#endif
 	__syncthreads();
 }
 

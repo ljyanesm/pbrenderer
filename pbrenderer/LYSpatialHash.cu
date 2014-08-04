@@ -172,6 +172,7 @@ extern "C" {
 			{
 				uint totalNeighborhoodSize = (2*nSize+1);
 				totalNeighborhoodSize = totalNeighborhoodSize*totalNeighborhoodSize*totalNeighborhoodSize;
+				if (totalNeighborhoodSize > arguments.maxNumCollectionElements) totalNeighborhoodSize = arguments.maxNumCollectionElements;
 				computeGridSize(totalNeighborhoodSize, 256, numBlocks, numThreads);
 
 				InteractionCellsArgs args;
@@ -179,13 +180,13 @@ extern "C" {
 				args.pos					= arguments.pos;
 				args.forceVector			= arguments.forceVector;
 				args.numNeighborCells		= totalNeighborhoodSize;
-				args.maxSearchRange			= arguments.maxSearchRange;	
+				args.maxSearchRange			= arguments.maxSearchRange;
 				args.maxSearchRangeSq		= arguments.maxSearchRangeSq;
-				args.gridParticleIndex		= arguments.gridParticleIndex;	
+				args.gridParticleIndex		= arguments.gridParticleIndex;
 				args.cellStart				= arguments.cellStart;
-				args.cellEnd				= arguments.cellEnd;	
-				args.sortedPos				= arguments.sortedPos;		
-				args.force					= arguments.force;		
+				args.cellEnd				= arguments.cellEnd;
+				args.sortedPos				= arguments.sortedPos;
+				args.force					= arguments.force;
 				args.dev_params				= arguments.dev_params;
 				args.totalVertices			= arguments.totalVertices_2Step;
 				args.collectionCellStart	= arguments.collectionCellStart;
@@ -196,9 +197,9 @@ extern "C" {
 				_collectInteractionCells<<< numBlocks, numThreads >>> (args);
 
 				//Get the max number of vertices in a cell
-				//thrust::device_ptr<uint> dev_ptr = thrust::device_pointer_cast(arguments.collectionVertices);
-				//thrust::device_ptr<uint> maxElem = thrust::max_element(dev_ptr, dev_ptr + totalNeighborhoodSize);		
-				uint maxPointsCell = 20;
+				thrust::device_ptr<uint> dev_ptr = thrust::device_pointer_cast(arguments.collectionVertices);
+				thrust::device_ptr<uint> maxElem = thrust::max_element(dev_ptr, dev_ptr + totalNeighborhoodSize);
+				uint maxPointsCell = *maxElem;
 
 				CollisionCheckArgs args2;
 				args2.forceVector			= arguments.forceVector;
@@ -213,7 +214,10 @@ extern "C" {
 				// Launch maxPointsCell threads on each block, and launch one block per interaction cell
 				// read the collectionCellStart and collectionVertices to shared mem, then decide if the
 				// current thread is inside the collectionVertices boundary and compute the interaction
-				_computeCollisionCheck <<< totalNeighborhoodSize, maxPointsCell >>> (args2);
+				if (maxPointsCell > 0) _computeCollisionCheck <<< totalNeighborhoodSize, maxPointsCell >>> (args2);
+				gpuErrchk(cudaPeekAtLastError());
+				checkCudaErrors(cudaMemset(arguments.collectionVertices, 0, totalNeighborhoodSize*sizeof(uint)));
+
 			} break;
 		case CollisionCheckType::BASIC:
 			{
@@ -233,7 +237,6 @@ extern "C" {
 					arguments.numVertices);
 				 //check if kernel invocation generated an error
 				gpuErrchk(cudaPeekAtLastError());
-				gpuErrchk(cudaDeviceSynchronize());
 			} break;
 		}
 #if 0

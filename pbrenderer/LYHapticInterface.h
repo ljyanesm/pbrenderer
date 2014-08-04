@@ -25,7 +25,7 @@ public:
 	virtual void	setCameraMatrix(glm::mat4 t);
 	virtual void	setModelMatrix(glm::mat4 t);
 	virtual void	setSize(float r);
-	virtual bool	toggleForces(bool p = true);
+	virtual bool	toggleForces();
 	virtual void	setTimer(StopWatchInterface *timer);
 	virtual void	setSpeed(float s);
 

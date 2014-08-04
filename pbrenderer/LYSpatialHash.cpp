@@ -104,10 +104,13 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	collisionCheckArgs.voxSize = 1.0f/gridSize.x;
 	collisionCheckArgs.maxSearchRange = maxSearchRange;
 	collisionCheckArgs.maxSearchRangeSq = maxSearchRangeSq;
+	collisionCheckArgs.maxNumCollectionElements = m_maxNumCollectionElements;
 
 	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.totalVertices_2Step, 1*sizeof(uint));
 	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionCellStart, m_maxNumCollectionElements*sizeof(uint));
-	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionVertices, m_maxNumCollectionElements*sizeof(uint));	
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionVertices, m_maxNumCollectionElements*sizeof(uint));
+
+	checkCudaErrors(cudaMemset(collisionCheckArgs.collectionVertices, 0, m_maxNumCollectionElements*sizeof(uint)));
 
 	this->setInfluenceRadius(0.02f);
 	setParameters(&m_params);
@@ -271,8 +274,6 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Nx = make_float3(0.0f);
 	collisionCheckArgs.pos = pos;
 	collisionCheckArgs.collisionCheckType = this->m_collisionCheckType;
-
-	//LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
 	collisionCheck(collisionCheckArgs);
 

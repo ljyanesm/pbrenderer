@@ -55,9 +55,9 @@ void LYHapticInterface::setSize( float r )
 	m_size = r;
 }
 
-bool LYHapticInterface::toggleForces( bool p /*= true*/ )
+bool LYHapticInterface::toggleForces()
 {
-	COLLISION_FORCEFEEDBACK = p;
+	COLLISION_FORCEFEEDBACK = !COLLISION_FORCEFEEDBACK;
 	return COLLISION_FORCEFEEDBACK;
 }
 
@@ -73,6 +73,7 @@ void LYHapticInterface::setSpeed( float s )
 
 float3 LYHapticInterface::calculateFeedbackUpdateProxy()
 {
+	if (!COLLISION_FORCEFEEDBACK) return make_float3(0.0f);
 	m_forceVector = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
 	return m_forceVector;
 }

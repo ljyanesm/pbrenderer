@@ -389,7 +389,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case ' ':
-		bPause = ioInterface->getDevice()->toggleForces(!bPause);
+		bPause = ioInterface->getDevice()->toggleForces();
 		break;
 	case 13:		// ENTER key
 

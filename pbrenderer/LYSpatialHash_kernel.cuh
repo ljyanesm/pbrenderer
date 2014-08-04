@@ -35,7 +35,7 @@ typedef struct _CollisionInfo{
 
 } CollisionInfo;
 
-typedef struct ALIGN(16) _SimParams
+typedef struct _SimParams
 {
 	float3 force;
     float3 cellSize;
@@ -75,6 +75,7 @@ public:
 	size_t					numToolVertices;
 	float					R;
 	float					voxSize;
+	uint					maxNumCollectionElements;
 	CollisionCheckType		collisionCheckType;
 
 	glm::vec4*	toolPos;
