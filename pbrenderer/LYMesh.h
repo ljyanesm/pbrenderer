@@ -48,10 +48,12 @@ public:
 	bool		getRenderPoints(){ return m_points; }
 	std::vector<LYVertex> *getVertices() { return &m_Vertices; }
 	
-	void setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
-	void setRenderMode(bool points){ m_points = points; }
+	void	setModelMatrix(glm::mat4 m) { modelMatrix = m; } 
+	void 	setRenderMode(bool points){ m_points = points; }
 
-	void draw( RenderType renderType );
+	void	draw( RenderType renderType );
+
+	void setPositions( std::vector<LYVertex>& pos);
 
 private:
     void Clear();
@@ -69,15 +71,7 @@ private:
 
 	bool m_points;
 
-	float4		*pos;
-	float4		*color;
-	float4		*normal;
 	float4		*force;
-	float		*density;
-
-	uint nX, nY, nZ;
-	uint nNX, nNY, nNZ;
-	uint nR, nG, nB;
 };
 
 

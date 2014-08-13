@@ -11,6 +11,7 @@
 #include <helper_cuda.h>
 #include <helper_math.h>
 #include <cuda_gl_interop.h>
+#include <map>
 #include <vector>
 #include <algorithm>
 class ZorderCPU : public LYSpaceHandler
@@ -27,7 +28,7 @@ public:
 	void	setInfluenceRadius(float r) {}
 	void	toggleUpdatePositions() {}
 	void	resetPositions() {}
-	LYSpaceHandler::SpaceHandlerType	getType() { return LYSpaceHandler::CPU_Z_ORDER;}
+	const LYSpaceHandler::SpaceHandlerType	getType() const { return LYSpaceHandler::CPU_Z_ORDER;}
 
 	ZorderCPU(LYMesh *mesh);
 	~ZorderCPU(void);
@@ -38,6 +39,7 @@ private:
 
 	std::vector<LYVertex>	sortedPoints;
 	std::vector<uint>		zIndeces;
+
 	float4		m_forceFeedback;
 
 	bool		m_updatePositions;

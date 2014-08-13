@@ -125,3 +125,10 @@ void LYMesh::draw( RenderType renderType )
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(3);
 }
+
+void LYMesh::setPositions(std::vector<LYVertex>& pos)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, VB);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(LYVertex) * pos.size(), &pos[0], GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}

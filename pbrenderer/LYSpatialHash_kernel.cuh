@@ -153,4 +153,12 @@ struct CollisionCheckArgs{
 	uint*			gridParticleIndex;
 	SimParams*		dev_params;
 };
+
+struct OvershootArgs{
+	LYVertex		*sortedPos;
+	float4			*sinking;				// Device pointer to the float4 sinking property
+	float3			pos;
+	float			influenceRadius;
+	uint			numVertices;
+};
 #endif

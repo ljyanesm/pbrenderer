@@ -1,7 +1,6 @@
 #pragma once
 
 #include <helper_functions.h>
-
 #include "LYVertex.h"
 #include "Collider.h"
 
@@ -12,9 +11,17 @@
 class LYSpaceHandler
 {
 public:
+	enum HapticRenderingMethods{
+		IMPLICIT_SURFACE,
+		SINKING,
+		NUM_METHODS
+	};
+
 	enum SpaceHandlerType{
 		GPU_SPATIAL_HASH,
-		CPU_Z_ORDER
+		CPU_SPATIAL_HASH,
+		CPU_Z_ORDER,
+		NUM_TYPES
 	};
 
 	virtual ~LYSpaceHandler() {};
@@ -22,12 +29,10 @@ public:
 	virtual void clear() = 0;
 	virtual void dump() = 0;
 
-	virtual void				setDeviceVertices(LYVertex *hostVertices) = 0;
-
 	virtual float3				calculateFeedbackUpdateProxy(Collider *pos) = 0;
 	virtual float				calculateCollisions(float3 pos) = 0;
 	virtual void				setInfluenceRadius(float r) = 0;
 	virtual void				toggleUpdatePositions() = 0;
 	virtual void				resetPositions() = 0;
-	virtual SpaceHandlerType	getType() = 0;
+	virtual const SpaceHandlerType	getType() const = 0;
 };

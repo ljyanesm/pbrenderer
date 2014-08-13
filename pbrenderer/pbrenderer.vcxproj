@@ -464,7 +464,7 @@
       <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <GPUDebugInfo>false</GPUDebugInfo>
+      <GPUDebugInfo>true</GPUDebugInfo>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <HostDebugInfo>true</HostDebugInfo>
       <PtxAsOptionV>true</PtxAsOptionV>
@@ -487,6 +487,7 @@
     <ClCompile Include="LYHapticDevice.cpp" />
     <ClCompile Include="ModelVoxelization.cpp" />
     <ClCompile Include="OverlayRenderer.cpp" />
+    <ClCompile Include="CPUHashSTL.cpp" />
     <ClCompile Include="rply.c" />
     <ClCompile Include="ZorderCPU.cpp" />
   </ItemGroup>
@@ -511,6 +512,7 @@
     <ClInclude Include="LYHapticDevice.h" />
     <ClInclude Include="ModelVoxelization.h" />
     <ClInclude Include="OverlayRenderer.h" />
+    <ClInclude Include="CPUHashSTL.h" />
     <ClInclude Include="rply.h" />
     <ClInclude Include="ZorderCPU.h" />
   </ItemGroup>

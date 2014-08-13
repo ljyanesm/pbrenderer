@@ -358,7 +358,7 @@ __device__ uint numVertsCheck[29791];
 
 __device__ uint vertexIndex[50000];
 
-__device__ uint vertexToolIndex[9261][50000];
+__device__ uint vertexToolIndex[4913][50000];
 
 __global__
 	void childCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, SimParams *dev_params, uint totalCells, uint totalVertices){
@@ -772,4 +772,29 @@ __global__
 	oldPos[originalIndex].m_density = density;
 	sortedPos[index].m_density = density;
 	__syncthreads ();
+}
+
+__global__
+	void _computeOvershoot(OvershootArgs args)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+	if (index >= args.numVertices) return;
+
+	// read particle data from sorted arrays
+	LYVertex pos2 = FETCH(args.sortedPos, index);
+
+	float3 npos;
+	float3 di = make_float3(0.0f);
+	float R = args.influenceRadius;
+	npos = pos2.m_pos - args.pos;
+	float dist = length(npos);
+
+	if (dist > R) return;
+	
+	di = (R - dist) * ( (npos)/dist );
+
+	atomicAdd(&args.sinking->x, di.x);
+	atomicAdd(&args.sinking->y, di.y);
+	atomicAdd(&args.sinking->z, di.z);
 }

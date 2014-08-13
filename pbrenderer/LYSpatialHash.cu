@@ -121,7 +121,7 @@ extern "C" {
 		//cudaMemcpy(arguments.toolPos, toolVertices.data(), arguments.numToolVertices*sizeof(glm::vec4), cudaMemcpyHostToDevice);
 
 		// Calculate the size of the neighborhood based on the radius
-		int nSize = round(r / arguments.voxSize);
+		int nSize = roundf((float) (r / arguments.voxSize));
 		// Calculate the voxel position of the query point
 		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
 
@@ -175,7 +175,7 @@ extern "C" {
 				
 				if (totalNeighborhoodSize > arguments.maxNumCollectionElements) totalNeighborhoodSize = arguments.maxNumCollectionElements;
 
-				computeGridSize(totalNeighborhoodSize, 32, numBlocks, numThreads);
+				computeGridSize(totalNeighborhoodSize, 256, numBlocks, numThreads);
 
 				InteractionCellsArgs args;
 				
@@ -322,5 +322,16 @@ extern "C" {
 			numVertices);
 		// check if kernel invocation generated an error
 		getLastCudaError("Kernel _updateDensities failed!");
+	}
+
+	void computeOvershoot(OvershootArgs args)
+	{
+		uint numThreads, numBlocks;
+		computeGridSize(args.numVertices, 256, numBlocks, numThreads);
+		// execute the kernel
+		_computeOvershoot<<< numBlocks, numThreads>>>(args);
+		// check if kernel invocation generated an error
+		getLastCudaError("Kernel _computeOvershoot failed!");
+
 	}
 }
