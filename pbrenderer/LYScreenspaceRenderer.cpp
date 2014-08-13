@@ -427,29 +427,29 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 	glm::mat4 modelMatrix = glm::mat4();
 	glm::mat4 modelViewMatrix = glm::mat4();
-	glm::mat4 inverse_transposed = glm::mat4();
+	glm::mat3 inverse_transposed = glm::mat3();
 
 	for (std::vector<LYMesh*>::iterator it = m_objects.begin(); it != m_objects.end(); ++it)
 	{
 		LYMesh* mesh = (*it);
 		modelMatrix =  mesh->getModelMatrix();
 		modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
-		inverse_transposed = glm::inverse(modelViewMatrix);
+		inverse_transposed = glm::inverse(glm::transpose(glm::mat3(modelViewMatrix)));
 		glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
 		glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
 		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
-		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+		glUniformMatrix3fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
 		(mesh->getRenderPoints()) ? _drawPoints(mesh) : _drawTriangles(mesh);
 	}
 
 	modelMatrix = haptic_interface->getHIPMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
-	inverse_transposed = glm::inverse(modelViewMatrix);
+	inverse_transposed = glm::inverse(glm::transpose(glm::mat3(modelViewMatrix)));
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+	glUniformMatrix3fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
@@ -458,10 +458,10 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 	modelMatrix = haptic_interface->getProxyMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
-	inverse_transposed = glm::inverse(modelViewMatrix);
+	inverse_transposed = glm::inverse(glm::transpose(glm::mat3(modelViewMatrix)));
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
+	glUniformMatrix3fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
 
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
@@ -470,7 +470,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 	glDisable(GL_POINT_SPRITE_ARB);
 
-	//glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 
 	//Blur Depth Texture
 	_setTextures();

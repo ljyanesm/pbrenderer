@@ -6,6 +6,7 @@ ZorderCPU::ZorderCPU(LYMesh *mesh)
 	sortedPoints.resize(mesh->getNumVertices());
 	sortedPoints = *mesh->getVertices();
 	zIndeces.resize(sortedPoints.size());
+
 	updateStructure();
 }
 

@@ -40,4 +40,7 @@ extern "C"
 
 	void _collectInteractionCells(InteractionCellsArgs arguments);
 	void _computeCollisionCheck(CollisionCheckArgs arguments);
+
+	void computeOvershoot(OvershootArgs args);
+	void _computeOvershoot(OvershootArgs args);
 }

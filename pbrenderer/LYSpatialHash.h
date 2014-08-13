@@ -36,16 +36,20 @@ public:
 	float	calculateCollisions(float3 pos);
 	float3	calculateFeedbackUpdateProxy(Collider *pos);
 
+	float3 implicitSurfaceApproach(Collider * pos);
+
 	void	dump();
 
 	void	resetPositions();
 	void	toggleUpdatePositions();
 	void	toggleCollisionCheckType();
+	void	toggleRenderingMethod();
 
-	LYSpatialHash::SpaceHandlerType getType() { return LYSpatialHash::GPU_SPATIAL_HASH; }
-private:
-
+	const LYSpatialHash::SpaceHandlerType getType() const { return LYSpatialHash::GPU_SPATIAL_HASH; }
 	const std::string getCollisionCheckString() const;
+	float3 sinkingApproach(Collider * pos);
+	float3 calculateOvershoot(float3 scpPosition);
+private:
 
 	cudaGraphicsResource* m_vboRes;
 
@@ -54,6 +58,8 @@ private:
 	LYVertex*	m_src_points;			// Source points saved in the GPU
 	LYVertex*	m_sorted_points;		// Sorted points saved in the GPU
 	float4*		m_point_force;			// Forces applied to the points...
+
+	float4*		m_dSinking;
 
 	glm::vec4*	m_collisionPoints;		// Collider 'tool' positions
 
@@ -85,13 +91,13 @@ private:
 
 
 	CollisionCheckType	m_collisionCheckType;
+	HapticRenderingMethods renderingMethod;
 
 	SimParams		m_params;
 	SimParams*		m_hParams;
 	SimParams*		m_dParams;
 
 	ccConfiguration collisionCheckArgs;
-	StopWatchInterface* collisionCheckTimer;
 
 	const uint maxSearchRange;
 	const uint maxSearchRangeSq;

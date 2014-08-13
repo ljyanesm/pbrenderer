@@ -37,6 +37,7 @@
 #include "LYScreenspaceRenderer.h"
 #include "LYSpatialHash.h"
 #include "ZorderCPU.h"
+#include "CPUHashSTL.h"
 #include "LYKeyboardDevice.h"
 #include "LYPLYLoader.h"
 
@@ -70,6 +71,7 @@ bool bPause = false;
 const float inertia = 0.1f;
 
 LYScreenspaceRenderer::DisplayMode mode = LYScreenspaceRenderer::DISPLAY_DIFFUSE_SPEC;
+LYSpaceHandler::SpaceHandlerType spaceH_type = LYSpaceHandler::CPU_SPATIAL_HASH;
 bool mouseMode = 0;
 
 glm::mat4 viewMatrix;
@@ -138,6 +140,31 @@ enum {M_VIEW = 0, M_MOVE};
 namespace fs = ::boost::filesystem;
 std::vector<fs::path> modelFiles;
 
+void create_space_hanlder(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceHandler* &space_handler)
+{
+	switch(spaceH_type)
+	{
+	case LYSpaceHandler::CPU_SPATIAL_HASH:
+		{
+			std::cout << "Creating CPU Hash" << std::endl;
+			space_handler = new CPUHashSTL(m_pMesh, 9999);
+		}
+		break;
+	case LYSpaceHandler::GPU_SPATIAL_HASH:
+		{
+			std::cout << "Creating GPU Hash" << std::endl;
+			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
+		}
+		break;
+	case LYSpaceHandler::CPU_Z_ORDER:
+		{
+			space_handler = nullptr;
+		}
+		break;
+	}
+}
+
+
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
 void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>& ret)
@@ -174,12 +201,17 @@ void cudaInit(int argc, char **argv)
 		printf("No CUDA Capable devices found, exiting...\n");
 		exit(EXIT_SUCCESS);
 	}
+	cudaSetDevice(devID);
+	cudaDeviceSynchronize();
+	cudaThreadSynchronize();
 }
 
 
 void initCUDA(int argc, char **argv)
 {
 	cudaInit(argc, argv);
+	float* p;
+	checkCudaErrors(cudaMalloc((void **) &p, sizeof(float)));
 	sdkCreateTimer(&hapticTimer);
 	sdkCreateTimer(&graphicsTimer);
 }
@@ -228,6 +260,8 @@ void initGL(int *argc, char **argv){
 	glClearColor(0.75, 0.75, 0.75, 1);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	initCUDA(*argc, argv);
+
 	loadConfigFile(argv);
 
 	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
@@ -240,7 +274,7 @@ void initGL(int *argc, char **argv){
 	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
 	m_physModel = modelVoxelizer->getModel();
 
-	space_handler = new LYSpatialHash(m_pMesh->getVBO(), (uint) m_pMesh->getNumVertices(), make_uint3(128, 128, 128));
+	create_space_hanlder(spaceH_type, space_handler);
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 
@@ -416,7 +450,6 @@ void keyboardFunc(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
-		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
 		ioInterface->getDevice()->start();
 		delete tmpModel;
@@ -440,7 +473,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
-		space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
+		create_space_hanlder(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
 		ioInterface->getDevice()->start();
 		delete tmpModel;
@@ -549,15 +582,19 @@ void keyboardFunc(unsigned char key, int x, int y)
 			spH->toggleCollisionCheckType();
 		}
 		break;
+	case 'M':
+		if (space_handler->getType() == LYSpaceHandler::GPU_SPATIAL_HASH){
+			LYSpatialHash* spH = dynamic_cast<LYSpatialHash*> (space_handler);
+			spH->toggleRenderingMethod();
+		}
+		break;
 	case 'C':
 		{
 			ioInterface->getDevice()->pause();
-			if (LYSpaceHandler *p = dynamic_cast<LYSpaceHandler*> (space_handler))
-			{
-				space_handler = new ZorderCPU(m_pMesh);
-			} else {
-				space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
-			}
+			spaceH_type = (LYSpaceHandler::SpaceHandlerType) 
+				((spaceH_type+1)%(LYSpaceHandler::NUM_TYPES-1));
+
+			create_space_hanlder(spaceH_type, space_handler);
 			ioInterface->getDevice()->setSpaceHandler(space_handler);
 			ioInterface->getDevice()->start();
 			delete tmpSpace;
@@ -592,6 +629,27 @@ void idle(void)
 DWORD next_game_tick = GetTickCount();
 int sleep_time = 0;
 static int hapticFPS = 0;
+
+std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
+{
+	std::string rString;
+	switch(sht)
+	{
+	case LYSpaceHandler::CPU_SPATIAL_HASH:
+		rString.append("CPU Hash");
+		break;
+	case LYSpaceHandler::GPU_SPATIAL_HASH:
+		rString.append("GPU Hash:  ");
+		rString.append(dynamic_cast<LYSpatialHash*>(space_handler)->getCollisionCheckString());
+		return rString;
+		break;
+	default:
+		rString.append("Not implemented!");
+		break;
+	}
+	return rString;
+}
+
 void display()
 {
 	LYMesh *displayMesh = m_pMesh;
@@ -687,7 +745,10 @@ void display()
 	glutReportErrors();
 
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
-	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f", modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime);
+
+	std::string spaceSubdivisionAlg = getSpaceHandlerString(spaceH_type);
+	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f             %s", 
+		modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime, spaceSubdivisionAlg.c_str());
 	static int measureNum = 0;
 
 	glutSetWindowTitle(fps_string);
@@ -701,7 +762,6 @@ void display()
 
 int main(int argc, char **argv)
 {
-	initCUDA(argc, argv);
 	initGL(&argc, argv);
 
 	glutDisplayFunc(display);

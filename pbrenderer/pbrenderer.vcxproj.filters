@@ -61,6 +61,9 @@
     <Filter Include="Preprocess">
       <UniqueIdentifier>{ea93f942-1848-49a8-9444-cffd73c912d3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Collision Response">
+      <UniqueIdentifier>{13ad8baa-cf4c-4fd8-89c1-91d7d6d17e89}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -106,14 +109,17 @@
     <ClCompile Include="LYHapticInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Collider.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ZorderCPU.cpp">
       <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
     <ClCompile Include="ModelVoxelization.cpp">
       <Filter>Preprocess</Filter>
+    </ClCompile>
+    <ClCompile Include="CPUHashSTL.cpp">
+      <Filter>Space Partitioning\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Collider.cpp">
+      <Filter>Collision Response</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -174,14 +180,17 @@
     <ClInclude Include="LYSpaceHandler.h">
       <Filter>Space Partitioning</Filter>
     </ClInclude>
-    <ClInclude Include="Collider.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ZorderCPU.h">
       <Filter>Space Partitioning\Header</Filter>
     </ClInclude>
     <ClInclude Include="ModelVoxelization.h">
       <Filter>Preprocess</Filter>
+    </ClInclude>
+    <ClInclude Include="CPUHashSTL.h">
+      <Filter>Space Partitioning\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
+      <Filter>Collision Response</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

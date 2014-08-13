@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include "vector_functions.h"
 #include "vector_types.h"
 
@@ -44,5 +45,10 @@ struct LYVertex
 			(m_pos.y - rhs.m_pos.y) < eps &&
 			(m_pos.z - rhs.m_pos.z) < eps 
 			);
+	}
+
+	friend
+		std::ostream& operator << (std::ostream& stream, const LYVertex& p) {
+			return (stream << "(" << p.m_pos.x << ", " << p.m_pos.y << ", " << p.m_pos.z << ")");
 	}
 };
