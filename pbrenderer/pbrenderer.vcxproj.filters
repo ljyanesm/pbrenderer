@@ -106,9 +106,6 @@
     <ClCompile Include="LYWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LYHapticInterface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ZorderCPU.cpp">
       <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
@@ -120,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="Collider.cpp">
       <Filter>Collision Response</Filter>
+    </ClCompile>
+    <ClCompile Include="LYHapticInterface.cpp">
+      <Filter>IODevices</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

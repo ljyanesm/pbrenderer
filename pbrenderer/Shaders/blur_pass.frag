@@ -20,12 +20,12 @@ void main()
     //Get Depth Information about the Pixel
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
-    float blurRadius = (1.0f/lin_depth) * 0.000001;
-    int windowWidth = 7;
+    float blurRadius = (1.0f/lin_depth) * 0.0001;
+    int windowWidth = 5;
     float sum = 0;
     float wsum = 0;
     
-    if(exp_depth >= 0.999999){
+    if(exp_depth >= 0.9999){
 		out_Depth = vec4(exp_depth);
 		return;
     }
@@ -35,7 +35,7 @@ void main()
 			vec2 samp = vec2(fs_Texcoord.s + x*blurRadius, fs_Texcoord.t + y*blurRadius);
 			float sampleDepth = texture(u_Depthtex, samp).r;
 			
-			if(sampleDepth < 0.99999){
+			if(sampleDepth < 0.9999){
 				//Spatial
 				float r = length(vec2(x,y)) * 0.01;
 				float w = exp(- (r*r));

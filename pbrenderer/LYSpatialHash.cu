@@ -327,11 +327,11 @@ extern "C" {
 	void computeOvershoot(OvershootArgs args)
 	{
 		uint numThreads, numBlocks;
-		computeGridSize(args.numVertices, 256, numBlocks, numThreads);
+		computeGridSize(args.numVertices, 512, numBlocks, numThreads);
 		// execute the kernel
-		_computeOvershoot<<< numBlocks, numThreads>>>(args);
+		_computeOvershoot<<<numBlocks, numThreads>>>(args);
+		cudaDeviceSynchronize();
 		// check if kernel invocation generated an error
 		getLastCudaError("Kernel _computeOvershoot failed!");
-
 	}
 }

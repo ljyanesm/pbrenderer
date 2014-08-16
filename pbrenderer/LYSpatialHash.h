@@ -49,6 +49,7 @@ public:
 	const std::string getCollisionCheckString() const;
 	float3 sinkingApproach(Collider * pos);
 	float3 calculateOvershoot(float3 scpPosition);
+	const std::string getMethodString() const;
 private:
 
 	cudaGraphicsResource* m_vboRes;

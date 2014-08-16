@@ -452,28 +452,29 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 
 float3 LYSpatialHash::sinkingApproach(Collider * pos)
 {
-	float k = 0.06f;
-	float k_h = 0.06f;
-	float k_t = 0.10f;
-	float gamma = 0.06f;
-	float R = m_hParams->colliderRadius;
+	float k = 0.001f;
+	float k_h = 0.001f;
+	float k_t = 0.0010f;
+	float gamma = 0.05f;
+	float R = collisionCheckArgs.R;
 	float eps = gamma * R;
 
 	float3 force = make_float3(0.0f);
 	float3 Vn = calculateOvershoot(pos->scpPosition);
-
-	if (length(Vn) > eps) pos->scpPosition += k*Vn;
-
+	float lVn = length(Vn);
+	if (lVn < eps) pos->scpPosition = pos->hapticPosition;
+	else pos->scpPosition += k*Vn;
 	float3 Vh = pos->hapticPosition - pos->scpPosition;
 
 	float collisionCheck = dot(Vn, Vh);
 
-	if (collisionCheck >= 0.0f) pos->scpPosition += k_h*Vh;
+	if (collisionCheck > EPS) pos->scpPosition += k_h*Vh;
 	else {
 		pos->scpPosition += k_t*cross(Vn, Vh);
 		float lVh = length(Vh);
-		if (lVh>= R) force = (lVh - R) * (Vh/lVh);
+		if (lVh >= R*0.5f) force = (lVh - R*0.5f) * (Vh/lVh);
 	}
+	pos->surfaceTgPlane = Vn/lVn;
 	float spring = 0.1f;
 	force *= spring;
 
@@ -488,13 +489,28 @@ float3 LYSpatialHash::calculateOvershoot(float3 scpPosition)
 
 	OvershootArgs args;
 	args.sortedPos = m_sorted_points;
-	args.influenceRadius = m_hParams->colliderRadius;
+	args.influenceRadius = collisionCheckArgs.R;
 	args.numVertices = m_numVertices;
 	args.sinking = m_dSinking;
 	args.pos = scpPosition;
-
+	float4 Vn = make_float4(0.0f);
+	LYCudaHelper::copyArrayToDevice((void **)m_dSinking, &Vn, 0, sizeof(float4));
 	computeOvershoot(args);
-	float4 Vn;
 	LYCudaHelper::copyArrayFromDevice((void**)&Vn, m_dSinking, 0, sizeof(float4));
+	printf("Vn = %f %f %f\n", Vn.x, Vn.y, Vn.z);
 	return make_float3(Vn);
+}
+
+const std::string LYSpatialHash::getMethodString() const
+{
+	switch(renderingMethod)
+	{
+	case LYSpaceHandler::IMPLICIT_SURFACE:
+		return std::string("Implicit Surface Method");
+		break;
+	case LYSpaceHandler::SINKING:
+		return std::string("Sinking Method");
+		break;
+	}
+	return std::string("No method detected!");
 }

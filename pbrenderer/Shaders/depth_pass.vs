@@ -20,7 +20,7 @@ void main(void) {
 	vec4 pos = u_ModelView * vec4(Position.xyz, 1.0f);
 	vec3 posEye = pos.xyz;
 	float dist = length(posEye);
-	gl_PointSize = pointRadius * (pointScale/dist);
+	gl_PointSize = 2 * pointRadius * (pointScale/dist);
 	
 	PtNormal = u_InvTrans * Normal;
 	fs_PosEye = posEye;

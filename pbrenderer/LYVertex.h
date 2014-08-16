@@ -10,7 +10,7 @@ struct LYVertex
 	float3	m_color;
 	float2	m_tex;
 	float	m_density;
-	
+	__host__ __device__
 	LYVertex() 
 	{
 		m_pos = float3();
