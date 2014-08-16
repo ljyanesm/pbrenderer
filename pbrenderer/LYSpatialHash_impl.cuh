@@ -786,7 +786,7 @@ __global__
 
 	float3 npos;
 	float3 di = make_float3(0.0f);
-	float R = args.influenceRadius;
+	float R = 2*args.influenceRadius;
 	npos = pos2.m_pos - args.pos;
 	float dist = length(npos);
 
