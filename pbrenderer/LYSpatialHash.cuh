@@ -42,5 +42,5 @@ extern "C"
 	void _computeCollisionCheck(CollisionCheckArgs arguments);
 
 	void computeOvershoot(OvershootArgs args);
-	void _computeOvershoot(OvershootArgs args);
+	void _computeOvershoot();
 }

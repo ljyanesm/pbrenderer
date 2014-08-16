@@ -71,7 +71,7 @@ bool bPause = false;
 const float inertia = 0.1f;
 
 LYScreenspaceRenderer::DisplayMode mode = LYScreenspaceRenderer::DISPLAY_DIFFUSE_SPEC;
-LYSpaceHandler::SpaceHandlerType spaceH_type = LYSpaceHandler::CPU_SPATIAL_HASH;
+LYSpaceHandler::SpaceHandlerType spaceH_type = LYSpaceHandler::GPU_SPATIAL_HASH;
 bool mouseMode = 0;
 
 glm::mat4 viewMatrix;
@@ -641,6 +641,8 @@ std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 	case LYSpaceHandler::GPU_SPATIAL_HASH:
 		rString.append("GPU Hash:  ");
 		rString.append(dynamic_cast<LYSpatialHash*>(space_handler)->getCollisionCheckString());
+		rString.append("-");
+		rString.append(dynamic_cast<LYSpatialHash*>(space_handler)->getMethodString());
 		return rString;
 		break;
 	default:
@@ -747,7 +749,7 @@ void display()
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
 
 	std::string spaceSubdivisionAlg = getSpaceHandlerString(spaceH_type);
-	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f        Haptic FPS: %f             %s", 
+	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f  Haptic FPS: %f  --   %s", 
 		modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime, spaceSubdivisionAlg.c_str());
 	static int measureNum = 0;
 

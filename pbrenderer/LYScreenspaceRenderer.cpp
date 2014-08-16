@@ -423,6 +423,8 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
+	glDepthFunc(GL_LESS);
+
 	depthShader->useShader();
 
 	glm::mat4 modelMatrix = glm::mat4();

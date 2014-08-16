@@ -4,6 +4,7 @@
 CPUHashSTL::CPUHashSTL(LYMesh* m, int numBuckets) :
 originalMesh(m),
 nBuckets(numBuckets),
+influenceRadius(0.02f),
 cellSize(0.02f)
 {
 	originalPoints.resize(m->getNumVertices());
