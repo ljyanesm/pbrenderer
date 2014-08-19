@@ -153,5 +153,4 @@ void OverlayRenderer::display() const {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
-
 }

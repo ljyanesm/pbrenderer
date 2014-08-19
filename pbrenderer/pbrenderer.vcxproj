@@ -464,7 +464,7 @@
       <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <GPUDebugInfo>true</GPUDebugInfo>
+      <GPUDebugInfo>false</GPUDebugInfo>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <HostDebugInfo>true</HostDebugInfo>
       <PtxAsOptionV>true</PtxAsOptionV>

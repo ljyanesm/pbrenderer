@@ -51,8 +51,8 @@ float	pointScale = 0.01f;
 float	influenceRadius = 0.2f;
 int		pointDiv = 0;
 
-const float NEARP = 1.0f;
-const float FARP = 100.0f;
+const float NEARP = 0.1f;
+const float FARP = 1000.0f;
 
 // view params
 int ox, oy;
@@ -140,7 +140,7 @@ enum {M_VIEW = 0, M_MOVE};
 namespace fs = ::boost::filesystem;
 std::vector<fs::path> modelFiles;
 
-void create_space_hanlder(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceHandler* &space_handler)
+void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceHandler* &space_handler)
 {
 	switch(spaceH_type)
 	{
@@ -201,7 +201,6 @@ void cudaInit(int argc, char **argv)
 		printf("No CUDA Capable devices found, exiting...\n");
 		exit(EXIT_SUCCESS);
 	}
-	cudaSetDevice(devID);
 	cudaDeviceSynchronize();
 	cudaThreadSynchronize();
 }
@@ -274,7 +273,7 @@ void initGL(int *argc, char **argv){
 	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
 	m_physModel = modelVoxelizer->getModel();
 
-	create_space_hanlder(spaceH_type, space_handler);
+	create_space_handler(spaceH_type, space_handler);
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 
@@ -352,9 +351,6 @@ void motion(int x, int y)
 	dx = (float)(x - ox);
 	dy = (float)(y - oy);
 
-	switch (M_VIEW)
-	{
-	case M_VIEW:
 		if (buttonState == 3)
 		{
 			// left+middle = zoom
@@ -373,41 +369,6 @@ void motion(int x, int y)
 			camera_rot[0] += dy / 5.0f;
 			camera_rot[1] += dx / 5.0f;
 		}
-
-		break;
-
-	case M_MOVE:
-		{
-			float translateSpeed = 0.003f;
-			float3 p = ioInterface->getDevice()->getPosition();
-
-			if (buttonState==1)
-			{
-				float v[3];
-				v[0] = dx*translateSpeed;
-				v[1] = -dy*translateSpeed;
-				v[2] = 0.0f;
-				glm::vec4 r = modelViewMatrix * glm::vec4(v[0], v[1], v[2],1.0);
-				p.x += r.x;
-				p.y += r.y;
-				p.z += r.z;
-			}
-			else if (buttonState==2)
-			{
-				float v[3];
-				v[0] = 0.0f;
-				v[1] = 0.0f;
-				v[2] = dy*translateSpeed;
-				glm::vec4 r = modelViewMatrix*glm::vec4(v[0], v[1], v[2], 1.0);
-				p.x += r.x;
-				p.y += r.y;
-				p.z += r.z;
-			}
-
-			ioInterface->getDevice()->setPosition(p);
-		}
-		break;
-	}
 
 	ox = x;
 	oy = y;
@@ -450,8 +411,8 @@ void keyboardFunc(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
+		create_space_handler(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
-		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -473,9 +434,8 @@ void keyboardFunc(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
-		create_space_hanlder(spaceH_type, space_handler);
+		create_space_handler(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
-		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -594,7 +554,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 			spaceH_type = (LYSpaceHandler::SpaceHandlerType) 
 				((spaceH_type+1)%(LYSpaceHandler::NUM_TYPES-1));
 
-			create_space_hanlder(spaceH_type, space_handler);
+			create_space_handler(spaceH_type, space_handler);
 			ioInterface->getDevice()->setSpaceHandler(space_handler);
 			ioInterface->getDevice()->start();
 			delete tmpSpace;
@@ -651,6 +611,7 @@ std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 	}
 	return rString;
 }
+
 
 void display()
 {
@@ -742,16 +703,15 @@ void display()
 	/////////////////////////////////////////////////////////////////////////////////////////// 
 	
 	sdkStopTimer(&graphicsTimer);
-	float displayTimer = sdkGetAverageTimerValue(&graphicsTimer);
+	float displayTimer = 1000.0f / sdkGetAverageTimerValue(&graphicsTimer);
 	glutSwapBuffers();
 	glutReportErrors();
 
-	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
+	float averageTimer = 1000.0f / sdkGetAverageTimerValue(&hapticTimer);
 
 	std::string spaceSubdivisionAlg = getSpaceHandlerString(spaceH_type);
-	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f  Haptic FPS: %f  --   %s", 
-		modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime, spaceSubdivisionAlg.c_str());
-	static int measureNum = 0;
+	sprintf(fps_string, "Model - %s - GraphicFPS: %5.2f HapticFPS: %5.2f - %s", 
+		modelFile.c_str(), displayTimer, averageTimer, spaceSubdivisionAlg.c_str());
 
 	glutSetWindowTitle(fps_string);
 	hapticFPS++;
