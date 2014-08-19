@@ -20,8 +20,8 @@ void main()
     //Get Depth Information about the Pixel
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
-    float blurRadius = (1.0f/lin_depth) * 0.0001;
-    int windowWidth = 5;
+    float blurRadius = (1.0f/lin_depth) * 0.00001;
+    int windowWidth = 3;
     float sum = 0;
     float wsum = 0;
     

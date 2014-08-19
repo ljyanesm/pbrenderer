@@ -156,25 +156,23 @@ __global__
 	nSize.z = ceil(nSize.z);
 
 	uint maxSearchRange = arguments.maxSearchRange;
-	uint maxSearchRangeSq = arguments.maxSearchRangeSq;
+	uint maxSearchRangeSq = maxSearchRange*maxSearchRange;
 	uint iX, iY, iZ;
 	iX = (int)(index % maxSearchRange);
 	iY = (int)((index/maxSearchRange) % maxSearchRange);
 	iZ = (int)(index / (maxSearchRangeSq));
 
-	if (iX < nSize.x && iY < nSize.y && iZ < nSize.z)
-	{
-		int x = translateRange(iX, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
-		int y = translateRange(iY, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
-		int z = translateRange(iZ, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
-		int3 neighbourPos = gridPos + make_int3(x , y, z);
-		uint  neighbourGridPos = calcGridHash(neighbourPos);
-		uint cellStartI = FETCH(arguments.cellStart, neighbourGridPos);
-		if (cellStartI == 0xffffffff) return;
-		uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
-		arguments.collectionCellStart[index] = cellStartI;
-		arguments.collectionVertices[index] = N;
-	}
+	int x = translateRange(iX, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+	int y = translateRange(iY, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+	int z = translateRange(iZ, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+	int3 neighbourPos = gridPos + make_int3(x , y, z);
+	uint  neighbourGridPos = calcGridHash(neighbourPos);
+	uint cellStartI = FETCH(arguments.cellStart, neighbourGridPos);
+	if (cellStartI == 0xffffffff) return;
+	uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
+	arguments.collectionCellStart[index] = cellStartI;
+	arguments.collectionVertices[index] = N;
+
 	__syncthreads();
 }
 
@@ -213,7 +211,7 @@ __global__
 			Ax += w * pos2.m_pos;
 			Nx += w * pos2.m_normal;
 			uint sortedIndex = arguments.gridParticleIndex[index];
-			if (length(arguments.forceVector) > 0.03) arguments.force[sortedIndex] += arguments.forceVector*0.001f;
+			if (length(arguments.forceVector) > 0.03f) arguments.force[sortedIndex] += arguments.forceVector*0.001f;
 			atomicAdd(&arguments.dev_params->Ax.x, Ax.x);
 			atomicAdd(&arguments.dev_params->Ax.y, Ax.y);
 			atomicAdd(&arguments.dev_params->Ax.z, Ax.z);
@@ -252,7 +250,7 @@ void naiveChildCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, floa
 		Ax += w * pos2.m_pos;
 		Nx += w * pos2.m_normal;
 		uint sortedIndex = gridParticleIndex[index];
-		if (length(forceVector) > 0.03) force[sortedIndex] += forceVector*0.001f;
+		if (length(forceVector) > 0.03f) force[sortedIndex] += forceVector*0.001f;
 		atomicAdd(&dev_params->Ax.x, Ax.x);
 		atomicAdd(&dev_params->Ax.y, Ax.y);
 		atomicAdd(&dev_params->Ax.z, Ax.z);
@@ -668,8 +666,7 @@ __device__
 			if (j != index) {              // check not colliding with self
 				LYVertex ev_vertex = FETCH(oldPos,j);
 				float3 pos2 = ev_vertex.m_pos;
-				float rho_j = ev_vertex.m_density;
-				rho_j = 1.0f/rho_j;
+				float rho_j = 1.0f;
 				float dist = length(pos - pos2);
 				normal += (pos - pos2) * wendlandWeight(dist/R) * rho_j;
 			}
@@ -769,8 +766,6 @@ __global__
 	// write new velocity back to original unsorted location
 	uint originalIndex = gridParticleIndex[index];
 	//printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
-	oldPos[originalIndex].m_density = density;
-	sortedPos[index].m_density = density;
 	__syncthreads ();
 }
 

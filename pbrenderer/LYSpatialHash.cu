@@ -121,7 +121,7 @@ extern "C" {
 		//cudaMemcpy(arguments.toolPos, toolVertices.data(), arguments.numToolVertices*sizeof(glm::vec4), cudaMemcpyHostToDevice);
 
 		// Calculate the size of the neighborhood based on the radius
-		int nSize = roundf((float) (r / arguments.voxSize));
+		int nSize = ceilf((float) (r / arguments.voxSize));
 		// Calculate the voxel position of the query point
 		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
 
@@ -226,7 +226,6 @@ extern "C" {
 				// thread per particle
 				uint numThreads, numBlocks;
 				computeGridSize(arguments.numVertices, 512, numBlocks, numThreads);
-
 				// execute the kernel
 				_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
 					(LYVertex *) arguments.sortedPos,

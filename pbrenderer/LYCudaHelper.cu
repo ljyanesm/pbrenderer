@@ -18,6 +18,10 @@ void LYCudaHelper::freeHostArray(void *devPtr)
 void LYCudaHelper::allocateArray(void **devPtr, size_t size)
 {
 	checkCudaErrors(cudaMalloc(devPtr, size));
+	if (NULL == devPtr){
+		printf("Device ran out of memory! \n");
+		exit(-1);
+	}
 }
 
 void LYCudaHelper::freeArray(void *devPtr)

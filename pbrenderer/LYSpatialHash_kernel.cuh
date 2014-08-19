@@ -44,19 +44,8 @@ typedef struct _SimParams
 
 	uint3 gridSize;
 
-	float dmin;
 	float w_tot;
-	float wn_tot;
 	float R;
-	float RMAX;
-	float RMIN;
-	float colliderRadius;
-    
-	uint numCells;
-    size_t numBodies;
-    uint maxParticlesPerCell;
-
-	
 }SimParams;
 
 enum CollisionCheckType{
