@@ -58,12 +58,12 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 
 LYHapticDevice::~LYHapticDevice(void)
 {
-	delete pState;
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ib);
 	hdStopScheduler();
 	hdUnschedule(hUpdateDeviceCallback);
 	hdDisableDevice(ghHD);
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &ib);
+	delete pState;
 }
 
 bool LYHapticDevice::loadDevices()
@@ -90,10 +90,21 @@ bool LYHapticDevice::initHD()
 		return false;
 	hdMakeCurrentDevice(ghHD);
 	hdEnable(HD_FORCE_OUTPUT);
-
 	hUpdateDeviceCallback = hdScheduleAsynchronous(
-		touchMesh, this, HD_MAX_SCHEDULER_PRIORITY);
+		touchMesh, this, HD_DEFAULT_SCHEDULER_PRIORITY);
 
+	hdStartScheduler();
+	return true;
+}
+
+bool LYHapticDevice::stopHD() 
+{
+	hdStopScheduler();
+	return true;
+}
+
+bool LYHapticDevice::startHD()
+{
 	hdStartScheduler();
 	return true;
 }
@@ -102,18 +113,17 @@ void LYHapticDevice::touchTool()
 {
 	/* Obtain a thread-safe copy of the current haptic display state. */
 	hdScheduleSynchronous(copyHapticDisplayState, pState,
-		HD_MAX_SCHEDULER_PRIORITY);
+		HD_DEFAULT_SCHEDULER_PRIORITY);
 	static float3 oldForce = float3();
 	int currentButtons;
 	hduVector3Dd position;
 	hduVector3Dd force( 0,0,0 );
-	sdkStartTimer(&m_timer);
 
-	hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
-
+	hdBeginFrame(ghHD);
 	if(COLLISION_FORCEFEEDBACK)
 	{
-		hdBeginFrame(ghHD);
+		sdkStartTimer(&m_timer);
+		hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
 		glm::vec3 pos = glm::vec3((float) pState->position[0], (float) pState->position[1], (float) pState->position[2]);
 		pos.x *= m_workspaceScale.x;
 		pos.y *= m_workspaceScale.y;
@@ -135,9 +145,10 @@ void LYHapticDevice::touchTool()
 		force[0] = _force.x;
 		force[1] = _force.y;
 		force[2] = _force.z;
-		hdSetDoublev(HD_CURRENT_FORCE, force);
-		hdEndFrame(ghHD);
+		sdkStopTimer(&m_timer);
 	}
+	hdSetDoublev(HD_CURRENT_FORCE, force);
+	hdEndFrame(ghHD);
 	//else
 	//{
 	//	force[0] = 0;
@@ -145,7 +156,6 @@ void LYHapticDevice::touchTool()
 	//	force[2] = 0;
 	//	hdSetDoublev(HD_CURRENT_FORCE, force);
 	//}
-	sdkStopTimer(&m_timer);
 }
 
 bool LYHapticDevice::isOk() const
@@ -170,6 +180,12 @@ HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData)
 HDCallbackCode HDCALLBACK touchMesh(void *pUserData)
 {
 	LYHapticDevice* haptic = (LYHapticDevice*) pUserData;
+	if (!haptic->isEnabled()) 
+	{
+		haptic->stopHD();
+	} else {
+		haptic->startHD();
+	}
 	haptic->touchTool();
 
 	return HD_CALLBACK_CONTINUE;

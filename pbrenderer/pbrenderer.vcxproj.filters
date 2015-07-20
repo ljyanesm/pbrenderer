@@ -73,9 +73,6 @@
     <ClCompile Include="LYOctree.cpp">
       <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
-    <ClCompile Include="LYSpatialHash.cpp">
-      <Filter>Space Partitioning\Source</Filter>
-    </ClCompile>
     <ClCompile Include="LYKeyboardDevice.cpp">
       <Filter>IODevices\Keyboard</Filter>
     </ClCompile>
@@ -247,8 +244,7 @@
     <CudaCompile Include="LYCudaHelper.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="LYSpatialHash.cu">
-      <Filter>Space Partitioning\Source</Filter>
-    </CudaCompile>
+    <CudaCompile Include="LYSpatialHash.cu" />
+    <CudaCompile Include="LYSpatialHashExtern.cu" />
   </ItemGroup>
 </Project>

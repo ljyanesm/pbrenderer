@@ -116,7 +116,7 @@ void OverlayRenderer::display() const {
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
 	model *= modelOrientation;
-	model *= glm::scale(0.1f, 0.1f, 0.1f);
+	model *= glm::scale(glm::vec3(0.1f, 0.1f, 0.1f));
 	modelView = viewMat * model;
 	mvpMat = projection * modelView;
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);

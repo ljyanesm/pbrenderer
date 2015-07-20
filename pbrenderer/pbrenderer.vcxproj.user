@@ -2,8 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerWorkingDirectory>$(ProjectDir)</LocalDebuggerWorkingDirectory>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
     <ShowAllFiles>false</ShowAllFiles>
+    <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
+    <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
   </PropertyGroup>
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
@@ -18,5 +20,30 @@
     <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\temp\pbrenderer-workdir\</RemoteDebuggerWorkingDirectory>
     <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug sm20|Win32'">
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
+    <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Cuda|Win32'">
+    <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
+    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
+    <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release sm20|Win32'">
+    <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
+    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
+    <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release sm3.5 dp|Win32'">
+    <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
   </PropertyGroup>
 </Project>

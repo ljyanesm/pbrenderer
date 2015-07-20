@@ -57,6 +57,7 @@ public:
 	virtual size_t			getHIPNumVertices() const;
 	virtual bool			isEnabled() const;
 
+	virtual ~LYHapticInterface() = 0 {};
 protected:
 	bool COLLISION_FORCEFEEDBACK;
 	

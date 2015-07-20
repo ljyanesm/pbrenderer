@@ -153,7 +153,7 @@ void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceH
 	case LYSpaceHandler::GPU_SPATIAL_HASH:
 		{
 			std::cout << "Creating GPU Hash" << std::endl;
-			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
+			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(64));
 		}
 		break;
 	case LYSpaceHandler::CPU_Z_ORDER:
@@ -173,16 +173,15 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 
 	if (fs::is_directory(root))
 	{
-		fs::recursive_directory_iterator it(root);
-		fs::recursive_directory_iterator endit;
+		fs::directory_iterator it(root);
+		fs::directory_iterator endit;
 		while(it != endit)
 		{
-			if (fs::is_regular_file(*it) && it->path().extension() == ext 
+			if (fs::is_regular_file(it->status()) && it->path().extension() == ext 
 				&& it->path().filename() != "proxy.ply" 
 				&& it->path().filename() != "hip.ply"
 				&& it->path().filename() != "bbox.ply")
 			{
-
 				ret.push_back(it->path().filename());
 			}
 			++it;
@@ -209,9 +208,8 @@ void cudaInit(int argc, char **argv)
 void initCUDA(int argc, char **argv)
 {
 	cudaInit(argc, argv);
-	float* p;
-	checkCudaErrors(cudaMalloc((void **) &p, sizeof(float)));
 	sdkCreateTimer(&hapticTimer);
+	sdkResetTimer(&hapticTimer);
 	sdkCreateTimer(&graphicsTimer);
 }
 
@@ -231,8 +229,9 @@ void loadConfigFile( char ** argv )
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 4;
+	loadedModel = 3;
 	get_all(".", ".ply", modelFiles);
+	std::sort(modelFiles.begin(), modelFiles.end());
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 }
@@ -263,15 +262,15 @@ void initGL(int *argc, char **argv){
 
 	loadConfigFile(argv);
 
-	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
+	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,10), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
 	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
 
-	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
-	m_physModel = modelVoxelizer->getModel();
+	//modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
+	//m_physModel = modelVoxelizer->getModel();
 
 	create_space_handler(spaceH_type, space_handler);
 
@@ -571,14 +570,13 @@ void special(int k, int x, int y)
 void cleanup()
 {
 	printf("Cleaning up!\n");
-	sdkDeleteTimer(&graphicsTimer);
-	sdkDeleteTimer(&hapticTimer);
-	delete m_plyLoader;
-	delete screenspace_renderer;
-	delete space_handler;
-	delete m_pMesh;
-	delete m_pCamera;
-	delete ioInterface;
+
+	//delete m_plyLoader;
+	//delete screenspace_renderer;
+	//delete space_handler;
+	//delete m_pMesh;
+	//delete m_pCamera;
+	//delete ioInterface;
 }
 
 void idle(void)
@@ -658,7 +656,7 @@ void display()
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewTransformation = glm::mat4();
 	viewMatrix *= glm::lookAt(m_pCamera->getPosition(), glm::vec3(0,0,0), glm::vec3(0,1,0));
-	viewTransformation *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
+	viewTransformation *= glm::translate(glm::vec3(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]));
 	viewTransformation *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	viewTransformation *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
 	viewMatrix *= viewTransformation;
@@ -724,6 +722,7 @@ void display()
 
 int main(int argc, char **argv)
 {
+
 	initGL(&argc, argv);
 
 	glutDisplayFunc(display);

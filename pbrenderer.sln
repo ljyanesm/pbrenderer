@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pbrenderer", "pbrenderer\pbrenderer.vcxproj", "{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}"
 EndProject
 Global
@@ -13,6 +13,8 @@ Global
 		Debug|x64 = Debug|x64
 		Release sm20|Win32 = Release sm20|Win32
 		Release sm20|x64 = Release sm20|x64
+		Release sm3.5 dp|Win32 = Release sm3.5 dp|Win32
+		Release sm3.5 dp|x64 = Release sm3.5 dp|x64
 		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
 	EndGlobalSection
@@ -33,6 +35,10 @@ Global
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm20|Win32.Build.0 = Release sm20|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm20|x64.ActiveCfg = Release sm20|x64
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm20|x64.Build.0 = Release sm20|x64
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|Win32.ActiveCfg = Release sm3.5 dp|Win32
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|Win32.Build.0 = Release sm3.5 dp|Win32
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|x64.ActiveCfg = Release sm3.5 dp|x64
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|x64.Build.0 = Release sm3.5 dp|x64
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release|Win32.ActiveCfg = Release|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release|Win32.Build.0 = Release|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release|x64.ActiveCfg = Release|x64

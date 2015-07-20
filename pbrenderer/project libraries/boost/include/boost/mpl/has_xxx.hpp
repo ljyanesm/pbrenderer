@@ -155,10 +155,11 @@ template<> struct trait<T> \
 // SFINAE-based implementations below are derived from a USENET newsgroup's 
 // posting by Rani Sharoni (comp.lang.c++.moderated, 2002-03-17 07:45:09 PST)
 
-#   elif BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1400)) \
+#   elif BOOST_WORKAROUND(BOOST_MSVC, <= 1400) \
+      || (BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1800)) && defined(__CUDACC__)) \
       || BOOST_WORKAROUND(__IBMCPP__, <= 700)
 
-// MSVC 7.1+ & VACPP
+// MSVC 7.1 & MSVC 8.0 & VACPP
 
 // agurt, 15/jun/05: replace overload-based SFINAE implementation with SFINAE
 // applied to partial specialization to fix some apparently random failures 
@@ -290,18 +291,24 @@ struct trait \
 #   if !defined(BOOST_MPL_HAS_XXX_NO_WRAPPED_TYPES)
 #     if BOOST_WORKAROUND(BOOST_MSVC, <= 1400)
 #       define BOOST_MPL_HAS_XXX_NO_WRAPPED_TYPES 1
+#     else
+#       define BOOST_MPL_HAS_XXX_NO_WRAPPED_TYPES 0
 #     endif
 #   endif
 
 #   if !defined(BOOST_MPL_HAS_XXX_NO_EXPLICIT_TEST_FUNCTION)
 #     if (defined(BOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS))
 #       define BOOST_MPL_HAS_XXX_NO_EXPLICIT_TEST_FUNCTION 1
+#     else
+#       define BOOST_MPL_HAS_XXX_NO_EXPLICIT_TEST_FUNCTION 0
 #     endif
 #   endif
 
 #   if !defined(BOOST_MPL_HAS_XXX_NEEDS_TEMPLATE_SFINAE)
 #     if BOOST_WORKAROUND(BOOST_MSVC, <= 1400)
 #       define BOOST_MPL_HAS_XXX_NEEDS_TEMPLATE_SFINAE 1
+#     else
+#       define BOOST_MPL_HAS_XXX_NEEDS_TEMPLATE_SFINAE 0
 #     endif
 #   endif
 
