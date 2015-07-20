@@ -446,6 +446,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 		(mesh->getRenderPoints()) ? _drawPoints(mesh) : _drawTriangles(mesh);
 	}
 
+#if 0
 	modelMatrix = haptic_interface->getHIPMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
 	inverse_transposed = glm::inverse(glm::transpose(glm::mat3(modelViewMatrix)));
@@ -469,7 +470,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
 
 	_drawPoints(haptic_interface->getProxyObject());
-
+#endif
 	glDisable(GL_POINT_SPRITE_ARB);
 
 	glDisable(GL_DEPTH_TEST);

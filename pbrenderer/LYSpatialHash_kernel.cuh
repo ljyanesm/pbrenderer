@@ -53,6 +53,7 @@ enum CollisionCheckType{
 	NAIVE,
 	DYNAMIC,
 	TWO_STEP,
+	REDUCTION,
 	NUM_TYPES
 };
 
@@ -148,6 +149,6 @@ struct OvershootArgs{
 	float4			*sinking;				// Device pointer to the float4 sinking property
 	float3			pos;
 	float			influenceRadius;
-	uint			numVertices;
+	size_t			numVertices;
 };
 #endif

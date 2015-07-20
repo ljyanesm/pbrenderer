@@ -119,7 +119,7 @@ __global__
 
 		// Now use the sorted index to reorder the pos and vel data
 		uint sortedIndex = gridParticleIndex[index];
-		LYVertex pos = FETCH(oldPos, sortedIndex);       // macro does either global read or texture fetch
+		LYVertex pos = oldPos[sortedIndex];       // macro does either global read or texture fetch
 		sortedPos[index] = pos;
 	}
 
@@ -354,9 +354,11 @@ __device__ uint cellsToCheck[29791];
 __device__ uint numVertsCell[29791];
 __device__ uint numVertsCheck[29791];
 
-__device__ uint vertexIndex[50000];
+//__device__ uint vertexIndex[50000];
+//__device__ uint vertexToolIndex[4913][50000];
 
-__device__ uint vertexToolIndex[4913][50000];
+__device__ uint vertexIndex[1];
+__device__ uint vertexToolIndex[1][1];
 
 __global__
 	void childCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, SimParams *dev_params, uint totalCells, uint totalVertices){
@@ -764,7 +766,7 @@ __global__
 	}
 
 	// write new velocity back to original unsorted location
-	uint originalIndex = gridParticleIndex[index];
+	//uint originalIndex = gridParticleIndex[index];
 	//printf("force[%d] = (%.4f, %.4f, %.4f)\n", index, force.x, force.y, force.z);
 	__syncthreads ();
 }

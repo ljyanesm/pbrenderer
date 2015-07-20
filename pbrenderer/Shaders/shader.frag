@@ -7,12 +7,7 @@
 #define	DISPLAY_COLOR 3
 #define	DISPLAY_DIFFUSE 4
 #define	DISPLAY_DIFFUSE_SPEC 5
-#define	DISPLAY_FRESNEL 6
-#define	DISPLAY_REFLECTION 7
-#define	DISPLAY_FRES_REFL 8
-#define	DISPLAY_THICKNESS 9
-#define	DISPLAY_REFRAC 10
-#define	DISPLAY_TOTAL 11
+#define	DISPLAY_TOTAL 6
 
 uniform mat4 u_ModelView;
 uniform mat4 u_Persp;
@@ -78,36 +73,19 @@ void main()
     
     //Blinn-Phong Shading Coefficients
     vec3 H = normalize(incident + viewer);
-    float specular = pow(max(0.0f, dot(H,N)),50.0f);
+    float specular = pow(max(0.0f, dot(H,N)),15.0f);
     float diffuse = max(0.0f, dot(incident, N));
     
     //Background Only Pixels
     if(exp_depth > 0.99999999){
-		out_Color = vec4(1.0f, 1.0f, 1.0f, 0.0f);
+		out_Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		return;
 	}
-    
-    //Fresnel Reflection
-    float r_0 = 0.3f;
-    float fres_refl = r_0 + (1-r_0)*pow(1-dot(N,viewer),5.0f);
-    
-    //Cube Map Reflection Values
-    vec3 reflect = reflect(-viewer,N);
-    vec4 refl_color = vec4(0.75, 0.75, 0.75, 0.0);//texture(u_Cubemaptex, reflect);
-    
-    //Color Attenuation from Thickness
-    //(Beer's Law)
-    float k_r = 5.0f;
-    float k_g = 1.0f;
-    float k_b = 0.1f;
-    vec3 color_atten = vec3( exp(-k_r*thickness), exp(-k_g*thickness), exp(-k_b*thickness));
-    
+        
     //Background Refraction
-    vec4 refrac_color = vec4(0.75, 0.75, 0.75, 0.0);//texture(u_Backgroundtex, fs_Texcoord + N.xy*thickness);
-    
-    //Final Real Color Mix
-    float transparency = 1-thickness;
-    vec3 final_color = mix(color_atten.rgb * diffuse, refrac_color.rgb,transparency);
+    vec4 refrac_color = vec4(0.75, 0.75, 0.75, 0.0);
+
+    vec3 final_color = refrac_color.rgb;
     
 	switch(u_DisplayType) {
 		case(DISPLAY_DEPTH):
@@ -128,23 +106,8 @@ void main()
 		case(DISPLAY_DIFFUSE_SPEC):
 			out_Color = vec4(Color.rgb * diffuse + specular * vec3(1.0f), 1.0f);
 			break;
-		case(DISPLAY_FRESNEL):
-			out_Color = vec4(vec3(fres_refl), 1.0f);
-			break;
-		case(DISPLAY_REFLECTION):
-			out_Color = vec4(refl_color.rgb, 1.0f);
-			break;
-		case(DISPLAY_FRES_REFL):
-			out_Color = vec4(refl_color.rgb * fres_refl, 1.0f);
-			break;
-		case(DISPLAY_THICKNESS):
-			out_Color = vec4(vec3(thickness),1.0f);
-			break;
-		case(DISPLAY_REFRAC):
-			out_Color = refrac_color;
-			break;
 		case(DISPLAY_TOTAL):
-			out_Color = vec4(final_color.rgb + specular * vec3(1.0f) + refl_color.rgb * fres_refl, 1.0f);
+			out_Color = vec4(final_color.rgb + specular * vec3(1.0f), 1.0f);
 			break;
 	}
 	return;
