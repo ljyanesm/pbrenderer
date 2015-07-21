@@ -122,7 +122,6 @@ void LYHapticDevice::touchTool()
 	hdBeginFrame(ghHD);
 	if(COLLISION_FORCEFEEDBACK)
 	{
-		sdkStartTimer(&m_timer);
 		hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
 		glm::vec3 pos = glm::vec3((float) pState->position[0], (float) pState->position[1], (float) pState->position[2]);
 		pos.x *= m_workspaceScale.x;
@@ -145,7 +144,6 @@ void LYHapticDevice::touchTool()
 		force[0] = _force.x;
 		force[1] = _force.y;
 		force[2] = _force.z;
-		sdkStopTimer(&m_timer);
 	}
 	hdSetDoublev(HD_CURRENT_FORCE, force);
 	hdEndFrame(ghHD);
@@ -180,12 +178,12 @@ HDCallbackCode HDCALLBACK copyHapticDisplayState(void *pUserData)
 HDCallbackCode HDCALLBACK touchMesh(void *pUserData)
 {
 	LYHapticDevice* haptic = (LYHapticDevice*) pUserData;
-	if (!haptic->isEnabled()) 
-	{
-		haptic->stopHD();
-	} else {
-		haptic->startHD();
-	}
+	//if (!haptic->isEnabled()) 
+	//{
+	//	haptic->stopHD();
+	//} else {
+	//	haptic->startHD();
+	//}
 	haptic->touchTool();
 
 	return HD_CALLBACK_CONTINUE;

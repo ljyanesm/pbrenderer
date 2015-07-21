@@ -85,7 +85,7 @@ void LYCudaHelper::printMemInfo()
 {
 	size_t gpuFreeMem, gpuTotalMem;
 	cudaError_t error(cudaMemGetInfo(&gpuFreeMem, &gpuTotalMem));
-	std::cout << "cudaMemGetInfo error code (" << error << "): " << cudaGetErrorString(error) << std::endl;
+	//std::cout << "cudaMemGetInfo error code (" << error << "): " << cudaGetErrorString(error) << std::endl;
 	gpuFreeMem /= 1024*1024;
 	gpuTotalMem /= 1024*1024;
 	printf("Total amount of MB available: %Iu MB \nTotal amount of device memory: %Iu MB\n", gpuFreeMem, gpuTotalMem);
