@@ -723,7 +723,9 @@ void display()
 		switch (spaceH_type)
 		{
 			case LYSpaceHandler::GPU_SPATIAL_HASH:
-				myfile.open (modelFile.substr(0, modelFile.find('.')).append("-"+spaceSubdivisionAlg).append(".GPUlog"), std::ios::app);
+				myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
+					.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
+					.append(".GPUlog"), std::ios::app);
 				myfile << averageTimer << std::endl;
 				myfile.close();
 				break;
