@@ -107,6 +107,8 @@ IOManager *ioInterface;
 ModelVoxelization *modelVoxelizer;
 ///////////////////////////////////////////////////////
 
+bool captureHapticTime = false;
+
 // Variables to load from the cfg file
 ///////////////////////////////////////////////////////
 std::string modelFile;
@@ -229,7 +231,7 @@ void loadConfigFile( char ** argv )
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 3;
+	loadedModel = 5;
 	get_all(".", ".ply", modelFiles);
 	std::sort(modelFiles.begin(), modelFiles.end());
 	if (modelFile.empty()) modelFile = argv[1];
@@ -558,6 +560,11 @@ void keyboardFunc(unsigned char key, int x, int y)
 			ioInterface->getDevice()->start();
 			delete tmpSpace;
 		} break;
+
+	case 'l':
+		{
+			captureHapticTime = !captureHapticTime;
+		} break;
 	}
 	devPosition += pos;
 	glutPostRedisplay();
@@ -711,6 +718,28 @@ void display()
 	sprintf(fps_string, "Model - %s - GraphicFPS: %5.2f HapticFPS: %5.2f - %s", 
 		modelFile.c_str(), displayTimer, averageTimer, spaceSubdivisionAlg.c_str());
 
+	if (captureHapticTime){
+		std::ofstream myfile;
+		switch (spaceH_type)
+		{
+			case LYSpaceHandler::GPU_SPATIAL_HASH:
+				myfile.open (modelFile.substr(0, modelFile.find('.')).append("-"+spaceSubdivisionAlg).append(".GPUlog"), std::ios::app);
+				myfile << averageTimer << std::endl;
+				myfile.close();
+				break;
+			case LYSpaceHandler::CPU_SPATIAL_HASH:
+				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
+				myfile << averageTimer << std::endl;
+				myfile.close();
+				break;
+			case LYSpaceHandler::CPU_Z_ORDER:
+				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
+				myfile << averageTimer << std::endl;
+				myfile.close();
+				break;
+		}
+	}
+
 	glutSetWindowTitle(fps_string);
 	hapticFPS++;
 	if (hapticFPS >= 20){
@@ -732,8 +761,6 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboardFunc);
 	glutSpecialFunc(special);
 	glutIdleFunc(idle);
-
-	atexit(cleanup);
 
 	glutMainLoop();
 

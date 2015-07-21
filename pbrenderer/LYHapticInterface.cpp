@@ -73,8 +73,12 @@ void LYHapticInterface::setSpeed( float s )
 
 float3 LYHapticInterface::calculateFeedbackUpdateProxy()
 {
-	if (!COLLISION_FORCEFEEDBACK) return make_float3(0.0f);
+	if (!COLLISION_FORCEFEEDBACK){
+		return make_float3(0.0f);
+	}
+	sdkStartTimer(&m_timer);
 	m_forceVector = m_spaceHandler->calculateFeedbackUpdateProxy(&m_collider);
+	sdkStopTimer(&m_timer);
 	return m_forceVector;
 }
 

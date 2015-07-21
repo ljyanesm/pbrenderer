@@ -433,8 +433,8 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 				dP.y = -Fx * Nx.y;
 				dP.z = -Fx * Nx.z;
 				dP = dP/fmaxf(dNx, 0.01f);
-				dP *= 0.001f;
-				Pseed += dP;
+				dP *= 0.00001f;
+				Pseed -= dP;
 			} while (length(dP) > 0.001f && ++iterations < 4);
 			pos->scpPosition = Pseed;
 			pos->surfaceTgPlane = Nx;

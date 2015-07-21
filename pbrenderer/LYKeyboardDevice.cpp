@@ -48,6 +48,8 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 2, &Indices[0], GL_STATIC_DRAW);
 
 	m_HIPMatrix = glm::mat4();
+
+	printf("Using keyboard device\n");
 }
 
 
