@@ -22,7 +22,7 @@
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug sm20|Win32'">
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
     <RemoteDebuggerCommand>$(TargetPath)</RemoteDebuggerCommand>
     <RemoteDebuggerServerName>CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
   </PropertyGroup>
