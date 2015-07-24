@@ -22,6 +22,7 @@
 #include "thrust/for_each.h"
 #include "thrust/iterator/zip_iterator.h"
 #include "thrust/sort.h"
+#include "thrust/extrema.h"
 
 #include "LYCudaHelper.cuh"
 #include "LYSpatialHash_impl.cuh"
@@ -41,6 +42,7 @@ extern "C" {
 	void setParameters(SimParams *hostParams)
 	{
 		// copy parameters to constant memory
+
 		checkCudaErrors( cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)) );
 	}
 
@@ -59,7 +61,7 @@ extern "C" {
 			numVertices);
 
 		// check if kernel invocation generated an error
-		getLastCudaError("Kernel execution failed");
+		checkCudaErrors(cudaPeekAtLastError());
 	}
 
 	void reorderDataAndFindCellStart(uint  *cellStart,
@@ -89,7 +91,7 @@ extern "C" {
 			gridParticleIndex,
 			(LYVertex *) oldPos,
 			numVertices);
-		getLastCudaError("Kernel execution failed: reorderDataAndFindCellStartD");
+		checkCudaErrors(cudaPeekAtLastError());
 
 #if USE_TEX
 		checkCudaErrors(cudaUnbindTexture(oldPosTex));
@@ -125,7 +127,7 @@ extern "C" {
 		// Calculate the voxel position of the query point
 		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
 
-		getLastCudaError("Before collisionCheck Kernel execution failed");
+		checkCudaErrors(cudaPeekAtLastError());
 
 		uint numThreads, numBlocks;
 		computeGridSize(arguments.numToolVertices, 32, numBlocks, numThreads);
@@ -282,7 +284,7 @@ extern "C" {
 												numVertices);
 
         // check if kernel invocation generated an error
-        getLastCudaError("Kernel execution failed");
+		checkCudaErrors(cudaPeekAtLastError());
 
 	}
 
@@ -302,7 +304,7 @@ extern "C" {
 														dev_params,
 														numVertices);
 		// check if kernel invocation generated an error
-		getLastCudaError("Kernel _updateProperties failed!");
+		checkCudaErrors(cudaPeekAtLastError());
 	}
 
 	void updateDensities(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
@@ -320,7 +322,7 @@ extern "C" {
 			dev_params,
 			numVertices);
 		// check if kernel invocation generated an error
-		getLastCudaError("Kernel _updateDensities failed!");
+		checkCudaErrors(cudaPeekAtLastError());
 	}
 
 	void computeOvershoot(OvershootArgs args)
@@ -331,6 +333,6 @@ extern "C" {
 		_computeOvershoot<<<numBlocks, numThreads>>>(args);
 		cudaDeviceSynchronize();
 		// check if kernel invocation generated an error
-		getLastCudaError("Kernel _computeOvershoot failed!");
+		checkCudaErrors(cudaPeekAtLastError());
 	}
 }

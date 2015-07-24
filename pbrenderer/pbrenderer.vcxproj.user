@@ -19,4 +19,7 @@
     <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CMP-D-7SQ4Z3J</RemoteDebuggerServerName>
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
+  </PropertyGroup>
 </Project>
