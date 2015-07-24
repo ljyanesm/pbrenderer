@@ -80,6 +80,7 @@ OverlayRenderer::~OverlayRenderer(void)
 
 void OverlayRenderer::display() const {
 	
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_depthFBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	int width(m_camera->getWidth());
@@ -104,9 +105,9 @@ void OverlayRenderer::display() const {
 
 	glm::vec3 surface_normal = -glm::vec3(surfaceNormal.x, surfaceNormal.y, surfaceNormal.z);
 	if ( glm::length(surface_normal) && surface_normal != glm::vec3(0,1,0) )// && surface_normal != glm::vec3(0,-1,0) && !glm::isnan(surface_normal).x)
-		modelOrientation = glm::transpose(glm::lookAt(glm::vec3(0,0,0), surface_normal, glm::vec3(0,1,0)));
+		modelOrientation = glm::transpose(glm::lookAt(glm::vec3(1,0,0), surface_normal, glm::vec3(0,1,0)));
 	else
-		modelOrientation = glm::transpose(glm::lookAt(glm::vec3(0,0,0), m_camera->getPosition(), glm::vec3(0,1,0)));
+		modelOrientation = glm::transpose(glm::lookAt(glm::vec3(1,0,0), m_camera->getPosition(), glm::vec3(0,1,0)));
 
 	/*
 	 Surface object:

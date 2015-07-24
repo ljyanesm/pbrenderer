@@ -78,12 +78,12 @@ void main()
     
     //Blinn-Phong Shading Coefficients
     vec3 H = normalize(incident + viewer);
-    float specular = pow(max(0.0f, dot(H,N)),50.0f);
+    float specular = pow(max(0.0f, dot(H,N)),16.0f);
     float diffuse = max(0.0f, dot(incident, N));
     
     //Background Only Pixels
     if(exp_depth > 0.99999999){
-		out_Color = vec4(1.0f, 1.0f, 1.0f, 0.0f);
+		out_Color = vec4(0.75f, 0.75f, 0.75f, 0.0f);
 		return;
 	}
     

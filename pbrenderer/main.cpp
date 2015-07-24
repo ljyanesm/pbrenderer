@@ -1,5 +1,6 @@
-#define BOOST_FILESYSTEM_VERSION 3
-#define BOOST_FILESYSTEM_NO_DEPRECATED 
+//#define BOOST_FILESYSTEM_VERSION 3
+#define BOOST_SYSTEM_DYN_LINK
+//#define BOOST_FILESYSTEM_NO_DEPRECATED 
 #include <boost/filesystem.hpp>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
@@ -180,7 +181,8 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 			if (fs::is_regular_file(*it) && it->path().extension() == ext 
 				&& it->path().filename() != "proxy.ply" 
 				&& it->path().filename() != "hip.ply"
-				&& it->path().filename() != "bbox.ply")
+				&& it->path().filename() != "bbox.ply"
+				&& it->path().filename() != "surface.ply")
 			{
 
 				ret.push_back(it->path().filename());
@@ -209,8 +211,6 @@ void cudaInit(int argc, char **argv)
 void initCUDA(int argc, char **argv)
 {
 	cudaInit(argc, argv);
-	float* p;
-	checkCudaErrors(cudaMalloc((void **) &p, sizeof(float)));
 	sdkCreateTimer(&hapticTimer);
 	sdkCreateTimer(&graphicsTimer);
 }
@@ -270,8 +270,8 @@ void initGL(int *argc, char **argv){
 	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
 
-	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
-	m_physModel = modelVoxelizer->getModel();
+	//modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
+	//m_physModel = modelVoxelizer->getModel();
 
 	create_space_handler(spaceH_type, space_handler);
 

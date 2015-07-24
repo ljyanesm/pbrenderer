@@ -56,9 +56,9 @@ enum CollisionCheckType{
 	NUM_TYPES
 };
 
-class ccConfiguration { // Collision check configuration call object
-public:
+struct ccConfiguration { // Collision check configuration call object
 	float3					pos;
+	float					padding;
 	float4					forceVector; 
 	size_t					numVertices;
 	size_t					numToolVertices;

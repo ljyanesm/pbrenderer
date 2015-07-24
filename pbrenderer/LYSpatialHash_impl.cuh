@@ -470,6 +470,7 @@ __global__
 	// For all the voxels around currentVoxel go to the neighbors and launch threads on each vertex on them.
 
 	uint totalVertices = 0;
+	uint totalCells = 0;
 	//return;
 	for(int z=-nSize.z; z<=nSize.z; z++) {
 		for(int y=-nSize.y; y<=nSize.y; y++) {
@@ -489,7 +490,7 @@ __global__
 				//cellsToCheck[totalCells] = cellStartI;
 				//numVertsCheck[totalCells] = N;
 				totalVertices += N;
-				//totalCells++;
+				totalCells++;
 
 			}
 		}
@@ -538,6 +539,7 @@ __global__
 	// For all the voxels around currentVoxel go to the neighbors and launch threads on each vertex on them.
 
 	uint totalVertices = 0;
+	uint totalCells = 0;
 	//return;
 	for(int z=-nSize.z; z<=nSize.z; z++) {
 		for(int y=-nSize.y; y<=nSize.y; y++) {
@@ -557,7 +559,7 @@ __global__
 				//cellsToCheck[totalCells] = cellStartI;
 				//numVertsCheck[totalCells] = N;
 				totalVertices += N;
-				//totalCells++;
+				totalCells++;
 
 			}
 		}

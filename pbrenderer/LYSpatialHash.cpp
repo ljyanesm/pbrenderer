@@ -72,19 +72,19 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	
 	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
-	collisionCheckArgs.sortedPos = m_sorted_points;
-	collisionCheckArgs.toolPos	 = m_collisionPoints;
-	collisionCheckArgs.forceVector = m_forceFeedback;
-	collisionCheckArgs.force = m_point_force;
-	collisionCheckArgs.gridParticleIndex = m_pointGridIndex;
-	collisionCheckArgs.cellStart = m_cellStart;
-	collisionCheckArgs.cellEnd = m_cellEnd;
-	collisionCheckArgs.dev_params = m_dParams;
-	collisionCheckArgs.numVertices = m_numVertices;
-	collisionCheckArgs.numToolVertices = m_numToolVertices;
-	collisionCheckArgs.voxSize = 1.0f/gridSize.x;
-	collisionCheckArgs.maxSearchRange = maxSearchRange;
-	collisionCheckArgs.maxSearchRangeSq = maxSearchRangeSq;
+	collisionCheckArgs.sortedPos				= m_sorted_points;
+	collisionCheckArgs.toolPos					= m_collisionPoints;
+	collisionCheckArgs.forceVector				= m_forceFeedback;
+	collisionCheckArgs.force					= m_point_force;
+	collisionCheckArgs.gridParticleIndex		= m_pointGridIndex;
+	collisionCheckArgs.cellStart				= m_cellStart;
+	collisionCheckArgs.cellEnd					= m_cellEnd;
+	collisionCheckArgs.dev_params				= m_dParams;
+	collisionCheckArgs.numVertices				= m_numVertices;
+	collisionCheckArgs.numToolVertices			= m_numToolVertices;
+	collisionCheckArgs.voxSize					= 1.0f/gridSize.x;
+	collisionCheckArgs.maxSearchRange			= maxSearchRange;
+	collisionCheckArgs.maxSearchRangeSq			= maxSearchRangeSq;
 	collisionCheckArgs.maxNumCollectionElements = m_maxNumCollectionElements;
 
 	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.totalVertices_2Step, 1*sizeof(uint));
@@ -94,13 +94,11 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	checkCudaErrors(cudaMemset(collisionCheckArgs.collectionVertices, 0, m_maxNumCollectionElements*sizeof(uint)));
 
 	this->setInfluenceRadius(0.02f);
-	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
-	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
 	LYVertex* dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
@@ -212,7 +210,6 @@ void	LYSpatialHash::update()
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
-	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	if (false && m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);

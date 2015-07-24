@@ -70,7 +70,7 @@ public:
 
 	void dumpIntoPdb(std::string o);
 
-	GLuint getDepthFBO() { return m_depthTexture; }
+	GLuint getDepthFBO() { return m_FBO; }
 
 protected:
 	void _initQuad();
