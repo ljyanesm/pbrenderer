@@ -18,8 +18,6 @@
 #include <helper_cuda_gl.h>
 #include <helper_functions.h>
 
-#include <cub\cub.cuh>
-
 #include "thrust/device_vector.h"
 #include "thrust/device_ptr.h"
 #include "thrust/for_each.h"
