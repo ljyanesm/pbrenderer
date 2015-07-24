@@ -1,338 +1,524 @@
-#if defined(__APPLE__) || defined(MACOSX)
-#include <GLUT/glut.h>
-#else
-#include <GL/freeglut.h>
-#endif
+#include "LYSpatialHash.h"
 
-#include <cstdlib>
-#include <cstdio>
-#include <string.h>
-
-#include <vector_functions.h>
-#include <device_functions.h>
-
-#include <cuda_runtime.h>
-#include <cuda_gl_interop.h>
-
-#include <helper_cuda.h>
-#include <helper_cuda_gl.h>
-#include <helper_functions.h>
-
-#include "thrust/device_ptr.h"
-#include "thrust/for_each.h"
-#include "thrust/iterator/zip_iterator.h"
-#include "thrust/sort.h"
-#include "thrust/extrema.h"
-
-#include "LYCudaHelper.cuh"
-#include "LYSpatialHash_impl.cuh"
-
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, char *file, int line, bool abort=true)
+LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
+m_gridSize(gridSize),
+	renderingMethod(HapticRenderingMethods::IMPLICIT_SURFACE),
+	maxSearchRange(7),
+	maxSearchRangeSq(maxSearchRange*maxSearchRange),
+	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
 {
-   if (code != cudaSuccess) 
-   {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
-   }
+	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
+	m_srcVBO		= vbo;
+	m_numVertices	= numVertices;
+
+	m_numToolVertices = 1;
+
+	m_forceFeedback = make_float4(0.0f);
+	m_hParams	=	new SimParams();
+
+	m_params.gridSize = m_gridSize;
+	m_params.cellSize = make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
+	m_params.R			= 0.02f;
+	neighborhoodRadius	= 0.02f;
+
+	m_hParams->gridSize		= m_gridSize;
+	m_hParams->cellSize		= make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
+
+	m_hParams->w_tot		= 0.0f;
+	m_hParams->Ax			= make_float3(0.0f);
+	m_hParams->Nx			= make_float3(0.0f);
+
+	m_touched				= false;
+	m_updatePositions		= false;
+
+	m_collisionCheckType	= CollisionCheckType::BASIC;
+
+	m_hCellStart = new uint[m_numGridCells];
+	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
+
+	m_hCellEnd = new uint[m_numGridCells];
+	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
+
+	voxelDensity = new thrust::device_vector<uint>(m_numGridCells);
+
+	size_t classSize = 
+		m_numVertices*sizeof(LYVertex)*2 
+		+ m_numVertices*sizeof(uint)*2 
+		+ m_numGridCells*sizeof(uint)*2
+		+ m_numVertices*sizeof(float4);
+
+	(classSize > 1024*1024) ? 
+		printf("This mesh requires: %d MB\n", classSize / (1024*1024)) :
+	(classSize > 1024) ? printf("This mesh requires: %d Kb\n", classSize / (1024)):
+		printf("This mesh requires: %d Bytes\n", classSize);
+
+	LYCudaHelper::printMemInfo();
+	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_src_points, (m_numVertices+1)*sizeof(LYVertex));
+
+	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(float4));
+	cudaMemset(m_point_force, 0, m_numVertices*sizeof(float4));
+
+	LYCudaHelper::allocateArray((void **)&m_collisionPoints, m_numToolVertices*sizeof(glm::vec4));
+
+	LYCudaHelper::allocateArray((void **)&m_pointHash, m_numVertices*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_pointGridIndex, m_numVertices*sizeof(uint));
+
+	LYCudaHelper::allocateArray((void **)&m_cellStart, m_numGridCells*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_cellEnd, m_numGridCells*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&m_dParams, sizeof(SimParams));
+	LYCudaHelper::allocateArray((void **)&m_dSinking, sizeof(float4));
+	LYCudaHelper::allocateArray((void **)&d_CollectionCellStart, m_maxNumCollectionElements*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&d_CollectionVertices,  m_maxNumCollectionElements*sizeof(uint));
+	LYCudaHelper::printMemInfo();
+
+	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
+
+	collisionCheckArgs.sortedPos = m_sorted_points;
+	collisionCheckArgs.toolPos	 = m_collisionPoints;
+	collisionCheckArgs.forceVector = m_forceFeedback;
+	collisionCheckArgs.force = m_point_force;
+	collisionCheckArgs.gridParticleIndex = m_pointGridIndex;
+	collisionCheckArgs.cellStart = m_cellStart;
+	collisionCheckArgs.cellEnd = m_cellEnd;
+	collisionCheckArgs.dev_params = m_dParams;
+	collisionCheckArgs.numVertices = m_numVertices;
+	collisionCheckArgs.numToolVertices = m_numToolVertices;
+	collisionCheckArgs.voxSize = 1.0f/gridSize.x;
+	collisionCheckArgs.maxSearchRange = maxSearchRange;
+	collisionCheckArgs.maxSearchRangeSq = maxSearchRangeSq;
+	collisionCheckArgs.maxNumCollectionElements = m_maxNumCollectionElements;
+
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.totalVertices_2Step, 1*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionCellStart, m_maxNumCollectionElements*sizeof(uint));
+	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.collectionVertices, m_maxNumCollectionElements*sizeof(uint));
+
+	checkCudaErrors(cudaMemset(collisionCheckArgs.collectionVertices, 0, m_maxNumCollectionElements*sizeof(uint)));
+
+	this->setInfluenceRadius(0.02f);
+	setParameters(&m_params);
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+
+	m_hParams->w_tot = 0.0f;
+	m_hParams->Ax = make_float3(0.0f);
+	m_hParams->Nx = make_float3(0.0f);
+	setParameters(&m_params);
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+
+	LYVertex* dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+
+	cudaMemcpy(m_src_points, dPos, numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice);
+	cudaDeviceSynchronize();
+
+	// calculate grid hash
+	calcHash(
+		m_pointHash,
+		m_pointGridIndex,
+		dPos,
+		m_numVertices);
+
+	// sort particles based on hash
+	{
+		LARGE_INTEGER freq;
+		LARGE_INTEGER startT;
+		LARGE_INTEGER endT;
+		QueryPerformanceFrequency(&freq);
+
+		QueryPerformanceCounter(&startT);
+		sortParticlesThrust(m_pointHash, m_pointGridIndex, m_numVertices);
+		//sortParticlesCUB(*cub_keys, *cub_values, d_temp_storage, temp_storage_bytes, m_numVertices);
+		QueryPerformanceCounter(&endT);
+
+		std::cout << "GPU sorting timing for " << numVertices << "is: " << (((double)endT.QuadPart - (double)startT.QuadPart) / (double)freq.QuadPart) << std::endl;
+	}
+	// reorder particle arrays into sorted order and
+	// find start and end of each cell
+	reorderDataAndFindCellStart(
+		m_cellStart,
+		m_cellEnd,
+		m_sorted_points,
+		m_pointHash,
+		m_pointGridIndex,
+		dPos,
+		m_numVertices,
+		m_numGridCells);
+
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
+
+
 }
 
-extern "C" {
 
-	void setParameters(SimParams *hostParams)
-	{
-		// copy parameters to constant memory
+LYSpatialHash::~LYSpatialHash(void)
+{
+	delete m_hCellEnd;
+	delete m_hCellStart;
+	delete m_hParams;	
 
-		checkCudaErrors( cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)) );
-	}
+	std::cout << "Freeing Hash info ->" << std::endl;
+	LYCudaHelper::freeArray(m_sorted_points);
+	std::cout << "m_sorted_points" << std::endl;
+	LYCudaHelper::freeArray(m_src_points);
+	std::cout << "m_src_points" << std::endl;
 
-	void calcHash(uint  *gridParticleHash,
-		uint  *gridParticleIndex,
-		LYVertex *pos,
-		size_t    numVertices)
-	{
-		uint numThreads, numBlocks;
-		computeGridSize(numVertices, 256, numBlocks, numThreads);
+	LYCudaHelper::freeArray(m_point_force);
+	std::cout << "m_point_force" << std::endl;
 
-		// execute the kernel
-		calcHashD<<< numBlocks, numThreads >>>(gridParticleHash,
-			gridParticleIndex,
-			(LYVertex *) pos,
-			numVertices);
+	LYCudaHelper::freeArray(m_collisionPoints);
+	std::cout << "m_collisionPoints" << std::endl;
 
-		// check if kernel invocation generated an error
-		checkCudaErrors(cudaPeekAtLastError());
-	}
+	LYCudaHelper::freeArray(m_pointHash);
+	std::cout << "m_pointHash" << std::endl;
+	LYCudaHelper::freeArray(m_pointGridIndex);
+	std::cout << "m_pointGridIndex" << std::endl;
 
-	void reorderDataAndFindCellStart(uint  *cellStart,
-		uint  *cellEnd,
-		LYVertex *sortedPos,
-		uint  *gridParticleHash,
-		uint  *gridParticleIndex,
-		LYVertex *oldPos,
-		size_t   numVertices,
-		uint   numCells)
-	{
-		uint numThreads, numBlocks;
-		computeGridSize(numVertices, 256, numBlocks, numThreads);
-		// set all cells to empty
-		checkCudaErrors(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
+	LYCudaHelper::freeArray(m_cellStart);
+	std::cout << "m_cellStart" << std::endl;
+	LYCudaHelper::freeArray(m_cellEnd);
+	std::cout << "m_cellEnd" << std::endl;
+	LYCudaHelper::freeArray(m_dParams);
+	std::cout << "m_dParams" << std::endl;
+	LYCudaHelper::freeArray(d_CollectionCellStart);
+	std::cout << "d_CollectionCellStart" << std::endl;
+	LYCudaHelper::freeArray(d_CollectionVertices);
+	std::cout << "d_CollectionVertices" << std::endl;
 
-#if USE_TEX
-		checkCudaErrors(cudaBindTexture(0, oldPosTex, oldPos, numVertices*sizeof(float4)));
-#endif
+	LYCudaHelper::freeArray(collisionCheckArgs.totalVertices_2Step);
+	std::cout << "collisionCheckArgs.totalVertices_2Step" << std::endl;
+	LYCudaHelper::freeArray(collisionCheckArgs.collectionCellStart);
+	std::cout << "collisionCheckArgs.collectionCellStart" << std::endl;
+	LYCudaHelper::freeArray(collisionCheckArgs.collectionVertices);
+	std::cout << "collisionCheckArgs.collectionVertices" << std::endl;
 
-		uint smemSize = sizeof(uint)*(numThreads+1);
-		reorderDataAndFindCellStartD<<< numBlocks, numThreads, smemSize>>>(
-			cellStart,
-			cellEnd,
-			(LYVertex *) sortedPos,
-			gridParticleHash,
-			gridParticleIndex,
-			(LYVertex *) oldPos,
-			numVertices);
-		checkCudaErrors(cudaPeekAtLastError());
-
-#if USE_TEX
-		checkCudaErrors(cudaUnbindTexture(oldPosTex));
-		checkCudaErrors(cudaUnbindTexture(oldVelTex));
-#endif
-	}
-
-	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices)
-	{
-		thrust::sort_by_key(thrust::device_ptr<uint>(dGridParticleHash),
-			thrust::device_ptr<uint>(dGridParticleHash + numVertices),
-			thrust::device_ptr<uint>(dGridParticleIndex));
-	}
-
-	void collisionCheck(const ccConfiguration &arguments)
-	{
-		// Get the size of the collision radius
-		float3 QP = arguments.pos;
-		float r = arguments.R;
-
-		// Generate the position of the 'tool' points to calculate the collisions
-		std::vector<glm::vec4> toolVertices(arguments.numToolVertices);
-		for(int i = 0; i < arguments.numToolVertices; i++)
-		{
-			float t = i / arguments.numToolVertices;
-			toolVertices.at(i) = glm::vec4((float)( (-arguments.voxSize*5) * (1-t) + (arguments.voxSize*5)*(t) ) + QP.x, QP.y, QP.z, 0);
-		}
-
-		//cudaMemcpy(arguments.toolPos, toolVertices.data(), arguments.numToolVertices*sizeof(glm::vec4), cudaMemcpyHostToDevice);
-
-		// Calculate the size of the neighborhood based on the radius
-		int nSize = ceilf((float) (r / arguments.voxSize));
-		// Calculate the voxel position of the query point
-		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
-
-		checkCudaErrors(cudaPeekAtLastError());
-
-		uint numThreads, numBlocks;
-		computeGridSize(arguments.numToolVertices, 32, numBlocks, numThreads);
-
-		// Using dynamic parallelism only execute threads on the neighborhood of the selected QP
-
-		switch (arguments.collisionCheckType)
-		{
-		case CollisionCheckType::NAIVE:
-			{
-				ToolCollisionCheckArgs args;
-
-				args.toolPos = arguments.toolPos;
-				args.sortedPos = arguments.sortedPos;
-				args.force = arguments.force;
-				args.forceVector = arguments.forceVector;
-				args.gridParticleIndex = arguments.gridParticleIndex;
-				args.cellStart = arguments.cellStart;
-				args.cellEnd = arguments.cellEnd;
-				args.dev_params = arguments.dev_params;
-				args.numVertices = arguments.numVertices;
-				args.numToolVertices = arguments.numToolVertices;
-
-				_naiveDynamicToolCollisionCheckD<<< numBlocks, numThreads>>>(args);
-			} break;
-		case CollisionCheckType::DYNAMIC:
-			{
-				ToolCollisionCheckArgs args;
-
-				args.toolPos = arguments.toolPos;
-				args.sortedPos = arguments.sortedPos;
-				args.force = arguments.force;
-				args.forceVector = arguments.forceVector;
-				args.gridParticleIndex = arguments.gridParticleIndex;
-				args.cellStart = arguments.cellStart;
-				args.cellEnd = arguments.cellEnd;
-				args.dev_params = arguments.dev_params;
-				args.numVertices = arguments.numVertices;
-				args.numToolVertices = arguments.numToolVertices;
-
-				_dynamicToolCollisionCheckD<<< numBlocks, numThreads >>>(args);
-			} break;
-		case CollisionCheckType::TWO_STEP:
-			{
-				uint totalNeighborhoodSize = (2*nSize+1);
-				totalNeighborhoodSize = totalNeighborhoodSize*totalNeighborhoodSize*totalNeighborhoodSize;
-				
-				if (totalNeighborhoodSize > arguments.maxNumCollectionElements) totalNeighborhoodSize = arguments.maxNumCollectionElements;
-
-				computeGridSize(totalNeighborhoodSize, 256, numBlocks, numThreads);
-
-				InteractionCellsArgs args;
-				
-				args.pos					= arguments.pos;
-				args.forceVector			= arguments.forceVector;
-				args.numNeighborCells		= totalNeighborhoodSize;
-				args.maxSearchRange			= arguments.maxSearchRange;
-				args.maxSearchRangeSq		= arguments.maxSearchRangeSq;
-				args.gridParticleIndex		= arguments.gridParticleIndex;
-				args.cellStart				= arguments.cellStart;
-				args.cellEnd				= arguments.cellEnd;
-				args.sortedPos				= arguments.sortedPos;
-				args.force					= arguments.force;
-				args.dev_params				= arguments.dev_params;
-				args.totalVertices			= arguments.totalVertices_2Step;
-				args.collectionCellStart	= arguments.collectionCellStart;
-				args.collectionVertices		= arguments.collectionVertices;
-				args.totalNeighborhoodSize	= totalNeighborhoodSize;
-				
-				// Collect all the cells and number of vertices that are in the area of the query point
-				_collectInteractionCells<<< numBlocks, numThreads >>> (args);
-
-				//Get the max number of vertices in a cell
-				thrust::device_ptr<uint> dev_ptr = thrust::device_pointer_cast(arguments.collectionVertices);
-				thrust::device_ptr<uint> maxElem = thrust::max_element(dev_ptr, dev_ptr + totalNeighborhoodSize);
-				uint maxPointsCell = *maxElem;
-
-				CollisionCheckArgs args2;
-				args2.forceVector			= arguments.forceVector;
-				args2.pos					= arguments.pos;
-				args2.collectionCellStart	= arguments.collectionCellStart;
-				args2.collectionVertices	= arguments.collectionVertices;
-				args2.sortedPos				= arguments.sortedPos;
-				args2.force					= arguments.force;
-				args2.gridParticleIndex		= arguments.gridParticleIndex;
-				args2.dev_params			= arguments.dev_params;
-
-				// Launch maxPointsCell threads on each block, and launch one block per interaction cell
-				// read the collectionCellStart and collectionVertices to shared mem, then decide if the
-				// current thread is inside the collectionVertices boundary and compute the interaction
-				if (maxPointsCell > 0) _computeCollisionCheck <<< totalNeighborhoodSize, maxPointsCell >>> (args2);
-				gpuErrchk(cudaPeekAtLastError());
-				checkCudaErrors(cudaMemset(arguments.collectionVertices, 0, totalNeighborhoodSize*sizeof(uint)));
-
-			} break;
-		case CollisionCheckType::BASIC:
-			{
-				// thread per particle
-				uint numThreads, numBlocks;
-				computeGridSize(arguments.numVertices, 512, numBlocks, numThreads);
-				// execute the kernel
-				_collisionCheckD<<< numBlocks, numThreads >>>(	arguments.pos,
-					(LYVertex *) arguments.sortedPos,
-					(float4 *) arguments.force,
-					arguments.forceVector,
-					arguments.gridParticleIndex,
-					arguments.cellStart,
-					arguments.cellEnd,
-					arguments.dev_params,
-					arguments.numVertices);
-				 //check if kernel invocation generated an error
-				gpuErrchk(cudaPeekAtLastError());
-			} break;
-		}
-#if 0
-		if (arguments.naiveDynamicCollisionCheck)
-		{
-			_naiveDynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
-				(LYVertex *) arguments.sortedPos,
-				(float4 *) arguments.force,
-				arguments.forceVector,
-				arguments.gridParticleIndex,
-				arguments.cellStart,
-				arguments.cellEnd,
-				arguments.dev_params,
-				arguments.numVertices);
-		}
-		else 
-		{
-			_dynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
-				(LYVertex *) arguments.sortedPos,
-				(float4 *) arguments.force,
-				arguments.forceVector,
-				arguments.gridParticleIndex,
-				arguments.cellStart,
-				arguments.cellEnd,
-				arguments.dev_params,
-				arguments.numVertices);
-		}
-#endif
+	LYCudaHelper::freeArray(m_dSinking);
+	std::cout << "m_dSinking" << std::endl;
+	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
 
-	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)
-	{
-        // thread per particle
-        uint numThreads, numBlocks;
-        computeGridSize(numVertices, 256, numBlocks, numThreads);
+void	LYSpatialHash::clear()
+{
+}
 
-		// execute the kernel
-        _updatePositions<<< numBlocks, numThreads >>>(
-												(LYVertex *) sortedPos,
-												(float4 *) force,
-												(LYVertex *) oldPos,
-												numVertices);
+void	LYSpatialHash::setVBO(uint vbo)
+{
+	m_srcVBO = vbo;
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&m_vboRes, vbo, cudaGraphicsMapFlagsWriteDiscard));
+}
 
-        // check if kernel invocation generated an error
-		checkCudaErrors(cudaPeekAtLastError());
+void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
+{
 
+}
+
+void LYSpatialHash::setInfluenceRadius(float r){
+	m_params.R = r;
+	this->m_hParams->R = r;
+	neighborhoodRadius = r;
+	collisionCheckArgs.R = r;
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+
+	printf("NSize = %d\n", (int) glm::round(r/m_hParams->cellSize.x));
+}
+
+void	LYSpatialHash::update()
+{
+	// update constants
+	m_hParams->w_tot = 0.0f;
+	m_hParams->Ax = make_float3(0.0f);
+	m_hParams->Nx = make_float3(0.0f);
+	setParameters(&m_params);
+	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+	if (false && m_dirtyPos) {
+		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+		// calculate grid hash
+		calcHash(
+			m_pointHash,
+			m_pointGridIndex,
+			dPos,
+			m_numVertices);
+
+		// sort particles based on hash
+		sortParticlesThrust(m_pointHash, m_pointGridIndex, m_numVertices);
+		//sortParticlesCUB(*cub_keys, *cub_values, d_temp_storage, temp_storage_bytes, m_numVertices);
+
+		// reorder particle arrays into sorted order and
+		// find start and end of each cell
+		reorderDataAndFindCellStart(
+			m_cellStart,
+			m_cellEnd,
+			m_sorted_points,
+			m_pointHash,
+			m_pointGridIndex,
+			dPos,
+			m_numVertices,
+			m_numGridCells);
+
+		if (m_updatePositions)
+		{
+			updatePositions(
+				m_sorted_points,
+				m_point_force,
+				dPos,
+				m_numVertices);
+
+			updateDensities(
+				m_sorted_points,
+				dPos,
+				m_pointGridIndex,
+				m_cellStart,
+				m_cellEnd,
+				m_dParams,
+				m_numVertices);
+
+			updateProperties(
+				m_sorted_points,
+				dPos,
+				m_pointGridIndex,
+				m_cellStart,
+				m_cellEnd,
+				m_dParams,
+				m_numVertices);
+		}
+
+		LYCudaHelper::unmapGLBufferObject(m_vboRes);
+		m_dirtyPos = false;
+	}
+}
+
+
+float LYSpatialHash::calculateCollisions( float3 pos )
+{
+	m_hParams->w_tot = 0.0f;
+	m_hParams->Ax = make_float3(0.0f);
+	m_hParams->Nx = make_float3(0.0f);
+	collisionCheckArgs.pos = pos;
+	collisionCheckArgs.collisionCheckType = this->m_collisionCheckType;
+
+	do{
+		collisionCheck(collisionCheckArgs);
+		LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
+	} while(false && glm::isnan(m_hParams->w_tot));
+	return m_hParams->w_tot;
+}
+
+float3 LYSpatialHash::calculateFeedbackUpdateProxy( Collider *pos )
+{
+	switch (renderingMethod){
+	case IMPLICIT_SURFACE:
+		{return implicitSurfaceApproach(pos);}
+		break;
+	case SINKING:
+		{return sinkingApproach(pos);}
+		break;
 	}
 
-	void updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+	m_forceFeedback = make_float4(0.0f);
+	return make_float3(m_forceFeedback);
+}
+
+thrust::device_vector<uint> *LYSpatialHash::getModelVoxels()
+{
+	thrust::transform(thrust::device_pointer_cast(m_cellStart), thrust::device_pointer_cast(m_cellStart)+this->m_numGridCells, thrust::device_pointer_cast(m_cellEnd), voxelDensity->begin(), thrust::minus<uint>());
+	return voxelDensity;
+}
+
+void LYSpatialHash::dump()
+{
+	// dump grid information
+	LYCudaHelper::copyArrayFromDevice(m_hCellStart, m_cellStart, 0, sizeof(uint)*m_numGridCells);
+	LYCudaHelper::copyArrayFromDevice(m_hCellEnd, m_cellEnd, 0, sizeof(uint)*m_numGridCells);
+	uint maxCellSize = 0;
+
+	for (uint i=0; i<m_numGridCells; i++)
 	{
+		if (m_hCellStart[i] != 0xffffffff)
+		{
+			uint cellSize = m_hCellEnd[i] - m_hCellStart[i];
 
-		uint numThreads, numBlocks;
-		computeGridSize(numVertices, 256, numBlocks, numThreads);
-
-		// execute the kernel
-		_updateProperties<<< numBlocks, numThreads>>>(
-														(LYVertex*) sortedPos,
-														(LYVertex*) oldPos,
-														gridParticleIndex,
-														cellStart,
-														cellEnd,
-														dev_params,
-														numVertices);
-		// check if kernel invocation generated an error
-		checkCudaErrors(cudaPeekAtLastError());
+			if (cellSize > maxCellSize)
+			{
+				maxCellSize = cellSize;
+			}
+		}
 	}
+	printf("maximum particles per cell = %d\n", maxCellSize);
+}
 
-	void updateDensities(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
+void LYSpatialHash::toggleUpdatePositions()
+{
+	m_updatePositions = !m_updatePositions;
+}
+
+void LYSpatialHash::resetPositions()
+{
+	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+	checkCudaErrors(cudaMemcpy(dPos, m_src_points, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
+}
+
+void LYSpatialHash::toggleCollisionCheckType()
+{
+	m_collisionCheckType = (CollisionCheckType) 
+		( (m_collisionCheckType+1) % CollisionCheckType::NUM_TYPES);
+}
+
+void LYSpatialHash::toggleRenderingMethod()
+{
+	renderingMethod = (HapticRenderingMethods) 
+		( (renderingMethod+1) % HapticRenderingMethods::NUM_METHODS);
+}
+
+const std::string LYSpatialHash::getCollisionCheckString() const
+{
+	switch (m_collisionCheckType)
 	{
-		uint numThreads, numBlocks;
-		computeGridSize(numVertices, 256, numBlocks, numThreads);
-
-		// execute the kernel
-		_updateDensities<<< numBlocks, numThreads>>>(
-			(LYVertex*) sortedPos,
-			(LYVertex*) oldPos,
-			gridParticleIndex,
-			cellStart,
-			cellEnd,
-			dev_params,
-			numVertices);
-		// check if kernel invocation generated an error
-		checkCudaErrors(cudaPeekAtLastError());
+		case DYNAMIC:
+			{return std::string("Dynamic");}
+			break;
+		case NAIVE:
+			{return std::string("Naive");}
+			break;
+		case TWO_STEP:
+			{return std::string("2 Step");}
+			break;
+		case BASIC:
+			{return std::string("Bruteforce");}
+			break;
 	}
+	return std::string("CollisionCheckType doesn't exist");
+}
 
-	void computeOvershoot(OvershootArgs args)
+float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
+{
+	float3 colliderPos = pos->hapticPosition;
+	float3 Pseed = make_float3(0.0f);
+	float3 dP = make_float3(0.0f);
+	float3 Ax, Nx;
+	float Fx;
+
+	if (!m_touched){
+		calculateCollisions(colliderPos);
+		Ax = m_hParams->Ax/m_hParams->w_tot;
+		float nLength = length(m_hParams->Nx);
+		Nx = m_hParams->Nx/nLength;
+
+		Fx = dot(Nx, colliderPos - Ax);
+		checkCudaErrors(cudaPeekAtLastError());
+
+		if (Fx < 0.0f){
+			m_touched = true;
+			Pseed = Ax;
+			pos->scpPosition = Pseed;
+			pos->surfaceTgPlane = Nx;
+			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
+			return make_float3(m_forceFeedback);
+		} else {
+			pos->scpPosition = colliderPos;
+			m_touched = false;
+		}
+	} else {
+		float dist = dot(colliderPos - pos->scpPosition, pos->surfaceTgPlane);
+		if (dist <= 0)
+		{
+			Pseed = colliderPos - dist*pos->surfaceTgPlane;
+			int err_iterations(0);
+			int iterations(0);
+			do{
+				while(abs(calculateCollisions(Pseed)) < 0.00001f && ++err_iterations < 4);
+				Ax = m_hParams->Ax/m_hParams->w_tot;
+				Nx = m_hParams->Nx;
+				float dNx = length(Nx);
+				Nx /= dNx;
+				Fx = dot(Nx, Pseed - Ax);
+				dP.x = -Fx * Nx.x;
+				dP.y = -Fx * Nx.y;
+				dP.z = -Fx * Nx.z;
+				dP = dP/fmaxf(dNx, 0.01f);
+				dP *= 0.00001f;
+				Pseed -= dP;
+			} while (length(dP) > 0.001f && ++iterations < 4);
+			pos->scpPosition = Pseed;
+			pos->surfaceTgPlane = Nx;
+			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
+			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
+
+			return make_float3(m_forceFeedback);
+		} else {
+			printf("Contact lost!  ");
+			Ax = pos->scpPosition;
+			Nx = pos->surfaceTgPlane;
+			Fx = dist;
+			printf("Ax = (%f, %f, %f)  ", Ax.x, Ax.y, Ax.z);
+			printf("Nx = (%f, %f, %f)  ", Nx.x, Nx.y, Nx.z);
+			printf("Fx = %f\n", Fx);
+			m_touched = false;
+			pos->scpPosition = colliderPos;
+		}
+	}
+	return make_float3(0.0f);
+}
+
+float3 LYSpatialHash::sinkingApproach(Collider * pos)
+{
+	float k = 0.001f;
+	float k_h = 0.1f;
+	float k_t = 0.01f;
+	float gamma = 0.05f;
+	float R = collisionCheckArgs.R;
+	float eps = gamma * R;
+
+	float3 force = make_float3(0.0f);
+	float3 Vn = calculateOvershoot(pos->scpPosition);
+	float lVn = length(Vn);
+	if (lVn < eps) pos->scpPosition = pos->hapticPosition;
+	else pos->scpPosition += k*Vn;
+	float3 Vh = pos->hapticPosition - pos->scpPosition;
+
+	float collisionCheck = dot(Vn, Vh);
+	printf("Sinking = %f\n", collisionCheck);
+	if (collisionCheck > EPS) pos->scpPosition += k_h*Vh;
+	else {
+		pos->scpPosition += k_t*cross(Vn, Vh);
+		float lVh = length(Vh);
+		if (lVh >= R*0.5f) force = (lVh - R*0.5f) * (Vh/lVh);
+	}
+	pos->surfaceTgPlane = Vn/lVn;
+	float spring = -1.0f;
+	force *= spring;
+
+	return force;
+}
+
+float3 LYSpatialHash::calculateOvershoot(float3 scpPosition)
+{
+	m_hParams->w_tot = 0.0f;
+	m_hParams->Ax = make_float3(0.0f);
+	m_hParams->Nx = make_float3(0.0f);
+
+	OvershootArgs args;
+	args.sortedPos = m_sorted_points;
+	args.influenceRadius = collisionCheckArgs.R;
+	args.numVertices = m_numVertices;
+	args.sinking = m_dSinking;
+	args.pos = scpPosition;
+	float4 Vn = make_float4(0.0f);
+	LYCudaHelper::copyArrayToDevice((void **)m_dSinking, &Vn, 0, sizeof(float4));
+	computeOvershoot(args);
+	LYCudaHelper::copyArrayFromDevice((void**)&Vn, m_dSinking, 0, sizeof(float4));
+	return make_float3(Vn);
+}
+
+const std::string LYSpatialHash::getMethodString() const
+{
+	switch(renderingMethod)
 	{
-		uint numThreads, numBlocks;
-		computeGridSize(args.numVertices, 512, numBlocks, numThreads);
-		// execute the kernel
-		_computeOvershoot<<<numBlocks, numThreads>>>(args);
-		cudaDeviceSynchronize();
-		// check if kernel invocation generated an error
-		checkCudaErrors(cudaPeekAtLastError());
+	case LYSpaceHandler::IMPLICIT_SURFACE:
+		{return std::string("Implicit");}
+		break;
+	case LYSpaceHandler::SINKING:
+		{return std::string("Sinking");}
+		break;
 	}
+	return std::string("No method detected!");
 }

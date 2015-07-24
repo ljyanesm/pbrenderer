@@ -371,7 +371,7 @@ p_ply ply_open(const char *name, p_ply_error_cb error_cb,
         return NULL;
     }
     assert(name);
-    fp = fopen(name, "rb");
+    fopen_s(&fp, name, "rb");
     if (!fp) {
         error_cb(ply, "Unable to open file");
         free(ply);
@@ -459,7 +459,7 @@ p_ply ply_create(const char *name, e_ply_storage_mode storage_mode,
         return NULL;
     }
     assert(name && storage_mode <= PLY_DEFAULT);
-    fp = fopen(name, "wb");
+    fopen_s(&fp, name, "wb");
     if (!fp) {
         error_cb(ply, "Unable to create file");
         free(ply);
