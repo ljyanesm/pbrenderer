@@ -10,6 +10,7 @@ in vec4 fs_Position;
 in vec3 fs_PosEye;
 in vec4 fs_Color;
 in vec3 PtNormal;
+in vec3 fs_Normal;
 
 out vec4 out_Color;
 out vec4 out_Position;
@@ -22,7 +23,7 @@ void main(void)
 //    float mag = dot(N.xy, N.xy);
 //    if (mag >= 1.0) discard;   // kill pixels outside circle
 //    N.z = sqrt(1.0-mag);
-	vec2 ptC = gl_PointCoord- vec2(0.5);
+	vec2 ptC = gl_PointCoord + vec2(-0.5, -0.5);
 	float depth = -PtNormal.x/PtNormal.z*ptC.x - PtNormal.y/PtNormal.z*ptC.y; 
 	float sqrMag = ptC.x*ptC.x + ptC.y*ptC.y + depth*depth; 
 	

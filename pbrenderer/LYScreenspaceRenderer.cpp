@@ -423,6 +423,8 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	//glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
+	glDepthFunc(GL_LESS);
+
 	depthShader->useShader();
 
 	glm::mat4 modelMatrix = glm::mat4();
@@ -453,6 +455,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	}
 	//////////////////////////////////////////////////////////////////////////
 
+#if 0
 	//////////////////////////////////////////////////////////////////////////
 	//
 	//  The HIP and the Proxy objects are displayed as points within the
@@ -483,7 +486,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
 
 	_drawPoints(haptic_interface->getProxyObject());
-
+#endif
 	//////////////////////////////////////////////////////////////////////////
 	// END OF FIRST PASS
 	//////////////////////////////////////////////////////////////////////////
