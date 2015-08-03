@@ -55,7 +55,6 @@ typedef struct _SimParams
 	uint numCells;
     size_t numBodies;
     uint maxParticlesPerCell;
-
 	
 }SimParams;
 
@@ -70,6 +69,7 @@ enum CollisionCheckType{
 class ccConfiguration { // Collision check configuration call object
 public:
 	float3					pos;
+	float					pad;
 	float4					forceVector; 
 	size_t					numVertices;
 	size_t					numToolVertices;
@@ -146,6 +146,7 @@ struct ToolCollisionCheckArgs {
 struct CollisionCheckArgs{
 	float4			forceVector;
 	float3			pos;
+	float			padding;
 	uint*			collectionCellStart;
 	uint*			collectionVertices;
 	LYVertex*		sortedPos;

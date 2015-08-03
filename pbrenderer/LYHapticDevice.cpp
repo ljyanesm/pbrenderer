@@ -12,6 +12,9 @@ LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hi
 	m_collider			= Collider();
 	m_speed				= 0.001f;
 	m_size				= 0.03f;
+
+	m_forceVector		= make_float3(0.0f);
+
 	m_workspaceScale	= make_float3(0.3f);
 	m_relativePosition	= make_float3(0.0f);
 
@@ -107,9 +110,7 @@ void LYHapticDevice::touchTool()
 	int currentButtons;
 	hduVector3Dd position;
 	hduVector3Dd force( 0,0,0 );
-	sdkStartTimer(&m_timer);
 	hdBeginFrame(ghHD);
-
 	hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
 
 	if(COLLISION_FORCEFEEDBACK)
@@ -145,7 +146,6 @@ void LYHapticDevice::touchTool()
 		hdSetDoublev(HD_CURRENT_FORCE, force);
 	}
 	hdEndFrame(ghHD);
-	sdkStopTimer(&m_timer);
 }
 
 bool LYHapticDevice::isOk() const
