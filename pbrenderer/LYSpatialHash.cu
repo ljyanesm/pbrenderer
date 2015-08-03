@@ -22,6 +22,7 @@
 #include "thrust/for_each.h"
 #include "thrust/iterator/zip_iterator.h"
 #include "thrust/sort.h"
+#include "thrust\extrema.h"
 
 #include "LYCudaHelper.cuh"
 #include "LYSpatialHash_impl.cuh"
@@ -111,19 +112,19 @@ extern "C" {
 		float r = arguments.R;
 
 		// Generate the position of the 'tool' points to calculate the collisions
-		std::vector<glm::vec4> toolVertices(arguments.numToolVertices);
-		for(int i = 0; i < arguments.numToolVertices; i++)
-		{
-			float t = i / arguments.numToolVertices;
-			toolVertices.at(i) = glm::vec4((float)( (-arguments.voxSize*5) * (1-t) + (arguments.voxSize*5)*(t) ) + QP.x, QP.y, QP.z, 0);
-		}
+		//std::vector<glm::vec4> toolVertices(arguments.numToolVertices);
+		//for(int i = 0; i < arguments.numToolVertices; i++)
+		//{
+		//	float t = i / arguments.numToolVertices;
+		//	toolVertices.at(i) = glm::vec4((float)( (-arguments.voxSize*5) * (1-t) + (arguments.voxSize*5)*(t) ) + QP.x, QP.y, QP.z, 0);
+		//}
 
 		//cudaMemcpy(arguments.toolPos, toolVertices.data(), arguments.numToolVertices*sizeof(glm::vec4), cudaMemcpyHostToDevice);
 
 		// Calculate the size of the neighborhood based on the radius
-		int nSize = roundf((float) (r / arguments.voxSize));
+		int nSize = (int) roundf((float) (r / arguments.voxSize));
 		// Calculate the voxel position of the query point
-		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / nSize;
+		glm::vec4 voxelPos = glm::vec4(QP.x, QP.y, QP.z, 0) / (float) nSize;
 
 		getLastCudaError("Before collisionCheck Kernel execution failed");
 
@@ -136,9 +137,8 @@ extern "C" {
 		{
 		case CollisionCheckType::NAIVE:
 			{
-				ToolCollisionCheckArgs args;
-
-				args.toolPos = arguments.toolPos;
+				SingleCollisionCheckArgs args;
+				args.pos = arguments.pos;
 				args.sortedPos = arguments.sortedPos;
 				args.force = arguments.force;
 				args.forceVector = arguments.forceVector;
@@ -147,15 +147,13 @@ extern "C" {
 				args.cellEnd = arguments.cellEnd;
 				args.dev_params = arguments.dev_params;
 				args.numVertices = arguments.numVertices;
-				args.numToolVertices = arguments.numToolVertices;
 
-				_naiveDynamicToolCollisionCheckD<<< numBlocks, numThreads>>>(args);
+				_naiveDynamicCollisionCheckD<<< 1, 1 >>>(args);	
 			} break;
 		case CollisionCheckType::DYNAMIC:
 			{
-				ToolCollisionCheckArgs args;
-
-				args.toolPos = arguments.toolPos;
+				SingleCollisionCheckArgs args;
+				args.pos = arguments.pos;
 				args.sortedPos = arguments.sortedPos;
 				args.force = arguments.force;
 				args.forceVector = arguments.forceVector;
@@ -164,9 +162,9 @@ extern "C" {
 				args.cellEnd = arguments.cellEnd;
 				args.dev_params = arguments.dev_params;
 				args.numVertices = arguments.numVertices;
-				args.numToolVertices = arguments.numToolVertices;
 
-				_dynamicToolCollisionCheckD<<< numBlocks, numThreads >>>(args);
+
+				_dynamicCollisionCheckD<<< numBlocks, numThreads >>>(args);
 			} break;
 		case CollisionCheckType::TWO_STEP:
 			{
@@ -267,7 +265,7 @@ extern "C" {
 				arguments.numVertices);
 		}
 #endif
-}
+	}
 
 	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)
 	{
@@ -284,44 +282,6 @@ extern "C" {
 
         // check if kernel invocation generated an error
         getLastCudaError("Kernel execution failed");
-
-	}
-
-	void updateProperties(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
-	{
-
-		uint numThreads, numBlocks;
-		computeGridSize(numVertices, 256, numBlocks, numThreads);
-
-		// execute the kernel
-		_updateProperties<<< numBlocks, numThreads>>>(
-														(LYVertex*) sortedPos,
-														(LYVertex*) oldPos,
-														gridParticleIndex,
-														cellStart,
-														cellEnd,
-														dev_params,
-														numVertices);
-		// check if kernel invocation generated an error
-		getLastCudaError("Kernel _updateProperties failed!");
-	}
-
-	void updateDensities(LYVertex *sortedPos, LYVertex *oldPos, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices)
-	{
-		uint numThreads, numBlocks;
-		computeGridSize(numVertices, 256, numBlocks, numThreads);
-
-		// execute the kernel
-		_updateDensities<<< numBlocks, numThreads>>>(
-			(LYVertex*) sortedPos,
-			(LYVertex*) oldPos,
-			gridParticleIndex,
-			cellStart,
-			cellEnd,
-			dev_params,
-			numVertices);
-		// check if kernel invocation generated an error
-		getLastCudaError("Kernel _updateDensities failed!");
 	}
 
 	void computeOvershoot(OvershootArgs args)

@@ -9,6 +9,8 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	m_speed =		0.1f;
 	m_size	=		0.03f;
 
+	m_forceVector		= make_float3(0.0f);
+
 	m_workspaceScale	= make_float3(0.3f);
 	m_relativePosition	= make_float3(0.0f);
 
@@ -45,7 +47,7 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	glGenBuffers(1, &ib);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 2, &Indices[0], GL_STATIC_DRAW);
-
+	std::cout << "Using keyboard device!" << std::endl;
 	m_HIPMatrix = glm::mat4();
 }
 

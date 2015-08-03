@@ -126,10 +126,10 @@ public:
 			for(unsigned int i = 0; i < scene->mMeshes[0]->mNumVertices; i++)
 			{
 				m_Vertices.at(i).m_pos = make_float3(scene->mMeshes[0]->mVertices[i].x, scene->mMeshes[0]->mVertices[i].y, scene->mMeshes[0]->mVertices[i].z);
-				m_Vertices.at(i).m_tex = make_float2(0,0);
+//				m_Vertices.at(i).m_tex = make_float2(0,0);
 				if (scene->mMeshes[0]->HasNormals()) m_Vertices.at(i).m_normal = make_float3(scene->mMeshes[0]->mNormals[i].x, scene->mMeshes[0]->mNormals[i].y, scene->mMeshes[0]->mNormals[i].z);
 				if (scene->mMeshes[0]->HasVertexColors(i)) m_Vertices.at(i).m_color = make_float3(scene->mMeshes[0]->mColors[i]->r, scene->mMeshes[0]->mColors[i]->g, scene->mMeshes[0]->mColors[i]->b);
-				m_Vertices.at(i).m_density = 1.0f;
+//				m_Vertices.at(i).m_density = 1.0f;
 			}
 
 			for (unsigned int i = 0 ; i < scene->mMeshes[0]->mNumFaces ; i++) {
@@ -151,6 +151,11 @@ public:
 	{
 		printf("Reading point model file:  %s  ", filename.c_str());
 
+		LYPLYLoader::nX  = LYPLYLoader::nY = 0;
+		LYPLYLoader::nZ	 = LYPLYLoader::nNX = 0;
+		LYPLYLoader::nNY = LYPLYLoader::nNZ = 0;
+		LYPLYLoader::nR  = LYPLYLoader::nG = 0; 
+		LYPLYLoader::nB = 0;
 		LYMesh *ret;
 		std::string currentLine;
 

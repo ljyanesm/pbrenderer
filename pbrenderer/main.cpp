@@ -107,6 +107,8 @@ IOManager *ioInterface;
 ModelVoxelization *modelVoxelizer;
 ///////////////////////////////////////////////////////
 
+bool captureHapticTime = false;
+
 // Variables to load from the cfg file
 ///////////////////////////////////////////////////////
 std::string modelFile;
@@ -116,12 +118,13 @@ LYHapticInterface::LYDEVICE_TYPE deviceType;
 ///////////////////////////////////////////////////////
 clock_t startTimer;
 clock_t endTimer;
-char fps_string[120];
+char fps_string[255];
 ///////////////////////////////////////////////////////
 
 // FPS Control variables for rendering
 ///////////////////////////////////////////////////////
 StopWatchInterface *hapticTimer = NULL;
+double freq = 0;
 StopWatchInterface *graphicsTimer = NULL;
 
 const int FRAMES_PER_SECOND = 30;
@@ -209,6 +212,14 @@ void cudaInit(int argc, char **argv)
 
 void initCUDA(int argc, char **argv)
 {
+	LARGE_INTEGER temp;
+
+	// get the tick frequency from the OS
+	QueryPerformanceFrequency((LARGE_INTEGER *) &temp);
+
+	// convert to type in which it is needed
+	freq = ((double) temp.QuadPart) / 1000.0;
+
 	cudaInit(argc, argv);
 	float* p;
 	checkCudaErrors(cudaMalloc((void **) &p, sizeof(float)));
@@ -245,6 +256,7 @@ void initGL(int *argc, char **argv){
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialize OpenGL and glew
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	initCUDA(*argc, argv);
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
@@ -260,8 +272,6 @@ void initGL(int *argc, char **argv){
 	glClearColor(0.75, 0.75, 0.75, 1);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	initCUDA(*argc, argv);
-
 	loadConfigFile(argv);
 
 	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
@@ -271,8 +281,8 @@ void initGL(int *argc, char **argv){
 	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
 	global_point_scale = m_pMesh->getScale();
 
-	modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
-	m_physModel = modelVoxelizer->getModel();
+	//modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
+	//m_physModel = modelVoxelizer->getModel();
 
 	create_space_hanlder(spaceH_type, space_handler);
 
@@ -599,6 +609,11 @@ void keyboardFunc(unsigned char key, int x, int y)
 			ioInterface->getDevice()->start();
 			delete tmpSpace;
 		} break;
+
+	case 'l':
+		{
+			captureHapticTime = !captureHapticTime;
+		} break;
 	}
 	devPosition += pos;
 	glutPostRedisplay();
@@ -628,7 +643,6 @@ void idle(void)
 
 DWORD next_game_tick = GetTickCount();
 int sleep_time = 0;
-static int hapticFPS = 0;
 
 std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 {
@@ -654,10 +668,13 @@ std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 
 void display()
 {
+	static uint resetTimers = 0;
 	LYMesh *displayMesh = m_pMesh;
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
 	// render
+	//LARGE_INTEGER start_time;
+	//QueryPerformanceCounter((LARGE_INTEGER *) &start_time);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewMatrix = glm::mat4();
 
@@ -740,25 +757,50 @@ void display()
 	overlay_renderer->display();
 
 	/////////////////////////////////////////////////////////////////////////////////////////// 
-	
+
 	sdkStopTimer(&graphicsTimer);
-	float displayTimer = sdkGetAverageTimerValue(&graphicsTimer);
+	//LARGE_INTEGER end_time; QueryPerformanceCounter((LARGE_INTEGER *) &end_time);
+	//float diff_time = (float)
+	//	(((double) end_time.QuadPart - (double) start_time.QuadPart) / freq);
 	glutSwapBuffers();
 	glutReportErrors();
 
 	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
 
 	std::string spaceSubdivisionAlg = getSpaceHandlerString(spaceH_type);
-	sprintf(fps_string, "Point-Based Rendering - %s - Graphic FPS: %5.3f  Haptic FPS: %f  --   %s", 
-		modelFile.c_str(), 1000.0f / (displayTimer), 1000.0f / averageTime, spaceSubdivisionAlg.c_str());
+	sprintf(fps_string, "HPBR - %s - G FPS: %5.2f  H FPS: %5.2f  --   %s", 
+		modelFile.c_str(), 1000.0f / (sdkGetAverageTimerValue(&graphicsTimer)), 1000.0f / averageTime, spaceSubdivisionAlg.c_str());
 	static int measureNum = 0;
 
+	if (captureHapticTime){
+		std::ofstream myfile;
+		switch (spaceH_type)
+		{
+		case LYSpaceHandler::GPU_SPATIAL_HASH:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append("-"+spaceSubdivisionAlg).append(".GPUlog"), std::ios::app);
+			myfile << averageTime << std::endl;
+			myfile.close();
+			break;
+		case LYSpaceHandler::CPU_SPATIAL_HASH:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
+			myfile << averageTime << std::endl;
+			myfile.close();
+			break;
+		case LYSpaceHandler::CPU_Z_ORDER:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
+			myfile << averageTime << std::endl;
+			myfile.close();
+			break;
+		}
+	}
+
+
 	glutSetWindowTitle(fps_string);
-	hapticFPS++;
-	if (hapticFPS >= 20){
+	resetTimers++;
+	if (resetTimers >= 30){
 		sdkResetTimer(&graphicsTimer);
 		sdkResetTimer(&hapticTimer);
-		hapticFPS = 0;
+		resetTimers = 0;
 	}
 }
 
@@ -773,8 +815,6 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboardFunc);
 	glutSpecialFunc(special);
 	glutIdleFunc(idle);
-
-	atexit(cleanup);
 
 	glutMainLoop();
 
