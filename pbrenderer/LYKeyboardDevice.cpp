@@ -3,6 +3,7 @@
 
 LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh)
 {
+	COLLISION_FORCEFEEDBACK = false;
 	m_spaceHandler = sh;
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
 	m_collider =	Collider();
@@ -49,6 +50,8 @@ LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 2, &Indices[0], GL_STATIC_DRAW);
 	std::cout << "Using keyboard device!" << std::endl;
 	m_HIPMatrix = glm::mat4();
+
+	printf("Using keyboard device\n");
 }
 
 

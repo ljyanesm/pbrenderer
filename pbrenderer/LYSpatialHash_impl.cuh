@@ -119,7 +119,7 @@ __global__
 
 		// Now use the sorted index to reorder the pos and vel data
 		uint sortedIndex = gridParticleIndex[index];
-		LYVertex pos = FETCH(oldPos, sortedIndex);       // macro does either global read or texture fetch
+		LYVertex pos = oldPos[sortedIndex];       // macro does either global read or texture fetch
 		sortedPos[index] = pos;
 	}
 
@@ -156,25 +156,23 @@ __global__
 	nSize.z = ceil(nSize.z);
 
 	uint maxSearchRange = arguments.maxSearchRange;
-	uint maxSearchRangeSq = arguments.maxSearchRangeSq;
+	uint maxSearchRangeSq = maxSearchRange*maxSearchRange;
 	uint iX, iY, iZ;
 	iX = (int)(index % maxSearchRange);
 	iY = (int)((index/maxSearchRange) % maxSearchRange);
 	iZ = (int)(index / (maxSearchRangeSq));
 
-	if (iX < nSize.x && iY < nSize.y && iZ < nSize.z)
-	{
-		int x = translateRange(iX, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
-		int y = translateRange(iY, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
-		int z = translateRange(iZ, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
-		int3 neighbourPos = gridPos + make_int3(x , y, z);
-		uint  neighbourGridPos = calcGridHash(neighbourPos);
-		uint cellStartI = FETCH(arguments.cellStart, neighbourGridPos);
-		if (cellStartI == 0xffffffff) return;
-		uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
-		arguments.collectionCellStart[index] = cellStartI;
-		arguments.collectionVertices[index] = N;
-	}
+	int x = translateRange(iX, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+	int y = translateRange(iY, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+	int z = translateRange(iZ, 0, maxSearchRange, -maxSearchRange/2, maxSearchRange/2);
+	int3 neighbourPos = gridPos + make_int3(x , y, z);
+	uint  neighbourGridPos = calcGridHash(neighbourPos);
+	uint cellStartI = FETCH(arguments.cellStart, neighbourGridPos);
+	if (cellStartI == 0xffffffff) return;
+	uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
+	arguments.collectionCellStart[index] = cellStartI;
+	arguments.collectionVertices[index] = N;
+
 	__syncthreads();
 }
 
@@ -213,7 +211,7 @@ __global__
 			Ax += w * pos2.m_pos;
 			Nx += w * pos2.m_normal;
 			uint sortedIndex = arguments.gridParticleIndex[index];
-			if (length(arguments.forceVector) > 0.03) arguments.force[sortedIndex] += arguments.forceVector*0.1f;
+			if (length(arguments.forceVector) > 0.03f) arguments.force[sortedIndex] += arguments.forceVector*0.001f;
 			atomicAdd(&arguments.dev_params->Ax.x, Ax.x);
 			atomicAdd(&arguments.dev_params->Ax.y, Ax.y);
 			atomicAdd(&arguments.dev_params->Ax.z, Ax.z);
@@ -252,7 +250,7 @@ void naiveChildCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, floa
 		Ax += w * pos2.m_pos;
 		Nx += w * pos2.m_normal;
 		uint sortedIndex = gridParticleIndex[index];
-		if (length(forceVector) > 0.03) force[sortedIndex] += forceVector*0.1f;
+		if (length(forceVector) > 0.03f) force[sortedIndex] += forceVector*0.001f;
 		atomicAdd(&dev_params->Ax.x, Ax.x);
 		atomicAdd(&dev_params->Ax.y, Ax.y);
 		atomicAdd(&dev_params->Ax.z, Ax.z);
@@ -356,9 +354,11 @@ __device__ uint cellsToCheck[29791];
 __device__ uint numVertsCell[29791];
 __device__ uint numVertsCheck[29791];
 
-__device__ uint vertexIndex[50000];
+//__device__ uint vertexIndex[50000];
+//__device__ uint vertexToolIndex[4913][50000];
 
-__device__ uint vertexToolIndex[4913][50000];
+__device__ uint vertexIndex[1];
+__device__ uint vertexToolIndex[1][1];
 
 __global__
 	void childCollisionKernel(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, SimParams *dev_params, uint totalCells, uint totalVertices){

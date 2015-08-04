@@ -80,6 +80,7 @@ OverlayRenderer::~OverlayRenderer(void)
 
 void OverlayRenderer::display() const {
 	
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_depthFBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	int width(m_camera->getWidth());
@@ -116,7 +117,7 @@ void OverlayRenderer::display() const {
 	model = glm::mat4();
 	model *= SCPPositionMatrix;
 	model *= modelOrientation;
-	model *= glm::scale(0.1f, 0.1f, 0.1f);
+	model *= glm::scale(glm::vec3(0.1f, 0.1f, 0.1f));
 	modelView = viewMat * model;
 	mvpMat = projection * modelView;
 	glUniformMatrix4fv(glGetUniformLocation(normalShader->getProgramId(),"modelViewMat"),1,GL_FALSE, &modelView[0][0]);
@@ -153,5 +154,4 @@ void OverlayRenderer::display() const {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
-
 }

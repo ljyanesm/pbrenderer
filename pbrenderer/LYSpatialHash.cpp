@@ -3,7 +3,7 @@
 LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	m_gridSize(gridSize),
 	renderingMethod(HapticRenderingMethods::IMPLICIT_SURFACE),
-	maxSearchRange(10),
+	maxSearchRange(7),
 	maxSearchRangeSq(maxSearchRange*maxSearchRange),
 	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
 {
@@ -17,21 +17,14 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	m_hParams	=	new SimParams();
 
 	m_params.gridSize = m_gridSize;
-	m_params.numCells = m_numGridCells;
 	m_params.cellSize = make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
-	m_params.numBodies = m_numVertices;
 	m_params.R			= 0.02f;
 	neighborhoodRadius	= 0.02f;
 
 	m_hParams->gridSize		= m_gridSize;
-	m_hParams->numCells		= m_numGridCells;
 	m_hParams->cellSize		= make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
-	m_hParams->numBodies	= m_numVertices;
 
-	m_hParams->dmin			= 0.75f;
 	m_hParams->w_tot		= 0.0f;
-	m_hParams->RMAX			= 2.0f;
-	m_hParams->RMIN			= 0.02f;
 	m_hParams->Ax			= make_float3(0.0f);
 	m_hParams->Nx			= make_float3(0.0f);
 
@@ -59,7 +52,7 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 
 	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
-	LYCudaHelper::allocateArray((void **)&m_src_points, m_numVertices*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_src_points, (m_numVertices+1)*sizeof(LYVertex));
 
 	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(float4));
 	cudaMemset(m_point_force, 0, m_numVertices*sizeof(float4));
@@ -79,25 +72,19 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	
 	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
 
-	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
-
-	checkCudaErrors(cudaMemcpy(m_src_points, dPos, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
-
-	LYCudaHelper::unmapGLBufferObject(m_vboRes);
-
-	collisionCheckArgs.sortedPos = m_sorted_points;
-	collisionCheckArgs.toolPos	 = m_collisionPoints;
-	collisionCheckArgs.forceVector = m_forceFeedback;
-	collisionCheckArgs.force = m_point_force;
-	collisionCheckArgs.gridParticleIndex = m_pointGridIndex;
-	collisionCheckArgs.cellStart = m_cellStart;
-	collisionCheckArgs.cellEnd = m_cellEnd;
-	collisionCheckArgs.dev_params = m_dParams;
-	collisionCheckArgs.numVertices = m_numVertices;
-	collisionCheckArgs.numToolVertices = m_numToolVertices;
-	collisionCheckArgs.voxSize = 1.0f/gridSize.x;
-	collisionCheckArgs.maxSearchRange = maxSearchRange;
-	collisionCheckArgs.maxSearchRangeSq = maxSearchRangeSq;
+	collisionCheckArgs.sortedPos				= m_sorted_points;
+	collisionCheckArgs.toolPos					= m_collisionPoints;
+	collisionCheckArgs.forceVector				= m_forceFeedback;
+	collisionCheckArgs.force					= m_point_force;
+	collisionCheckArgs.gridParticleIndex		= m_pointGridIndex;
+	collisionCheckArgs.cellStart				= m_cellStart;
+	collisionCheckArgs.cellEnd					= m_cellEnd;
+	collisionCheckArgs.dev_params				= m_dParams;
+	collisionCheckArgs.numVertices				= m_numVertices;
+	collisionCheckArgs.numToolVertices			= m_numToolVertices;
+	collisionCheckArgs.voxSize					= 1.0f/gridSize.x;
+	collisionCheckArgs.maxSearchRange			= maxSearchRange;
+	collisionCheckArgs.maxSearchRangeSq			= maxSearchRangeSq;
 	collisionCheckArgs.maxNumCollectionElements = m_maxNumCollectionElements;
 
 	LYCudaHelper::allocateArray((void **)&collisionCheckArgs.totalVertices_2Step, 1*sizeof(uint));
@@ -107,19 +94,18 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	checkCudaErrors(cudaMemset(collisionCheckArgs.collectionVertices, 0, m_maxNumCollectionElements*sizeof(uint)));
 
 	this->setInfluenceRadius(0.02f);
-	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	
-	cudaDeviceSynchronize();
-
 
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
-	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
-	dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+	LYVertex* dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+
+	cudaMemcpy(m_src_points, dPos, numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice);
+	cudaDeviceSynchronize();
+
 	// calculate grid hash
 	calcHash(
 		m_pointHash,
@@ -190,7 +176,6 @@ LYSpatialHash::~LYSpatialHash(void)
 
 	LYCudaHelper::freeArray(m_dSinking);
 	std::cout << "m_dSinking" << std::endl;
-
 	LYCudaHelper::unregisterGLBufferObject(m_vboRes);
 }
 
@@ -225,7 +210,6 @@ void	LYSpatialHash::update()
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
-	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 	if (m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
@@ -293,9 +277,10 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	collisionCheckArgs.collisionCheckType = this->m_collisionCheckType;
 	collisionCheckArgs.forceVector = this->m_forceFeedback;
 
-	collisionCheck(collisionCheckArgs);
-
-	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
+	do{
+		collisionCheck(collisionCheckArgs);
+		LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
+	} while(glm::isnan(m_hParams->w_tot));
 	return m_hParams->w_tot;
 }
 
@@ -429,8 +414,8 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 				dP.x = -Fx * Nx.x;
 				dP.y = -Fx * Nx.y;
 				dP.z = -Fx * Nx.z;
-				dP = dP/fmaxf(dNx, 0.1f);
-				dP *= 0.001f;
+				dP = dP/fmaxf(dNx, 0.01f);
+				dP *= 0.01f;
 				Pseed += dP;
 			} while (length(dP) > 0.001f && ++iterations < 4);
 			pos->scpPosition = Pseed;
@@ -457,9 +442,9 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 float3 LYSpatialHash::sinkingApproach(Collider * pos)
 {
 	float k = 0.001f;
-	float k_h = 0.001f;
-	float k_t = 0.0010f;
-	float gamma = 0.05f;
+	float k_h = 0.1f;
+	float k_t = 0.001f;
+	float gamma = 0.5f;
 	float R = collisionCheckArgs.R;
 	float eps = gamma * R;
 
@@ -471,7 +456,7 @@ float3 LYSpatialHash::sinkingApproach(Collider * pos)
 	float3 Vh = pos->hapticPosition - pos->scpPosition;
 
 	float collisionCheck = dot(Vn, Vh);
-
+	printf("Sinking = %f\n", collisionCheck);
 	if (collisionCheck > EPS) pos->scpPosition += k_h*Vh;
 	else {
 		pos->scpPosition += k_t*cross(Vn, Vh);
@@ -479,7 +464,7 @@ float3 LYSpatialHash::sinkingApproach(Collider * pos)
 		if (lVh >= R*0.5f) force = (lVh - R*0.5f) * (Vh/lVh);
 	}
 	pos->surfaceTgPlane = Vn/lVn;
-	float spring = 0.1f;
+	float spring = -1.0f;
 	force *= spring;
 
 	return force;
@@ -501,7 +486,6 @@ float3 LYSpatialHash::calculateOvershoot(float3 scpPosition)
 	LYCudaHelper::copyArrayToDevice((void **)m_dSinking, &Vn, 0, sizeof(float4));
 	computeOvershoot(args);
 	LYCudaHelper::copyArrayFromDevice((void**)&Vn, m_dSinking, 0, sizeof(float4));
-	printf("Vn = %f %f %f\n", Vn.x, Vn.y, Vn.z);
 	return make_float3(Vn);
 }
 
@@ -510,10 +494,10 @@ const std::string LYSpatialHash::getMethodString() const
 	switch(renderingMethod)
 	{
 	case LYSpaceHandler::IMPLICIT_SURFACE:
-		return std::string("Implicit Surface Method");
+		return std::string("Implicit");
 		break;
 	case LYSpaceHandler::SINKING:
-		return std::string("Sinking Method");
+		return std::string("Sinking");
 		break;
 	}
 	return std::string("No method detected!");
