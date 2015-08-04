@@ -149,6 +149,11 @@ public:
 	{
 		printf("Reading point model file:  %s  ", filename.c_str());
 
+		LYPLYLoader::nX  = LYPLYLoader::nY = 0;
+		LYPLYLoader::nZ	 = LYPLYLoader::nNX = 0;
+		LYPLYLoader::nNY = LYPLYLoader::nNZ = 0;
+		LYPLYLoader::nR  = LYPLYLoader::nG = 0; 
+		LYPLYLoader::nB = 0;
 		LYMesh *ret;
 		std::string currentLine;
 

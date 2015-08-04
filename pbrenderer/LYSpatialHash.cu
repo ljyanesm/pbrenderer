@@ -279,7 +279,6 @@ void	LYSpatialHash::update()
 				m_dParams,
 				m_numVertices);
 		}
-
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
 		m_dirtyPos = false;
 	}
@@ -386,7 +385,7 @@ const std::string LYSpatialHash::getCollisionCheckString() const
 			break;
 	}
 	return std::string("CollisionCheckType doesn't exist");
-}
+	}
 
 float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 {
@@ -404,7 +403,6 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 
 		Fx = dot(Nx, colliderPos - Ax);
 		checkCudaErrors(cudaPeekAtLastError());
-
 		if (Fx < 0.0f){
 			m_touched = true;
 			Pseed = Ax;
@@ -442,7 +440,6 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
 			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
-
 			return make_float3(m_forceFeedback);
 		} else {
 			printf("Contact lost!  ");
@@ -467,14 +464,12 @@ float3 LYSpatialHash::sinkingApproach(Collider * pos)
 	float gamma = 0.05f;
 	float R = collisionCheckArgs.R;
 	float eps = gamma * R;
-
 	float3 force = make_float3(0.0f);
 	float3 Vn = calculateOvershoot(pos->scpPosition);
 	float lVn = length(Vn);
 	if (lVn < eps) pos->scpPosition = pos->hapticPosition;
 	else pos->scpPosition += k*Vn;
 	float3 Vh = pos->hapticPosition - pos->scpPosition;
-
 	float collisionCheck = dot(Vn, Vh);
 	printf("Sinking = %f\n", collisionCheck);
 	if (collisionCheck > EPS) pos->scpPosition += k_h*Vh;
@@ -482,11 +477,9 @@ float3 LYSpatialHash::sinkingApproach(Collider * pos)
 		pos->scpPosition += k_t*cross(Vn, Vh);
 		float lVh = length(Vh);
 		if (lVh >= R*0.5f) force = (lVh - R*0.5f) * (Vh/lVh);
-	}
 	pos->surfaceTgPlane = Vn/lVn;
 	float spring = -1.0f;
 	force *= spring;
-
 	return force;
 }
 
@@ -495,7 +488,6 @@ float3 LYSpatialHash::calculateOvershoot(float3 scpPosition)
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
-
 	OvershootArgs args;
 	args.sortedPos = m_sorted_points;
 	args.influenceRadius = collisionCheckArgs.R;
