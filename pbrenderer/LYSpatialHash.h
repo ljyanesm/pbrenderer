@@ -7,8 +7,8 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 #include <cuda_gl_interop.h>
-#include "glm/glm.hpp"
 #include "defines.h"
+#include "glm/glm.hpp"
 
 #include "Collider.h"
 #include "LYCudaHelper.cuh"

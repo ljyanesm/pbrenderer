@@ -52,7 +52,7 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 
 	LYCudaHelper::printMemInfo();
 	LYCudaHelper::allocateArray((void **)&m_sorted_points, m_numVertices*sizeof(LYVertex));
-	LYCudaHelper::allocateArray((void **)&m_src_points, (m_numVertices+1)*sizeof(LYVertex));
+	LYCudaHelper::allocateArray((void **)&m_src_points, m_numVertices*sizeof(LYVertex));
 
 	LYCudaHelper::allocateArray((void **)&m_point_force, m_numVertices*sizeof(float4));
 	cudaMemset(m_point_force, 0, m_numVertices*sizeof(float4));
@@ -71,6 +71,12 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	LYCudaHelper::printMemInfo();
 	
 	LYCudaHelper::registerGLBufferObject(m_srcVBO, &m_vboRes);
+
+	LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+
+	checkCudaErrors(cudaMemcpy(m_src_points, dPos, m_numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice));
+
+	LYCudaHelper::unmapGLBufferObject(m_vboRes);
 
 	collisionCheckArgs.sortedPos				= m_sorted_points;
 	collisionCheckArgs.toolPos					= m_collisionPoints;
@@ -93,15 +99,19 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 
 	checkCudaErrors(cudaMemset(collisionCheckArgs.collectionVertices, 0, m_maxNumCollectionElements*sizeof(uint)));
 
-	this->setInfluenceRadius(0.02f);
+	setParameters(&m_params);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
+
+	cudaDeviceSynchronize();
 
 	m_hParams->w_tot = 0.0f;
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
+	setParameters(&m_params);
+
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
 
-	LYVertex* dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
+	dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 
 	cudaMemcpy(m_src_points, dPos, numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice);
 	cudaDeviceSynchronize();
@@ -277,10 +287,9 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	collisionCheckArgs.collisionCheckType = this->m_collisionCheckType;
 	collisionCheckArgs.forceVector = this->m_forceFeedback;
 
-	do{
-		collisionCheck(collisionCheckArgs);
-		LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
-	} while(glm::isnan(m_hParams->w_tot));
+	collisionCheck(collisionCheckArgs);
+	LYCudaHelper::copyArrayFromDevice(m_hParams, m_dParams, 0, sizeof(SimParams));
+
 	return m_hParams->w_tot;
 }
 

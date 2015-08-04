@@ -100,18 +100,6 @@ bool LYHapticDevice::initHD()
 	return true;
 }
 
-bool LYHapticDevice::stopHD() 
-{
-	hdStopScheduler();
-	return true;
-}
-
-bool LYHapticDevice::startHD()
-{
-	hdStartScheduler();
-	return true;
-}
-
 void LYHapticDevice::touchTool()
 {
 	/* Obtain a thread-safe copy of the current haptic display state. */
