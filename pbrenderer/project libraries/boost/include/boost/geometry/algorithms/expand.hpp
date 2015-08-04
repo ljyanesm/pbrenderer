@@ -3,7 +3,6 @@
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
-// Copyright (c) 2014 Samuel Debionne, Grenoble, France.
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -20,7 +19,6 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#include <boost/geometry/algorithms/not_implemented.hpp>
 #include <boost/geometry/core/coordinate_dimension.hpp>
 #include <boost/geometry/geometries/concepts/check.hpp>
 
@@ -28,9 +26,6 @@
 
 #include <boost/geometry/strategies/compare.hpp>
 #include <boost/geometry/policies/compare.hpp>
-
-#include <boost/variant/static_visitor.hpp>
-#include <boost/variant/apply_visitor.hpp>
 
 
 namespace boost { namespace geometry
@@ -43,26 +38,26 @@ namespace detail { namespace expand
 
 template
 <
+    typename Box, typename Point,
     typename StrategyLess, typename StrategyGreater,
     std::size_t Dimension, std::size_t DimensionCount
 >
 struct point_loop
 {
-    template <typename Box, typename Point>
+    typedef typename strategy::compare::detail::select_strategy
+        <
+            StrategyLess, 1, Point, Dimension
+        >::type less_type;
+
+    typedef typename strategy::compare::detail::select_strategy
+        <
+            StrategyGreater, -1, Point, Dimension
+        >::type greater_type;
+
+    typedef typename select_coordinate_type<Point, Box>::type coordinate_type;
+
     static inline void apply(Box& box, Point const& source)
     {
-        typedef typename strategy::compare::detail::select_strategy
-            <
-                StrategyLess, 1, Point, Dimension
-            >::type less_type;
-
-        typedef typename strategy::compare::detail::select_strategy
-            <
-                StrategyGreater, -1, Point, Dimension
-            >::type greater_type;
-
-        typedef typename select_coordinate_type<Point, Box>::type coordinate_type;
-
         less_type less;
         greater_type greater;
 
@@ -80,6 +75,7 @@ struct point_loop
 
         point_loop
             <
+                Box, Point,
                 StrategyLess, StrategyGreater,
                 Dimension + 1, DimensionCount
             >::apply(box, source);
@@ -89,47 +85,49 @@ struct point_loop
 
 template
 <
+    typename Box, typename Point,
     typename StrategyLess, typename StrategyGreater,
     std::size_t DimensionCount
 >
 struct point_loop
     <
+        Box, Point,
         StrategyLess, StrategyGreater,
         DimensionCount, DimensionCount
     >
 {
-    template <typename Box, typename Point>
     static inline void apply(Box&, Point const&) {}
 };
 
 
 template
 <
+    typename Box, typename Geometry,
     typename StrategyLess, typename StrategyGreater,
     std::size_t Index,
     std::size_t Dimension, std::size_t DimensionCount
 >
 struct indexed_loop
 {
-    template <typename Box, typename Geometry>
+    typedef typename strategy::compare::detail::select_strategy
+        <
+            StrategyLess, 1, Box, Dimension
+        >::type less_type;
+
+    typedef typename strategy::compare::detail::select_strategy
+        <
+            StrategyGreater, -1, Box, Dimension
+        >::type greater_type;
+
+    typedef typename select_coordinate_type
+            <
+                Box,
+                Geometry
+            >::type coordinate_type;
+
+
     static inline void apply(Box& box, Geometry const& source)
     {
-        typedef typename strategy::compare::detail::select_strategy
-            <
-                StrategyLess, 1, Box, Dimension
-            >::type less_type;
-
-        typedef typename strategy::compare::detail::select_strategy
-            <
-                StrategyGreater, -1, Box, Dimension
-            >::type greater_type;
-
-        typedef typename select_coordinate_type
-                <
-                    Box,
-                    Geometry
-                >::type coordinate_type;
-
         less_type less;
         greater_type greater;
 
@@ -147,6 +145,7 @@ struct indexed_loop
 
         indexed_loop
             <
+                Box, Geometry,
                 StrategyLess, StrategyGreater,
                 Index, Dimension + 1, DimensionCount
             >::apply(box, source);
@@ -156,16 +155,17 @@ struct indexed_loop
 
 template
 <
+    typename Box, typename Geometry,
     typename StrategyLess, typename StrategyGreater,
     std::size_t Index, std::size_t DimensionCount
 >
 struct indexed_loop
     <
+        Box, Geometry,
         StrategyLess, StrategyGreater,
         Index, DimensionCount, DimensionCount
     >
 {
-    template <typename Box, typename Geometry>
     static inline void apply(Box&, Geometry const&) {}
 };
 
@@ -174,21 +174,23 @@ struct indexed_loop
 // Changes a box such that the other box is also contained by the box
 template
 <
+    typename Box, typename Geometry,
     typename StrategyLess, typename StrategyGreater
 >
 struct expand_indexed
 {
-    template <typename Box, typename Geometry>
     static inline void apply(Box& box, Geometry const& geometry)
     {
         indexed_loop
             <
+                Box, Geometry,
                 StrategyLess, StrategyGreater,
                 0, 0, dimension<Geometry>::type::value
             >::apply(box, geometry);
 
         indexed_loop
             <
+                Box, Geometry,
                 StrategyLess, StrategyGreater,
                 1, 0, dimension<Geometry>::type::value
             >::apply(box, geometry);
@@ -204,13 +206,11 @@ namespace dispatch
 
 template
 <
-    typename GeometryOut, typename Geometry,
-    typename StrategyLess = strategy::compare::default_strategy,
-    typename StrategyGreater = strategy::compare::default_strategy,
-    typename TagOut = typename tag<GeometryOut>::type,
-    typename Tag = typename tag<Geometry>::type
+    typename Tag,
+    typename BoxOut, typename Geometry,
+    typename StrategyLess, typename StrategyGreater
 >
-struct expand: not_implemented<TagOut, Tag>
+struct expand
 {};
 
 
@@ -220,9 +220,10 @@ template
     typename BoxOut, typename Point,
     typename StrategyLess, typename StrategyGreater
 >
-struct expand<BoxOut, Point, StrategyLess, StrategyGreater, box_tag, point_tag>
+struct expand<point_tag, BoxOut, Point, StrategyLess, StrategyGreater>
     : detail::expand::point_loop
         <
+            BoxOut, Point,
             StrategyLess, StrategyGreater,
             0, dimension<Point>::type::value
         >
@@ -235,8 +236,9 @@ template
     typename BoxOut, typename BoxIn,
     typename StrategyLess, typename StrategyGreater
 >
-struct expand<BoxOut, BoxIn, StrategyLess, StrategyGreater, box_tag, box_tag>
-    : detail::expand::expand_indexed<StrategyLess, StrategyGreater>
+struct expand<box_tag, BoxOut, BoxIn, StrategyLess, StrategyGreater>
+    : detail::expand::expand_indexed
+        <BoxOut, BoxIn, StrategyLess, StrategyGreater>
 {};
 
 template
@@ -244,8 +246,9 @@ template
     typename Box, typename Segment,
     typename StrategyLess, typename StrategyGreater
 >
-struct expand<Box, Segment, StrategyLess, StrategyGreater, box_tag, segment_tag>
-    : detail::expand::expand_indexed<StrategyLess, StrategyGreater>
+struct expand<segment_tag, Box, Segment, StrategyLess, StrategyGreater>
+    : detail::expand::expand_indexed
+        <Box, Segment, StrategyLess, StrategyGreater>
 {};
 
 
@@ -253,51 +256,6 @@ struct expand<Box, Segment, StrategyLess, StrategyGreater, box_tag, segment_tag>
 #endif // DOXYGEN_NO_DISPATCH
 
 
-namespace resolve_variant {
-    
-template <typename Geometry>
-struct expand
-{
-    template <typename Box>
-    static inline void apply(Box& box, Geometry const& geometry)
-    {
-        concept::check<Box>();
-        concept::check<Geometry const>();
-        concept::check_concepts_and_equal_dimensions<Box, Geometry const>();
-        
-        dispatch::expand<Box, Geometry>::apply(box, geometry);
-    }
-};
-
-template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
-struct expand<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
-{
-    template <typename Box>
-    struct visitor: boost::static_visitor<void>
-    {
-        Box& m_box;
-        
-        visitor(Box& box) : m_box(box) {}
-        
-        template <typename Geometry>
-        void operator()(Geometry const& geometry) const
-        {
-            return expand<Geometry>::apply(m_box, geometry);
-        }
-    };
-    
-    template <class Box>
-    static inline void
-    apply(Box& box,
-          boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> const& geometry)
-    {
-        return boost::apply_visitor(visitor<Box>(box), geometry);
-    }
-};
-    
-} // namespace resolve_variant
-    
-    
 /***
 *!
 \brief Expands a box using the extend (envelope) of another geometry (box, point)
@@ -321,7 +279,13 @@ inline void expand(Box& box, Geometry const& geometry,
 {
     concept::check_concepts_and_equal_dimensions<Box, Geometry const>();
 
-    dispatch::expand<Box, Geometry>::apply(box, geometry);
+    dispatch::expand
+        <
+            typename tag<Geometry>::type,
+            Box,
+            Geometry,
+            StrategyLess, StrategyGreater
+        >::apply(box, geometry);
 }
 ***/
 
@@ -339,7 +303,15 @@ inline void expand(Box& box, Geometry const& geometry,
 template <typename Box, typename Geometry>
 inline void expand(Box& box, Geometry const& geometry)
 {
-    resolve_variant::expand<Geometry>::apply(box, geometry);
+    concept::check_concepts_and_equal_dimensions<Box, Geometry const>();
+
+    dispatch::expand
+        <
+            typename tag<Geometry>::type,
+            Box, Geometry,
+            strategy::compare::default_strategy,
+            strategy::compare::default_strategy
+        >::apply(box, geometry);
 }
 
 }} // namespace boost::geometry

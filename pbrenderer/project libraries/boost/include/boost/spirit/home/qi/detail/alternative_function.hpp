@@ -56,10 +56,10 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     struct alternative_function
     {
         alternative_function(
-            Iterator& first_, Iterator const& last_, Context& context_,
-            Skipper const& skipper_, Attribute& attr_)
-          : first(first_), last(last_), context(context_), skipper(skipper_),
-            attr(attr_)
+            Iterator& first, Iterator const& last, Context& context,
+            Skipper const& skipper, Attribute& attr)
+          : first(first), last(last), context(context), skipper(skipper),
+            attr(attr)
         {
         }
 
@@ -185,14 +185,14 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     struct alternative_function<Iterator, Context, Skipper, unused_type const>
     {
         alternative_function(
-            Iterator& first_, Iterator const& last_, Context& context_,
-            Skipper const& skipper_, unused_type)
-          : first(first_), last(last_), context(context_), skipper(skipper_)
+            Iterator& first, Iterator const& last, Context& context,
+            Skipper const& skipper, unused_type)
+          : first(first), last(last), context(context), skipper(skipper)
         {
         }
 
         template <typename Component>
-        bool operator()(Component const& component) const
+        bool operator()(Component const& component)
         {
             // return true if the parser succeeds
             return component.parse(first, last, context, skipper,

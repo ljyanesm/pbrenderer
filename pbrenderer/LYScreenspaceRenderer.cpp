@@ -420,7 +420,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glEnable(GL_POINT_SPRITE_ARB);
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
-	//glDepthMask(GL_TRUE);
+//	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
 	glDepthFunc(GL_LESS);
@@ -431,14 +431,6 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glm::mat4 modelViewMatrix = glm::mat4();
 	glm::mat3 inverse_transposed = glm::mat3();
 
-
-	//////////////////////////////////////////////////////////////////////////
-	// RENDER ALL THE POINT BASED MODELS
-	// The "m_objects" array contains all the meshes that need to be displayed
-	// 
-	//
-	// FIRST PASS
-	//////////////////////////////////////////////////////////////////////////
 	for (std::vector<LYMesh*>::iterator it = m_objects.begin(); it != m_objects.end(); ++it)
 	{
 		LYMesh* mesh = (*it);
@@ -453,16 +445,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 		(mesh->getRenderPoints()) ? _drawPoints(mesh) : _drawTriangles(mesh);
 	}
-	//////////////////////////////////////////////////////////////////////////
 
-#if 0
-	//////////////////////////////////////////////////////////////////////////
-	//
-	//  The HIP and the Proxy objects are displayed as points within the
-	//
-	//  FIRST PASS
-	//
-	//////////////////////////////////////////////////////////////////////////
 	modelMatrix = haptic_interface->getHIPMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
 	inverse_transposed = glm::inverse(glm::transpose(glm::mat3(modelViewMatrix)));
@@ -486,23 +469,10 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
 
 	_drawPoints(haptic_interface->getProxyObject());
-#endif
-	//////////////////////////////////////////////////////////////////////////
-	// END OF FIRST PASS
-	//////////////////////////////////////////////////////////////////////////
-
 
 	glDisable(GL_POINT_SPRITE_ARB);
 
 	glDisable(GL_DEPTH_TEST);
-
-
-	//////////////////////////////////////////////////////////////////////////
-	//
-	//  START: SECOND PASS
-	//  Depth buffer smoothing pass
-	//
-	//////////////////////////////////////////////////////////////////////////
 
 	//Blur Depth Texture
 	_setTextures();
@@ -524,19 +494,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 
 	glBindVertexArray(0);
 
-	//////////////////////////////////////////////////////////////////////////
-	//  END OF SECOND PASS
-	//////////////////////////////////////////////////////////////////////////
-
-
-	///////////////////////////////////////////////////////////////////////////////
-	//
-	//  START: THIRD PASS
-	//  The values of the normals are calculated using the smoothed depth values
-	//
-	//  Normals to Texture from Depth Texture
-	//
-	///////////////////////////////////////////////////////////////////////////////
+	//Write Normals to Texture from Depth Texture
 	_setTextures();
 	_bindFBO(m_normalsFBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -565,18 +523,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	//////////////////////////////////////////////////////////////////////////
-	// END OF THIRD PASS
-	//////////////////////////////////////////////////////////////////////////
-
-	//////////////////////////////////////////////////////////////////////////
-	//
-	// FINAL PASS
-	// Render the screen sized quad, combining all the attributes of the model
-	// and applying the illumination model (Phong in this case)
-	//
-	// Draw Full Screen Quad
-	//////////////////////////////////////////////////////////////////////////
+	//Draw Full Screen Quad
 	_setTextures();
 	totalShader->useShader();
 	glBindVertexArray(m_device_quad.vertex_array);
@@ -612,12 +559,6 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
-
-	//////////////////////////////////////////////////////////////////////////
-	//  END OF FINAL PASS
-	//////////////////////////////////////////////////////////////////////////
-
-	// Clear the meshes array for next frame
 	m_objects.clear();
 }
 

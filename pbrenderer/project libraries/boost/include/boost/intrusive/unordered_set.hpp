@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
 //
 // (C) Copyright Olaf Krzikalla 2004-2006.
-// (C) Copyright Ion Gaztanaga  2006-2014
+// (C) Copyright Ion Gaztanaga  2006-2009
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
@@ -13,15 +13,12 @@
 #ifndef BOOST_INTRUSIVE_UNORDERED_SET_HPP
 #define BOOST_INTRUSIVE_UNORDERED_SET_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
 #include <boost/intrusive/hashtable.hpp>
-#include <boost/move/utility_core.hpp>
-#include <boost/static_assert.hpp>
+#include <boost/move/move.hpp>
+#include <iterator>
+
 
 namespace boost {
 namespace intrusive {
@@ -64,14 +61,13 @@ namespace intrusive {
 #if defined(BOOST_INTRUSIVE_DOXYGEN_INVOKED)
 template<class T, class ...Options>
 #else
-template<class ValueTraits, class Hash, class Equal, class SizeType, class BucketTraits, std::size_t BoolFlags>
+template<class Config>
 #endif
 class unordered_set_impl
-   : public hashtable_impl<ValueTraits, Hash, Equal, SizeType, BucketTraits, BoolFlags>
 {
    /// @cond
    private:
-   typedef hashtable_impl<ValueTraits, Hash, Equal, SizeType, BucketTraits, BoolFlags> table_type;
+   typedef hashtable_impl<Config> table_type;
 
    //! This class is
    //! movable
@@ -106,13 +102,18 @@ class unordered_set_impl
    typedef typename implementation_defined::const_node_ptr              const_node_ptr;
    typedef typename implementation_defined::node_algorithms             node_algorithms;
 
+   /// @cond
+   private:
+   table_type table_;
+   /// @endcond
+
    public:
 
    //! <b>Requires</b>: buckets must not be being used by any other resource.
    //!
    //! <b>Effects</b>: Constructs an empty unordered_set_impl, storing a reference
    //!   to the bucket array and copies of the hasher and equal functors.
-   //!
+   //!  
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Throws</b>: If value_traits::node_traits::node
@@ -121,11 +122,11 @@ class unordered_set_impl
    //!
    //! <b>Notes</b>: buckets array must be disposed only after
    //!   *this is disposed.
-   explicit unordered_set_impl( const bucket_traits &b_traits
-                              , const hasher & hash_func = hasher()
-                              , const key_equal &equal_func = key_equal()
-                              , const value_traits &v_traits = value_traits())
-      :  table_type(b_traits, hash_func, equal_func, v_traits)
+   unordered_set_impl( const bucket_traits &b_traits
+                     , const hasher & hash_func = hasher()
+                     , const key_equal &equal_func = key_equal()
+                     , const value_traits &v_traits = value_traits())
+      :  table_(b_traits, hash_func, equal_func, v_traits)
    {}
 
    //! <b>Requires</b>: buckets must not be being used by any other resource
@@ -133,7 +134,7 @@ class unordered_set_impl
    //!
    //! <b>Effects</b>: Constructs an empty unordered_set and inserts elements from
    //!   [b, e).
-   //!
+   //!  
    //! <b>Complexity</b>: If N is std::distance(b, e): Average case is O(N)
    //!   (with a good hash function and with buckets_len >= N),worst case O(N2).
    //!
@@ -150,21 +151,20 @@ class unordered_set_impl
                      , const hasher & hash_func = hasher()
                      , const key_equal &equal_func = key_equal()
                      , const value_traits &v_traits = value_traits())
-      :  table_type(b_traits, hash_func, equal_func, v_traits)
-   {  table_type::insert_unique(b, e);  }
+      :  table_(b_traits, hash_func, equal_func, v_traits)
+   {  table_.insert_unique(b, e);  }
 
    //! <b>Effects</b>: to-do
-   //!
+   //!  
    unordered_set_impl(BOOST_RV_REF(unordered_set_impl) x)
-      :  table_type(::boost::move(static_cast<table_type&>(x)))
+      :  table_(::boost::move(x.table_))
    {}
 
    //! <b>Effects</b>: to-do
-   //!
+   //!  
    unordered_set_impl& operator=(BOOST_RV_REF(unordered_set_impl) x)
-   {  return static_cast<unordered_set_impl&>(table_type::operator=(::boost::move(static_cast<table_type&>(x)))); }
+   {  table_ = ::boost::move(x.table_);  return *this;  }
 
-   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
    //! <b>Effects</b>: Detaches all elements from this. The objects in the unordered_set
    //!   are not deleted (i.e. no destructors are called).
    //!
@@ -182,7 +182,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    iterator begin()
-   { return table_type::begin();  }
+   { return table_.begin();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the beginning
    //!   of the unordered_set.
@@ -192,7 +192,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator begin() const
-   { return table_type::begin();  }
+   { return table_.begin();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the beginning
    //!   of the unordered_set.
@@ -202,7 +202,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator cbegin() const
-   { return table_type::cbegin();  }
+   { return table_.cbegin();  }
 
    //! <b>Effects</b>: Returns an iterator pointing to the end of the unordered_set.
    //!
@@ -210,7 +210,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    iterator end()
-   { return table_type::end();  }
+   { return table_.end();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the end of the unordered_set.
    //!
@@ -218,7 +218,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator end() const
-   { return table_type::end();  }
+   { return table_.end();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the end of the unordered_set.
    //!
@@ -226,7 +226,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator cend() const
-   { return table_type::cend();  }
+   { return table_.cend();  }
 
    //! <b>Effects</b>: Returns the hasher object used by the unordered_set.
    //!
@@ -234,7 +234,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If hasher copy-constructor throws.
    hasher hash_function() const
-   { return table_type::hash_function(); }
+   { return table_.hash_function(); }
 
    //! <b>Effects</b>: Returns the key_equal object used by the unordered_set.
    //!
@@ -242,7 +242,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If key_equal copy-constructor throws.
    key_equal key_eq() const
-   { return table_type::key_eq(); }
+   { return table_.key_eq(); }
 
    //! <b>Effects</b>: Returns true if the container is empty.
    //!
@@ -252,7 +252,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    bool empty() const
-   { return table_type::empty(); }
+   { return table_.empty(); }
 
    //! <b>Effects</b>: Returns the number of elements stored in the unordered_set.
    //!
@@ -261,7 +261,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    size_type size() const
-   { return table_type::size(); }
+   { return table_.size(); }
 
    //! <b>Requires</b>: the hasher and the equality function unqualified swap
    //!   call should not throw.
@@ -274,7 +274,7 @@ class unordered_set_impl
    //! <b>Throws</b>: If the swap() call for the comparison or hash functors
    //!   found using ADL throw. Basic guarantee.
    void swap(unordered_set_impl& other)
-   { table_type::swap(other.table_); }
+   { table_.swap(other.table_); }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!   Cloner should yield to nodes that compare equal and produce the same
@@ -290,16 +290,14 @@ class unordered_set_impl
    //!
    //!   If any operation throws, all cloned elements are unlinked and disposed
    //!   calling Disposer::operator()(pointer).
-   //!
+   //!  
    //! <b>Complexity</b>: Linear to erased plus inserted elements.
    //!
    //! <b>Throws</b>: If cloner or hasher throw or hash or equality predicate copying
    //!   throws. Basic guarantee.
    template <class Cloner, class Disposer>
    void clone_from(const unordered_set_impl &src, Cloner cloner, Disposer disposer)
-   {  table_type::clone_from(src.table_, cloner, disposer);  }
-
-   #endif //#ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
+   {  table_.clone_from(src.table_, cloner, disposer);  }
 
    //! <b>Requires</b>: value must be an lvalue
    //!
@@ -318,7 +316,7 @@ class unordered_set_impl
    //! <b>Note</b>: Does not affect the validity of iterators and references.
    //!   No copy-constructors are called.
    std::pair<iterator, bool> insert(reference value)
-   {  return table_type::insert_unique(value);  }
+   {  return table_.insert_unique(value);  }
 
    //! <b>Requires</b>: Dereferencing iterator must yield an lvalue
    //!   of type value_type.
@@ -334,7 +332,7 @@ class unordered_set_impl
    //!   No copy-constructors are called.
    template<class Iterator>
    void insert(Iterator b, Iterator e)
-   {  table_type::insert_unique(b, e);  }
+   {  table_.insert_unique(b, e);  }
 
    //! <b>Requires</b>: "hasher" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -374,7 +372,7 @@ class unordered_set_impl
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    std::pair<iterator, bool> insert_check
       (const KeyType &key, KeyHasher hasher, KeyValueEqual key_value_equal, insert_commit_data &commit_data)
-   {  return table_type::insert_unique_check(key, hasher, key_value_equal, commit_data); }
+   {  return table_.insert_unique_check(key, hasher, key_value_equal, commit_data); }
 
    //! <b>Requires</b>: value must be an lvalue of type value_type. commit_data
    //!   must have been obtained from a previous call to "insert_check".
@@ -396,9 +394,7 @@ class unordered_set_impl
    //!
    //!   After a successful rehashing insert_commit_data remains valid.
    iterator insert_commit(reference value, const insert_commit_data &commit_data)
-   {  return table_type::insert_unique_commit(value, commit_data); }
-
-   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
+   {  return table_.insert_unique_commit(value, commit_data); }
 
    //! <b>Effects</b>: Erases the element pointed to by i.
    //!
@@ -409,7 +405,7 @@ class unordered_set_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased element. No destructors are called.
    void erase(const_iterator i)
-   {  table_type::erase(i);  }
+   {  table_.erase(i);  }
 
    //! <b>Effects</b>: Erases the range pointed to by b end e.
    //!
@@ -421,7 +417,7 @@ class unordered_set_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased elements. No destructors are called.
    void erase(const_iterator b, const_iterator e)
-   {  table_type::erase(b, e);  }
+   {  table_.erase(b, e);  }
 
    //! <b>Effects</b>: Erases all the elements with the given value.
    //!
@@ -435,7 +431,7 @@ class unordered_set_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased elements. No destructors are called.
    size_type erase(const_reference value)
-   {  return table_type::erase(value);  }
+   {  return table_.erase(value);  }
 
    //! <b>Requires</b>: "hasher" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -459,7 +455,7 @@ class unordered_set_impl
    //!    to the erased elements. No destructors are called.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    size_type erase(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func)
-   {  return table_type::erase(key, hash_func, equal_func);  }
+   {  return table_.erase(key, hash_func, equal_func);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -478,7 +474,7 @@ class unordered_set_impl
                               , typename detail::enable_if_c<!detail::is_convertible<Disposer, const_iterator>::value >::type * = 0
                               /// @endcond
                               )
-   {  table_type::erase_and_dispose(i, disposer);  }
+   {  table_.erase_and_dispose(i, disposer);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -494,7 +490,7 @@ class unordered_set_impl
    //!    to the erased elements.
    template<class Disposer>
    void erase_and_dispose(const_iterator b, const_iterator e, Disposer disposer)
-   {  table_type::erase_and_dispose(b, e, disposer);  }
+   {  table_.erase_and_dispose(b, e, disposer);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -512,7 +508,7 @@ class unordered_set_impl
    //!    to the erased elements. No destructors are called.
    template<class Disposer>
    size_type erase_and_dispose(const_reference value, Disposer disposer)
-   {  return table_type::erase_and_dispose(value, disposer);  }
+   {  return table_.erase_and_dispose(value, disposer);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -531,7 +527,7 @@ class unordered_set_impl
    //!    to the erased elements.
    template<class KeyType, class KeyHasher, class KeyValueEqual, class Disposer>
    size_type erase_and_dispose(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func, Disposer disposer)
-   {  return table_type::erase_and_dispose(key, hash_func, equal_func, disposer);  }
+   {  return table_.erase_and_dispose(key, hash_func, equal_func, disposer);  }
 
    //! <b>Effects</b>: Erases all of the elements.
    //!
@@ -543,7 +539,7 @@ class unordered_set_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased elements. No destructors are called.
    void clear()
-   {  return table_type::clear();  }
+   {  return table_.clear();  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -558,7 +554,7 @@ class unordered_set_impl
    //!    to the erased elements. No destructors are called.
    template<class Disposer>
    void clear_and_dispose(Disposer disposer)
-   {  return table_type::clear_and_dispose(disposer);  }
+   {  return table_.clear_and_dispose(disposer);  }
 
    //! <b>Effects</b>: Returns the number of contained elements with the given value
    //!
@@ -566,7 +562,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    size_type count(const_reference value) const
-   {  return table_type::find(value) != end();  }
+   {  return table_.find(value) != end();  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -583,7 +579,7 @@ class unordered_set_impl
    //! <b>Throws</b>: If hash_func or equal_func throw.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    size_type count(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func) const
-   {  return table_type::find(key, hash_func, equal_func) != end();  }
+   {  return table_.find(key, hash_func, equal_func) != end();  }
 
    //! <b>Effects</b>: Finds an iterator to the first element is equal to
    //!   "value" or end() if that element does not exist.
@@ -592,7 +588,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    iterator find(const_reference value)
-   {  return table_type::find(value);  }
+   {  return table_.find(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -615,7 +611,7 @@ class unordered_set_impl
    //!   key type. Usually this key is part of the value_type.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    iterator find(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func)
-   {  return table_type::find(key, hash_func, equal_func);  }
+   {  return table_.find(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Finds a const_iterator to the first element whose key is
    //!   "key" or end() if that element does not exist.
@@ -624,7 +620,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    const_iterator find(const_reference value) const
-   {  return table_type::find(value);  }
+   {  return table_.find(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -647,7 +643,7 @@ class unordered_set_impl
    //!   key type. Usually this key is part of the value_type.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    const_iterator find(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func) const
-   {  return table_type::find(key, hash_func, equal_func);  }
+   {  return table_.find(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Returns a range containing all elements with values equivalent
    //!   to value. Returns std::make_pair(this->end(), this->end()) if no such
@@ -657,7 +653,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    std::pair<iterator,iterator> equal_range(const_reference value)
-   {  return table_type::equal_range(value);  }
+   {  return table_.equal_range(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -681,7 +677,7 @@ class unordered_set_impl
    //!   key type. Usually this key is part of the value_type.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    std::pair<iterator,iterator> equal_range(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func)
-   {  return table_type::equal_range(key, hash_func, equal_func);  }
+   {  return table_.equal_range(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Returns a range containing all elements with values equivalent
    //!   to value. Returns std::make_pair(this->end(), this->end()) if no such
@@ -692,7 +688,7 @@ class unordered_set_impl
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    std::pair<const_iterator, const_iterator>
       equal_range(const_reference value) const
-   {  return table_type::equal_range(value);  }
+   {  return table_.equal_range(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -717,7 +713,7 @@ class unordered_set_impl
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    std::pair<const_iterator, const_iterator>
       equal_range(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func) const
-   {  return table_type::equal_range(key, hash_func, equal_func);  }
+   {  return table_.equal_range(key, hash_func, equal_func);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_set of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -729,7 +725,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the internal hash function throws.
    iterator iterator_to(reference value)
-   {  return table_type::iterator_to(value);  }
+   {  return table_.iterator_to(value);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_set of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -741,7 +737,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the internal hash function throws.
    const_iterator iterator_to(const_reference value) const
-   {  return table_type::iterator_to(value);  }
+   {  return table_.iterator_to(value);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_set of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -783,7 +779,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    local_iterator local_iterator_to(reference value)
-   {  return table_type::local_iterator_to(value);  }
+   {  return table_.local_iterator_to(value);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_set of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -795,7 +791,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_local_iterator local_iterator_to(const_reference value) const
-   {  return table_type::local_iterator_to(value);  }
+   {  return table_.local_iterator_to(value);  }
 
    //! <b>Effects</b>: Returns the number of buckets passed in the constructor
    //!   or the last rehash function.
@@ -804,7 +800,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    size_type bucket_count() const
-   {  return table_type::bucket_count();   }
+   {  return table_.bucket_count();   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -814,7 +810,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    size_type bucket_size(size_type n) const
-   {  return table_type::bucket_size(n);   }
+   {  return table_.bucket_size(n);   }
 
    //! <b>Effects</b>: Returns the index of the bucket in which elements
    //!   with keys equivalent to k would be found, if any such element existed.
@@ -825,7 +821,7 @@ class unordered_set_impl
    //!
    //! <b>Note</b>: the return value is in the range [0, this->bucket_count()).
    size_type bucket(const value_type& k) const
-   {  return table_type::bucket(k);   }
+   {  return table_.bucket(k);   }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -841,7 +837,7 @@ class unordered_set_impl
    //! <b>Note</b>: the return value is in the range [0, this->bucket_count()).
    template<class KeyType, class KeyHasher>
    size_type bucket(const KeyType& k,  KeyHasher hash_func) const
-   {  return table_type::bucket(k, hash_func);   }
+   {  return table_.bucket(k, hash_func);   }
 
    //! <b>Effects</b>: Returns the bucket array pointer passed in the constructor
    //!   or the last rehash function.
@@ -850,7 +846,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: Nothing.
    bucket_ptr bucket_pointer() const
-   {  return table_type::bucket_pointer();   }
+   {  return table_.bucket_pointer();   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -864,7 +860,7 @@ class unordered_set_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    local_iterator begin(size_type n)
-   {  return table_type::begin(n);   }
+   {  return table_.begin(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -878,7 +874,7 @@ class unordered_set_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator begin(size_type n) const
-   {  return table_type::begin(n);   }
+   {  return table_.begin(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -892,7 +888,7 @@ class unordered_set_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator cbegin(size_type n) const
-   {  return table_type::cbegin(n);   }
+   {  return table_.cbegin(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -906,7 +902,7 @@ class unordered_set_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    local_iterator end(size_type n)
-   {  return table_type::end(n);   }
+   {  return table_.end(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -920,7 +916,7 @@ class unordered_set_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator end(size_type n) const
-   {  return table_type::end(n);   }
+   {  return table_.end(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -934,7 +930,7 @@ class unordered_set_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator cend(size_type n) const
-   {  return table_type::cend(n);   }
+   {  return table_.cend(n);   }
 
    //! <b>Requires</b>: new_buckets must be a pointer to a new bucket array
    //!   or the same as the old bucket array. new_size is the length of the
@@ -950,7 +946,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>: If the hasher functor throws. Basic guarantee.
    void rehash(const bucket_traits &new_bucket_traits)
-   {  table_type::rehash(new_bucket_traits); }
+   {  table_.rehash(new_bucket_traits); }
 
    //! <b>Requires</b>:
    //!
@@ -962,11 +958,11 @@ class unordered_set_impl
    //!
    //! <b>Note</b>: this method is only available if incremental<true> option is activated.
    bool incremental_rehash(bool grow = true)
-   {  return table_type::incremental_rehash(grow);  }
+   {  return table_.incremental_rehash(grow);  }
 
    //! <b>Note</b>: this method is only available if incremental<true> option is activated.
    bool incremental_rehash(const bucket_traits &new_bucket_traits)
-   {  return table_type::incremental_rehash(new_bucket_traits);  }
+   {  return table_.incremental_rehash(new_bucket_traits);  }
 
    //! <b>Requires</b>:
    //!
@@ -976,7 +972,7 @@ class unordered_set_impl
    //!
    //! <b>Throws</b>:
    size_type split_count() const
-   {  return table_type::split_count(); }
+   {  return table_.split_count(); }
 
    //! <b>Effects</b>: Returns the nearest new bucket count optimized for
    //!   the container that is bigger than n. This suggestion can be used
@@ -1001,8 +997,6 @@ class unordered_set_impl
    //! <b>Throws</b>: Nothing.
    static size_type suggested_lower_bucket_count(size_type n)
    {  return table_type::suggested_lower_bucket_count(n);  }
-
-   #endif   //   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
 };
 
 //! Helper metafunction to define an \c unordered_set that yields to the same type when the
@@ -1010,45 +1004,26 @@ class unordered_set_impl
 #if defined(BOOST_INTRUSIVE_DOXYGEN_INVOKED) || defined(BOOST_INTRUSIVE_VARIADIC_TEMPLATES)
 template<class T, class ...Options>
 #else
-template<class T, class O1 = void, class O2 = void
-                , class O3 = void, class O4 = void
-                , class O5 = void, class O6 = void
-                , class O7 = void, class O8 = void
-                , class O9 = void, class O10= void
+template<class T, class O1 = none, class O2 = none
+                , class O3 = none, class O4 = none
+                , class O5 = none, class O6 = none
+                , class O7 = none, class O8 = none
+                , class O9 = none, class O10= none
                 >
 #endif
 struct make_unordered_set
 {
    /// @cond
-   typedef typename pack_options
-      < hashtable_defaults,
-         #if !defined(BOOST_INTRUSIVE_VARIADIC_TEMPLATES)
-         O1, O2, O3, O4, O5, O6, O7, O8, O9, O10
-         #else
-         Options...
-         #endif
-      >::type packed_options;
-
-   typedef typename detail::get_value_traits
-      <T, typename packed_options::proto_value_traits>::type value_traits;
-
-   typedef typename make_bucket_traits
-            <T, true, packed_options>::type bucket_traits;
-
    typedef unordered_set_impl
-      < value_traits
-      , typename packed_options::hash
-      , typename packed_options::equal
-      , typename packed_options::size_type
-      , bucket_traits
-      ,  (std::size_t(true)*hash_bool_flags::unique_keys_pos)
-      |  (std::size_t(packed_options::constant_time_size)*hash_bool_flags::constant_time_size_pos)
-      |  (std::size_t(packed_options::power_2_buckets)*hash_bool_flags::power_2_buckets_pos)
-      |  (std::size_t(packed_options::cache_begin)*hash_bool_flags::cache_begin_pos)
-      |  (std::size_t(packed_options::compare_hash)*hash_bool_flags::compare_hash_pos)
-      |  (std::size_t(packed_options::incremental)*hash_bool_flags::incremental_pos)
+      <  typename make_hashtable_opt
+            <T, true,
+               #if !defined(BOOST_INTRUSIVE_VARIADIC_TEMPLATES)
+               O1, O2, O3, O4, O5, O6, O7, O8, O9, O10
+               #else
+               Options...
+               #endif
+            >::type
       > implementation_defined;
-
    /// @endcond
    typedef implementation_defined type;
 };
@@ -1092,10 +1067,10 @@ class unordered_set
    typedef typename Base::hasher             hasher;
    typedef typename Base::key_equal          key_equal;
 
-   explicit unordered_set  ( const bucket_traits &b_traits
-                           , const hasher & hash_func = hasher()
-                           , const key_equal &equal_func = key_equal()
-                           , const value_traits &v_traits = value_traits())
+   unordered_set  ( const bucket_traits &b_traits
+                  , const hasher & hash_func = hasher()
+                  , const key_equal &equal_func = key_equal()
+                  , const value_traits &v_traits = value_traits())
       :  Base(b_traits, hash_func, equal_func, v_traits)
    {}
 
@@ -1114,7 +1089,7 @@ class unordered_set
    {}
 
    unordered_set& operator=(BOOST_RV_REF(unordered_set) x)
-   {  return static_cast<unordered_set&>(this->Base::operator=(::boost::move(static_cast<Base&>(x))));  }
+   {  this->Base::operator=(::boost::move(static_cast<Base&>(x))); return *this;  }
 };
 
 #endif
@@ -1158,14 +1133,13 @@ class unordered_set
 #if defined(BOOST_INTRUSIVE_DOXYGEN_INVOKED)
 template<class T, class ...Options>
 #else
-template<class ValueTraits, class Hash, class Equal, class SizeType, class BucketTraits, std::size_t BoolFlags>
+template<class Config>
 #endif
 class unordered_multiset_impl
-   : public hashtable_impl<ValueTraits, Hash, Equal, SizeType, BucketTraits, BoolFlags>
 {
    /// @cond
    private:
-   typedef hashtable_impl<ValueTraits, Hash, Equal, SizeType, BucketTraits, BoolFlags> table_type;
+   typedef hashtable_impl<Config> table_type;
    /// @endcond
 
    //Movable
@@ -1199,13 +1173,18 @@ class unordered_multiset_impl
    typedef typename implementation_defined::const_node_ptr              const_node_ptr;
    typedef typename implementation_defined::node_algorithms             node_algorithms;
 
+   /// @cond
+   private:
+   table_type table_;
+   /// @endcond
+
    public:
 
    //! <b>Requires</b>: buckets must not be being used by any other resource.
    //!
    //! <b>Effects</b>: Constructs an empty unordered_multiset, storing a reference
    //!   to the bucket array and copies of the hasher and equal functors.
-   //!
+   //!  
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Throws</b>: If value_traits::node_traits::node
@@ -1214,11 +1193,11 @@ class unordered_multiset_impl
    //!
    //! <b>Notes</b>: buckets array must be disposed only after
    //!   *this is disposed.
-   explicit unordered_multiset_impl ( const bucket_traits &b_traits
-                                    , const hasher & hash_func = hasher()
-                                    , const key_equal &equal_func = key_equal()
-                                    , const value_traits &v_traits = value_traits())
-      :  table_type(b_traits, hash_func, equal_func, v_traits)
+   unordered_multiset_impl ( const bucket_traits &b_traits
+                           , const hasher & hash_func = hasher()
+                           , const key_equal &equal_func = key_equal()
+                           , const value_traits &v_traits = value_traits())
+      :  table_(b_traits, hash_func, equal_func, v_traits)
    {}
 
    //! <b>Requires</b>: buckets must not be being used by any other resource
@@ -1226,7 +1205,7 @@ class unordered_multiset_impl
    //!
    //! <b>Effects</b>: Constructs an empty unordered_multiset and inserts elements from
    //!   [b, e).
-   //!
+   //!  
    //! <b>Complexity</b>: If N is std::distance(b, e): Average case is O(N)
    //!   (with a good hash function and with buckets_len >= N),worst case O(N2).
    //!
@@ -1243,21 +1222,19 @@ class unordered_multiset_impl
                            , const hasher & hash_func = hasher()
                            , const key_equal &equal_func = key_equal()
                            , const value_traits &v_traits = value_traits())
-      :  table_type(b_traits, hash_func, equal_func, v_traits)
-   {  table_type::insert_equal(b, e);  }
+      :  table_(b_traits, hash_func, equal_func, v_traits)
+   {  table_.insert_equal(b, e);  }
 
    //! <b>Effects</b>: to-do
-   //!
+   //!  
    unordered_multiset_impl(BOOST_RV_REF(unordered_multiset_impl) x)
-      :  table_type(::boost::move(static_cast<table_type&>(x)))
+      :  table_(::boost::move(x.table_))
    {}
 
    //! <b>Effects</b>: to-do
-   //!
+   //!  
    unordered_multiset_impl& operator=(BOOST_RV_REF(unordered_multiset_impl) x)
-   {  return static_cast<unordered_multiset_impl&>(table_type::operator=(::boost::move(static_cast<table_type&>(x))));  }
-
-   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
+   {  table_ = ::boost::move(x.table_);  return *this;  }
 
    //! <b>Effects</b>: Detaches all elements from this. The objects in the unordered_multiset
    //!   are not deleted (i.e. no destructors are called).
@@ -1276,7 +1253,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    iterator begin()
-   { return table_type::begin();  }
+   { return table_.begin();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the beginning
    //!   of the unordered_multiset.
@@ -1286,7 +1263,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator begin() const
-   { return table_type::begin();  }
+   { return table_.begin();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the beginning
    //!   of the unordered_multiset.
@@ -1296,7 +1273,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator cbegin() const
-   { return table_type::cbegin();  }
+   { return table_.cbegin();  }
 
    //! <b>Effects</b>: Returns an iterator pointing to the end of the unordered_multiset.
    //!
@@ -1304,7 +1281,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    iterator end()
-   { return table_type::end();  }
+   { return table_.end();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the end of the unordered_multiset.
    //!
@@ -1312,7 +1289,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator end() const
-   { return table_type::end();  }
+   { return table_.end();  }
 
    //! <b>Effects</b>: Returns a const_iterator pointing to the end of the unordered_multiset.
    //!
@@ -1320,7 +1297,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_iterator cend() const
-   { return table_type::cend();  }
+   { return table_.cend();  }
 
    //! <b>Effects</b>: Returns the hasher object used by the unordered_set.
    //!
@@ -1328,7 +1305,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If hasher copy-constructor throws.
    hasher hash_function() const
-   { return table_type::hash_function(); }
+   { return table_.hash_function(); }
 
    //! <b>Effects</b>: Returns the key_equal object used by the unordered_multiset.
    //!
@@ -1336,7 +1313,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If key_equal copy-constructor throws.
    key_equal key_eq() const
-   { return table_type::key_eq(); }
+   { return table_.key_eq(); }
 
    //! <b>Effects</b>: Returns true if the container is empty.
    //!
@@ -1346,7 +1323,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    bool empty() const
-   { return table_type::empty(); }
+   { return table_.empty(); }
 
    //! <b>Effects</b>: Returns the number of elements stored in the unordered_multiset.
    //!
@@ -1355,7 +1332,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    size_type size() const
-   { return table_type::size(); }
+   { return table_.size(); }
 
    //! <b>Requires</b>: the hasher and the equality function unqualified swap
    //!   call should not throw.
@@ -1369,7 +1346,7 @@ class unordered_multiset_impl
    //! <b>Throws</b>: If the swap() call for the comparison or hash functors
    //!   found using ADL throw. Basic guarantee.
    void swap(unordered_multiset_impl& other)
-   { table_type::swap(other.table_); }
+   { table_.swap(other.table_); }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!   Cloner should yield to nodes that compare equal and produce the same
@@ -1385,16 +1362,14 @@ class unordered_multiset_impl
    //!
    //!   If any operation throws, all cloned elements are unlinked and disposed
    //!   calling Disposer::operator()(pointer).
-   //!
+   //!  
    //! <b>Complexity</b>: Linear to erased plus inserted elements.
    //!
    //! <b>Throws</b>: If cloner or hasher throw or hash or equality predicate copying
    //!   throws. Basic guarantee.
    template <class Cloner, class Disposer>
    void clone_from(const unordered_multiset_impl &src, Cloner cloner, Disposer disposer)
-   {  table_type::clone_from(src.table_, cloner, disposer);  }
-
-   #endif   //   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
+   {  table_.clone_from(src.table_, cloner, disposer);  }
 
    //! <b>Requires</b>: value must be an lvalue
    //!
@@ -1409,7 +1384,7 @@ class unordered_multiset_impl
    //! <b>Note</b>: Does not affect the validity of iterators and references.
    //!   No copy-constructors are called.
    iterator insert(reference value)
-   {  return table_type::insert_equal(value);  }
+   {  return table_.insert_equal(value);  }
 
    //! <b>Requires</b>: Dereferencing iterator must yield an lvalue
    //!   of type value_type.
@@ -1425,9 +1400,7 @@ class unordered_multiset_impl
    //!   No copy-constructors are called.
    template<class Iterator>
    void insert(Iterator b, Iterator e)
-   {  table_type::insert_equal(b, e);  }
-
-   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
+   {  table_.insert_equal(b, e);  }
 
    //! <b>Effects</b>: Erases the element pointed to by i.
    //!
@@ -1438,7 +1411,7 @@ class unordered_multiset_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased element. No destructors are called.
    void erase(const_iterator i)
-   {  table_type::erase(i);  }
+   {  table_.erase(i);  }
 
    //! <b>Effects</b>: Erases the range pointed to by b end e.
    //!
@@ -1450,7 +1423,7 @@ class unordered_multiset_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased elements. No destructors are called.
    void erase(const_iterator b, const_iterator e)
-   {  table_type::erase(b, e);  }
+   {  table_.erase(b, e);  }
 
    //! <b>Effects</b>: Erases all the elements with the given value.
    //!
@@ -1464,7 +1437,7 @@ class unordered_multiset_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased elements. No destructors are called.
    size_type erase(const_reference value)
-   {  return table_type::erase(value);  }
+   {  return table_.erase(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1489,7 +1462,7 @@ class unordered_multiset_impl
    //!    to the erased elements. No destructors are called.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    size_type erase(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func)
-   {  return table_type::erase(key, hash_func, equal_func);  }
+   {  return table_.erase(key, hash_func, equal_func);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -1508,7 +1481,7 @@ class unordered_multiset_impl
                               , typename detail::enable_if_c<!detail::is_convertible<Disposer, const_iterator>::value >::type * = 0
                               /// @endcond
                               )
-   {  table_type::erase_and_dispose(i, disposer);  }
+   {  table_.erase_and_dispose(i, disposer);  }
 
    #if !defined(BOOST_INTRUSIVE_DOXYGEN_INVOKED)
    template<class Disposer>
@@ -1530,7 +1503,7 @@ class unordered_multiset_impl
    //!    to the erased elements.
    template<class Disposer>
    void erase_and_dispose(const_iterator b, const_iterator e, Disposer disposer)
-   {  table_type::erase_and_dispose(b, e, disposer);  }
+   {  table_.erase_and_dispose(b, e, disposer);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -1548,7 +1521,7 @@ class unordered_multiset_impl
    //!    to the erased elements. No destructors are called.
    template<class Disposer>
    size_type erase_and_dispose(const_reference value, Disposer disposer)
-   {  return table_type::erase_and_dispose(value, disposer);  }
+   {  return table_.erase_and_dispose(value, disposer);  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -1567,7 +1540,7 @@ class unordered_multiset_impl
    //!    to the erased elements.
    template<class KeyType, class KeyHasher, class KeyValueEqual, class Disposer>
    size_type erase_and_dispose(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func, Disposer disposer)
-   {  return table_type::erase_and_dispose(key, hash_func, equal_func, disposer);  }
+   {  return table_.erase_and_dispose(key, hash_func, equal_func, disposer);  }
 
    //! <b>Effects</b>: Erases all the elements of the container.
    //!
@@ -1579,7 +1552,7 @@ class unordered_multiset_impl
    //! <b>Note</b>: Invalidates the iterators (but not the references)
    //!    to the erased elements. No destructors are called.
    void clear()
-   {  return table_type::clear();  }
+   {  return table_.clear();  }
 
    //! <b>Requires</b>: Disposer::operator()(pointer) shouldn't throw.
    //!
@@ -1594,7 +1567,7 @@ class unordered_multiset_impl
    //!    to the erased elements. No destructors are called.
    template<class Disposer>
    void clear_and_dispose(Disposer disposer)
-   {  return table_type::clear_and_dispose(disposer);  }
+   {  return table_.clear_and_dispose(disposer);  }
 
    //! <b>Effects</b>: Returns the number of contained elements with the given key
    //!
@@ -1602,7 +1575,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    size_type count(const_reference value) const
-   {  return table_type::count(value);  }
+   {  return table_.count(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1619,7 +1592,7 @@ class unordered_multiset_impl
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    size_type count(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func) const
-   {  return table_type::count(key, hash_func, equal_func);  }
+   {  return table_.count(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Finds an iterator to the first element whose value is
    //!   "value" or end() if that element does not exist.
@@ -1628,7 +1601,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    iterator find(const_reference value)
-   {  return table_type::find(value);  }
+   {  return table_.find(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1651,7 +1624,7 @@ class unordered_multiset_impl
    //!   key type. Usually this key is part of the value_type.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    iterator find(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func)
-   {  return table_type::find(key, hash_func, equal_func);  }
+   {  return table_.find(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Finds a const_iterator to the first element whose key is
    //!   "key" or end() if that element does not exist.
@@ -1660,7 +1633,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    const_iterator find(const_reference value) const
-   {  return table_type::find(value);  }
+   {  return table_.find(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1683,7 +1656,7 @@ class unordered_multiset_impl
    //!   key type. Usually this key is part of the value_type.
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    const_iterator find(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func) const
-   {  return table_type::find(key, hash_func, equal_func);  }
+   {  return table_.find(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Returns a range containing all elements with values equivalent
    //!   to value. Returns std::make_pair(this->end(), this->end()) if no such
@@ -1693,7 +1666,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    std::pair<iterator,iterator> equal_range(const_reference value)
-   {  return table_type::equal_range(value);  }
+   {  return table_.equal_range(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1718,7 +1691,7 @@ class unordered_multiset_impl
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    std::pair<iterator,iterator> equal_range
       (const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func)
-   {  return table_type::equal_range(key, hash_func, equal_func);  }
+   {  return table_.equal_range(key, hash_func, equal_func);  }
 
    //! <b>Effects</b>: Returns a range containing all elements with values equivalent
    //!   to value. Returns std::make_pair(this->end(), this->end()) if no such
@@ -1729,7 +1702,7 @@ class unordered_multiset_impl
    //! <b>Throws</b>: If the internal hasher or the equality functor throws.
    std::pair<const_iterator, const_iterator>
       equal_range(const_reference value) const
-   {  return table_type::equal_range(value);  }
+   {  return table_.equal_range(value);  }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1754,7 +1727,7 @@ class unordered_multiset_impl
    template<class KeyType, class KeyHasher, class KeyValueEqual>
    std::pair<const_iterator, const_iterator>
       equal_range(const KeyType& key, KeyHasher hash_func, KeyValueEqual equal_func) const
-   {  return table_type::equal_range(key, hash_func, equal_func);  }
+   {  return table_.equal_range(key, hash_func, equal_func);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_multiset of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -1766,7 +1739,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the hash function throws.
    iterator iterator_to(reference value)
-   {  return table_type::iterator_to(value);  }
+   {  return table_.iterator_to(value);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_multiset of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -1778,7 +1751,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the hash function throws.
    const_iterator iterator_to(const_reference value) const
-   {  return table_type::iterator_to(value);  }
+   {  return table_.iterator_to(value);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_set of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -1820,7 +1793,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    local_iterator local_iterator_to(reference value)
-   {  return table_type::local_iterator_to(value);  }
+   {  return table_.local_iterator_to(value);  }
 
    //! <b>Requires</b>: value must be an lvalue and shall be in a unordered_set of
    //!   appropriate type. Otherwise the behavior is undefined.
@@ -1832,7 +1805,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    const_local_iterator local_iterator_to(const_reference value) const
-   {  return table_type::local_iterator_to(value);  }
+   {  return table_.local_iterator_to(value);  }
 
    //! <b>Effects</b>: Returns the number of buckets passed in the constructor
    //!   or the last rehash function.
@@ -1841,7 +1814,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    size_type bucket_count() const
-   {  return table_type::bucket_count();   }
+   {  return table_.bucket_count();   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1851,7 +1824,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    size_type bucket_size(size_type n) const
-   {  return table_type::bucket_size(n);   }
+   {  return table_.bucket_size(n);   }
 
    //! <b>Effects</b>: Returns the index of the bucket in which elements
    //!   with keys equivalent to k would be found, if any such element existed.
@@ -1862,7 +1835,7 @@ class unordered_multiset_impl
    //!
    //! <b>Note</b>: the return value is in the range [0, this->bucket_count()).
    size_type bucket(const value_type& k) const
-   {  return table_type::bucket(k);   }
+   {  return table_.bucket(k);   }
 
    //! <b>Requires</b>: "hash_func" must be a hash function that induces
    //!   the same hash values as the stored hasher. The difference is that
@@ -1878,7 +1851,7 @@ class unordered_multiset_impl
    //! <b>Note</b>: the return value is in the range [0, this->bucket_count()).
    template<class KeyType, class KeyHasher>
    size_type bucket(const KeyType& k, const KeyHasher &hash_func) const
-   {  return table_type::bucket(k, hash_func);   }
+   {  return table_.bucket(k, hash_func);   }
 
    //! <b>Effects</b>: Returns the bucket array pointer passed in the constructor
    //!   or the last rehash function.
@@ -1887,7 +1860,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: Nothing.
    bucket_ptr bucket_pointer() const
-   {  return table_type::bucket_pointer();   }
+   {  return table_.bucket_pointer();   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1901,7 +1874,7 @@ class unordered_multiset_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    local_iterator begin(size_type n)
-   {  return table_type::begin(n);   }
+   {  return table_.begin(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1915,7 +1888,7 @@ class unordered_multiset_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator begin(size_type n) const
-   {  return table_type::begin(n);   }
+   {  return table_.begin(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1929,7 +1902,7 @@ class unordered_multiset_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator cbegin(size_type n) const
-   {  return table_type::cbegin(n);   }
+   {  return table_.cbegin(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1943,7 +1916,7 @@ class unordered_multiset_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    local_iterator end(size_type n)
-   {  return table_type::end(n);   }
+   {  return table_.end(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1957,7 +1930,7 @@ class unordered_multiset_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator end(size_type n) const
-   {  return table_type::end(n);   }
+   {  return table_.end(n);   }
 
    //! <b>Requires</b>: n is in the range [0, this->bucket_count()).
    //!
@@ -1971,7 +1944,7 @@ class unordered_multiset_impl
    //! <b>Note</b>:  [this->begin(n), this->end(n)) is a valid range
    //!   containing all of the elements in the nth bucket.
    const_local_iterator cend(size_type n) const
-   {  return table_type::cend(n);   }
+   {  return table_.cend(n);   }
 
    //! <b>Requires</b>: new_buckets must be a pointer to a new bucket array
    //!   or the same as the old bucket array. new_size is the length of the
@@ -1987,7 +1960,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>: If the hasher functor throws.
    void rehash(const bucket_traits &new_bucket_traits)
-   {  table_type::rehash(new_bucket_traits); }
+   {  table_.rehash(new_bucket_traits); }
 
    //! <b>Requires</b>:
    //!
@@ -1999,11 +1972,11 @@ class unordered_multiset_impl
    //!
    //! <b>Note</b>: this method is only available if incremental<true> option is activated.
    bool incremental_rehash(bool grow = true)
-   {  return table_type::incremental_rehash(grow);  }
+   {  return table_.incremental_rehash(grow);  }
 
    //! <b>Note</b>: this method is only available if incremental<true> option is activated.
    bool incremental_rehash(const bucket_traits &new_bucket_traits)
-   {  return table_type::incremental_rehash(new_bucket_traits);  }
+   {  return table_.incremental_rehash(new_bucket_traits);  }
 
    //! <b>Requires</b>:
    //!
@@ -2013,7 +1986,7 @@ class unordered_multiset_impl
    //!
    //! <b>Throws</b>:
    size_type split_count() const
-   {  return table_type::split_count(); }
+   {  return table_.split_count(); }
 
    //! <b>Effects</b>: Returns the nearest new bucket count optimized for
    //!   the container that is bigger than n. This suggestion can be used
@@ -2038,8 +2011,6 @@ class unordered_multiset_impl
    //! <b>Throws</b>: Nothing.
    static size_type suggested_lower_bucket_count(size_type n)
    {  return table_type::suggested_lower_bucket_count(n);  }
-
-   #endif   //   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
 };
 
 //! Helper metafunction to define an \c unordered_multiset that yields to the same type when the
@@ -2047,45 +2018,26 @@ class unordered_multiset_impl
 #if defined(BOOST_INTRUSIVE_DOXYGEN_INVOKED) || defined(BOOST_INTRUSIVE_VARIADIC_TEMPLATES)
 template<class T, class ...Options>
 #else
-template<class T, class O1 = void, class O2 = void
-                , class O3 = void, class O4 = void
-                , class O5 = void, class O6 = void
-                , class O7 = void, class O8 = void
-                , class O9 = void, class O10= void
+template<class T, class O1 = none, class O2 = none
+                , class O3 = none, class O4 = none
+                , class O5 = none, class O6 = none
+                , class O7 = none, class O8 = none
+                , class O9 = none, class O10= none
                 >
 #endif
 struct make_unordered_multiset
 {
    /// @cond
-   typedef typename pack_options
-      < hashtable_defaults,
-         #if !defined(BOOST_INTRUSIVE_VARIADIC_TEMPLATES)
-         O1, O2, O3, O4, O5, O6, O7, O8, O9, O10
-         #else
-         Options...
-         #endif
-      >::type packed_options;
-
-   typedef typename detail::get_value_traits
-      <T, typename packed_options::proto_value_traits>::type value_traits;
-
-   typedef typename make_bucket_traits
-            <T, true, packed_options>::type bucket_traits;
-
    typedef unordered_multiset_impl
-      < value_traits
-      , typename packed_options::hash
-      , typename packed_options::equal
-      , typename packed_options::size_type
-      , bucket_traits
-      ,  (std::size_t(false)*hash_bool_flags::unique_keys_pos)
-      |  (std::size_t(packed_options::constant_time_size)*hash_bool_flags::constant_time_size_pos)
-      |  (std::size_t(packed_options::power_2_buckets)*hash_bool_flags::power_2_buckets_pos)
-      |  (std::size_t(packed_options::cache_begin)*hash_bool_flags::cache_begin_pos)
-      |  (std::size_t(packed_options::compare_hash)*hash_bool_flags::compare_hash_pos)
-      |  (std::size_t(packed_options::incremental)*hash_bool_flags::incremental_pos)
+      <  typename make_hashtable_opt
+            <T, false,
+               #if !defined(BOOST_INTRUSIVE_VARIADIC_TEMPLATES)
+               O1, O2, O3, O4, O5, O6, O7, O8, O9, O10
+               #else
+               Options...
+               #endif
+            >::type
       > implementation_defined;
-
    /// @endcond
    typedef implementation_defined type;
 };
@@ -2128,10 +2080,10 @@ class unordered_multiset
    typedef typename Base::hasher             hasher;
    typedef typename Base::key_equal          key_equal;
 
-   explicit unordered_multiset( const bucket_traits &b_traits
-                              , const hasher & hash_func = hasher()
-                              , const key_equal &equal_func = key_equal()
-                              , const value_traits &v_traits = value_traits())
+   unordered_multiset( const bucket_traits &b_traits
+                     , const hasher & hash_func = hasher()
+                     , const key_equal &equal_func = key_equal()
+                     , const value_traits &v_traits = value_traits())
       :  Base(b_traits, hash_func, equal_func, v_traits)
    {}
 
@@ -2150,7 +2102,7 @@ class unordered_multiset
    {}
 
    unordered_multiset& operator=(BOOST_RV_REF(unordered_multiset) x)
-   {  return static_cast<unordered_multiset&>(this->Base::operator=(::boost::move(static_cast<Base&>(x))));  }
+   {  this->Base::operator=(::boost::move(static_cast<Base&>(x))); return *this;  }
 };
 
 #endif

@@ -46,14 +46,11 @@ template
     typename GeometryOut,
     typename Geometry1,
     typename Geometry2,
-    typename RobustPolicy,
     typename OutputIterator,
     typename Strategy
 >
 inline OutputIterator sym_difference_insert(Geometry1 const& geometry1,
-            Geometry2 const& geometry2,
-            RobustPolicy const& robust_policy,
-            OutputIterator out,
+            Geometry2 const& geometry2, OutputIterator out,
             Strategy const& strategy)
 {
     concept::check<Geometry1 const>();
@@ -62,21 +59,36 @@ inline OutputIterator sym_difference_insert(Geometry1 const& geometry1,
 
     out = geometry::dispatch::intersection_insert
         <
+            typename geometry::tag<Geometry1>::type,
+            typename geometry::tag<Geometry2>::type,
+            typename geometry::tag<GeometryOut>::type,
+            geometry::is_areal<Geometry1>::value,
+            geometry::is_areal<Geometry2>::value,
+            geometry::is_areal<GeometryOut>::value,
             Geometry1, Geometry2,
-            GeometryOut,
-            overlay_difference,
             geometry::detail::overlay::do_reverse<geometry::point_order<Geometry1>::value>::value,
-            geometry::detail::overlay::do_reverse<geometry::point_order<Geometry2>::value, true>::value
-        >::apply(geometry1, geometry2, robust_policy, out, strategy);
+            geometry::detail::overlay::do_reverse<geometry::point_order<Geometry2>::value, true>::value,
+            geometry::detail::overlay::do_reverse<geometry::point_order<GeometryOut>::value>::value,
+            OutputIterator, GeometryOut,
+            overlay_difference,
+            Strategy
+        >::apply(geometry1, geometry2, out, strategy);
     out = geometry::dispatch::intersection_insert
         <
+            typename geometry::tag<Geometry2>::type,
+            typename geometry::tag<Geometry1>::type,
+            typename geometry::tag<GeometryOut>::type,
+            geometry::is_areal<Geometry2>::value,
+            geometry::is_areal<Geometry1>::value,
+            geometry::is_areal<GeometryOut>::value,
             Geometry2, Geometry1,
-            GeometryOut,
-            overlay_difference,
             geometry::detail::overlay::do_reverse<geometry::point_order<Geometry2>::value>::value,
             geometry::detail::overlay::do_reverse<geometry::point_order<Geometry1>::value, true>::value,
-            geometry::detail::overlay::do_reverse<geometry::point_order<GeometryOut>::value>::value
-        >::apply(geometry2, geometry1, robust_policy, out, strategy);
+            geometry::detail::overlay::do_reverse<geometry::point_order<GeometryOut>::value>::value,
+            OutputIterator, GeometryOut,
+            overlay_difference,
+            Strategy
+        >::apply(geometry2, geometry1, out, strategy);
     return out;
 }
 
@@ -100,12 +112,10 @@ template
     typename GeometryOut,
     typename Geometry1,
     typename Geometry2,
-    typename RobustPolicy,
     typename OutputIterator
 >
 inline OutputIterator sym_difference_insert(Geometry1 const& geometry1,
-            Geometry2 const& geometry2,
-            RobustPolicy const& robust_policy, OutputIterator out)
+            Geometry2 const& geometry2, OutputIterator out)
 {
     concept::check<Geometry1 const>();
     concept::check<Geometry2 const>();
@@ -116,11 +126,10 @@ inline OutputIterator sym_difference_insert(Geometry1 const& geometry1,
             typename cs_tag<GeometryOut>::type,
             Geometry1,
             Geometry2,
-            typename geometry::point_type<GeometryOut>::type,
-            RobustPolicy
+            typename geometry::point_type<GeometryOut>::type
         > strategy_type;
 
-    return sym_difference_insert<GeometryOut>(geometry1, geometry2, robust_policy, out, strategy_type());
+    return sym_difference_insert<GeometryOut>(geometry1, geometry2, out, strategy_type());
 }
 
 }} // namespace detail::sym_difference
@@ -156,17 +165,8 @@ inline void sym_difference(Geometry1 const& geometry1,
     typedef typename boost::range_value<Collection>::type geometry_out;
     concept::check<geometry_out>();
 
-    typedef typename geometry::rescale_overlay_policy_type
-        <
-            Geometry1,
-            Geometry2
-        >::type rescale_policy_type;
-
-    rescale_policy_type robust_policy
-            = geometry::get_rescale_policy<rescale_policy_type>(geometry1, geometry2);
-
     detail::sym_difference::sym_difference_insert<geometry_out>(
-            geometry1, geometry2, robust_policy,
+            geometry1, geometry2,
             std::back_inserter(output_collection));
 }
 

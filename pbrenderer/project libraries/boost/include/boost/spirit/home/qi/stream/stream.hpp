@@ -58,28 +58,23 @@ namespace boost { namespace spirit { namespace qi
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
           , Context& /*context*/, Skipper const& skipper
-          , Attribute& attr_) const
+          , Attribute& attr) const
         {
             typedef qi::detail::iterator_source<Iterator> source_device;
             typedef boost::iostreams::stream<source_device> instream;
 
             qi::skip_over(first, last, skipper);
 
-            instream in(first, last);           // copies 'first'
-            in >> attr_;                        // use existing operator>>()
+            instream in(first, last);         // copies 'first'
+            in >> attr;                       // use existing operator>>()
 
             // advance the iterator if everything is ok
-            if (in) {
-                if (!in.eof()) {
-                    std::streamsize pos = in.tellg();
-                    std::advance(first, pos);
-                } else {
-                    first = last;
-                }
-                return true;
+            if (in.good()) {
+                std::streamsize pos = in.tellg();
+                std::advance(first, pos);
             }
 
-            return false;
+            return in.good() || in.eof();
         }
 
         template <typename Context>

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,15 +11,11 @@
 #ifndef BOOST_INTERPROCESS_POSIX_SEMAPHORE_WRAPPER_HPP
 #define BOOST_INTERPROCESS_POSIX_SEMAPHORE_WRAPPER_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/interprocess/detail/posix_time_types_wrk.hpp>
 #include <boost/interprocess/exceptions.hpp>
 #include <boost/interprocess/creation_tags.hpp>
 #include <boost/interprocess/detail/os_file_functions.hpp>
-#include <boost/interprocess/detail/shared_dir_helpers.hpp>
+#include <boost/interprocess/detail/tmp_dir_helpers.hpp>
 #include <boost/interprocess/permissions.hpp>
 
 #include <fcntl.h>      //O_CREAT, O_*...
@@ -39,8 +35,6 @@
 #include <boost/interprocess/sync/posix/ptime_to_timespec.hpp>
 #else
 #include <boost/interprocess/detail/os_thread_functions.hpp>
-#include <boost/interprocess/sync/detail/locks.hpp>
-#include <boost/interprocess/sync/detail/common_algorithms.hpp>
 #endif
 
 namespace boost {
@@ -55,7 +49,7 @@ inline bool semaphore_open
    #ifndef BOOST_INTERPROCESS_FILESYSTEM_BASED_POSIX_SEMAPHORES
    add_leading_slash(origname, name);
    #else
-   create_shared_dir_cleaning_old_and_get_filepath(origname, name);
+   create_tmp_and_clean_old_and_get_filename(origname, name);
    #endif
 
    //Create new mapping
@@ -109,7 +103,7 @@ inline bool semaphore_open
 inline void semaphore_close(sem_t *handle)
 {
    int ret = sem_close(handle);
-   if(ret != 0){
+   if(ret != 0){ 
       BOOST_ASSERT(0);
    }
 }
@@ -121,7 +115,7 @@ inline bool semaphore_unlink(const char *semname)
       #ifndef BOOST_INTERPROCESS_FILESYSTEM_BASED_POSIX_SEMAPHORES
       add_leading_slash(semname, sem_str);
       #else
-      shared_filepath(semname, sem_str);
+      tmp_filename(semname, sem_str);
       #endif
       return 0 == sem_unlink(sem_str.c_str());
    }
@@ -137,15 +131,14 @@ inline void semaphore_init(sem_t *handle, unsigned int initialCount)
    //sem_init call is not defined, but -1 is returned on failure.
    //In the future, a successful call might be required to return 0.
    if(ret == -1){
-      error_info err = system_error_code();
-      throw interprocess_exception(err);
+      throw interprocess_exception(system_error_code());
    }
 }
 
 inline void semaphore_destroy(sem_t *handle)
 {
    int ret = sem_destroy(handle);
-   if(ret != 0){
+   if(ret != 0){ 
       BOOST_ASSERT(0);
    }
 }
@@ -154,8 +147,7 @@ inline void semaphore_post(sem_t *handle)
 {
    int ret = sem_post(handle);
    if(ret != 0){
-      error_info err = system_error_code();
-      throw interprocess_exception(err);
+      throw interprocess_exception(system_error_code());
    }
 }
 
@@ -163,8 +155,7 @@ inline void semaphore_wait(sem_t *handle)
 {
    int ret = sem_wait(handle);
    if(ret != 0){
-      error_info err = system_error_code();
-      throw interprocess_exception(err);
+      throw interprocess_exception(system_error_code());
    }
 }
 
@@ -176,39 +167,17 @@ inline bool semaphore_try_wait(sem_t *handle)
    if(system_error_code() == EAGAIN){
       return false;
    }
-   error_info err = system_error_code();
-   throw interprocess_exception(err);
+   throw interprocess_exception(system_error_code());
+   return false;
 }
-
-#ifndef BOOST_INTERPROCESS_POSIX_TIMEOUTS
-
-struct semaphore_wrapper_try_wrapper
-{
-   explicit semaphore_wrapper_try_wrapper(sem_t *handle)
-      : m_handle(handle)
-   {}
-
-   void wait()
-   {  semaphore_wait(m_handle);  }
-
-   bool try_wait()
-   {  return semaphore_try_wait(m_handle);  }
-
-   private:
-   sem_t *m_handle;
-};
-
-#endif
 
 inline bool semaphore_timed_wait(sem_t *handle, const boost::posix_time::ptime &abs_time)
 {
-   #ifdef BOOST_INTERPROCESS_POSIX_TIMEOUTS
-   //Posix does not support infinity absolute time so handle it here
    if(abs_time == boost::posix_time::pos_infin){
       semaphore_wait(handle);
       return true;
    }
-
+   #ifdef BOOST_INTERPROCESS_POSIX_TIMEOUTS
    timespec tspec = ptime_to_timespec(abs_time);
    for (;;){
       int res = sem_timedwait(handle, &tspec);
@@ -221,16 +190,17 @@ inline bool semaphore_timed_wait(sem_t *handle, const boost::posix_time::ptime &
       if(system_error_code() == ETIMEDOUT){
          return false;
       }
-      error_info err = system_error_code();
-      throw interprocess_exception(err);
+      throw interprocess_exception(system_error_code());
    }
    return false;
    #else //#ifdef BOOST_INTERPROCESS_POSIX_TIMEOUTS
-
-   semaphore_wrapper_try_wrapper swtw(handle);
-   ipcdetail::lock_to_wait<semaphore_wrapper_try_wrapper> lw(swtw);
-   return ipcdetail::try_based_timed_lock(lw, abs_time);
-
+   boost::posix_time::ptime now;
+   do{
+      if(semaphore_try_wait(handle))
+         return true;
+      thread_yield();
+   }while((now = microsec_clock::universal_time()) < abs_time);
+   return false;
    #endif   //#ifdef BOOST_INTERPROCESS_POSIX_TIMEOUTS
 }
 

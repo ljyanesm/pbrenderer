@@ -7,10 +7,7 @@
 #if !defined(FUSION_REVERSE_07212005_1230)
 #define FUSION_REVERSE_07212005_1230
 
-#include <boost/fusion/support/config.hpp>
 #include <boost/fusion/view/reverse_view/reverse_view.hpp>
-#include <boost/fusion/support/is_sequence.hpp>
-#include <boost/utility/enable_if.hpp>
 
 namespace boost { namespace fusion
 {
@@ -24,13 +21,7 @@ namespace boost { namespace fusion
     }
 
     template <typename Sequence>
-    BOOST_FUSION_GPU_ENABLED
-    inline 
-    typename
-        enable_if<
-            traits::is_sequence<Sequence>
-          , reverse_view<Sequence const>
-        >::type
+    inline reverse_view<Sequence const>
     reverse(Sequence const& view)
     {
         return reverse_view<Sequence const>(view);

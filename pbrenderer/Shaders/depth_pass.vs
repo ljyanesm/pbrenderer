@@ -12,7 +12,6 @@ layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec3 Color;
 
 out vec3 PtNormal;
-out vec3 fs_Normal;
 out vec3 fs_PosEye;
 out vec4 fs_Position;
 out vec4 fs_Color;
@@ -24,7 +23,6 @@ void main(void) {
 	gl_PointSize = 2 * pointRadius * (pointScale/dist);
 	
 	PtNormal = u_InvTrans * Normal;
-	fs_Normal = Normal;
 	fs_PosEye = posEye;
 	fs_Position = pos;
 	fs_Color = vec4(Color.xyz,1.0f);

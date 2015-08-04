@@ -7,10 +7,6 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 #include <cuda_gl_interop.h>
-
-#include <thrust/device_vector.h>
-#include <thrust/transform.h>
-
 #include "glm/glm.hpp"
 #include "defines.h"
 
@@ -44,8 +40,6 @@ public:
 
 	void	dump();
 
-	thrust::device_vector<uint> *getModelVoxels();
-
 	void	resetPositions();
 	void	toggleUpdatePositions();
 	void	toggleCollisionCheckType();
@@ -57,6 +51,7 @@ public:
 	float3 calculateOvershoot(float3 scpPosition);
 	const std::string getMethodString() const;
 private:
+
 	cudaGraphicsResource* m_vboRes;
 
 	float		neighborhoodRadius;		// Local neighborhood radius
@@ -80,8 +75,6 @@ private:
 
 	uint*		d_CollectionCellStart;
 	uint*		d_CollectionVertices;
-
-	thrust::device_vector<uint> *voxelDensity;
 
 	uint		m_srcVBO;
 	size_t		m_numVertices;

@@ -64,13 +64,13 @@
     <Filter Include="Collision Response">
       <UniqueIdentifier>{13ad8baa-cf4c-4fd8-89c1-91d7d6d17e89}</UniqueIdentifier>
     </Filter>
-    <Filter Include="TextRenderer">
-      <UniqueIdentifier>{61b3889c-0195-4c4d-aa89-b96dd5e7d0f3}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="LYOctree.cpp">
+      <Filter>Space Partitioning\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LYSpatialHash.cpp">
       <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
     <ClCompile Include="LYKeyboardDevice.cpp">
@@ -244,7 +244,8 @@
     <CudaCompile Include="LYCudaHelper.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="LYSpatialHash.cu" />
-    <CudaCompile Include="LYSpatialHashExtern.cu" />
+    <CudaCompile Include="LYSpatialHash.cu">
+      <Filter>Space Partitioning\Source</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

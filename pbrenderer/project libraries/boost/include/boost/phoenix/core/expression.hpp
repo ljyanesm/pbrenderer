@@ -103,9 +103,8 @@ namespace boost { namespace phoenix
             proto_grammar;
         
         static type make(BOOST_PP_REPEAT(BOOST_PHOENIX_ITERATION, M1, _))
-      { //?? actor or Actor??
-        //Actor<base_type> const e =
-                actor<base_type> const e =
+        {
+            actor<base_type> const e =
                 {
                     proto::make_expr<
                         Tag
@@ -117,7 +116,7 @@ namespace boost { namespace phoenix
 
         template<typename Expr, typename State, typename Data>
         struct impl
-          : proto::pass_through<expr_ext>::template impl<Expr, State, Data>
+          : proto::detail::pass_through_impl<expr_ext, Expr, State, Data>
         {};
         
         typedef Tag proto_tag;

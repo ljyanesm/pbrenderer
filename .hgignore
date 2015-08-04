@@ -19,10 +19,3 @@ pbrenderer/x64/Debug sm20/*
 pbrenderer/x64/Release sm20/*
 x64/Debug sm20/*
 x64/Release sm20/*
-Release sm3.5 dp/*
-pbrenderer/Debug sm20/*
-Release sm20/*
-Debug sm20/*
-desktop.ini
-*.*log
-Thumbs.db

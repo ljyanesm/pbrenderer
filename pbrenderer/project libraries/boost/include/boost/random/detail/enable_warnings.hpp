@@ -16,7 +16,3 @@
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
-
-#if defined(BOOST_GCC) && BOOST_GCC >= 40600
-#pragma GCC diagnostic pop
-#endif

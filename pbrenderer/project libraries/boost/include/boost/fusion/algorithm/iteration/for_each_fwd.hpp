@@ -7,10 +7,6 @@
 #if !defined(BOOST_FUSION_FOR_EACH_FWD_HPP_INCLUDED)
 #define BOOST_FUSION_FOR_EACH_FWD_HPP_INCLUDED
 
-#include <boost/fusion/support/config.hpp>
-#include <boost/fusion/support/is_sequence.hpp>
-#include <boost/utility/enable_if.hpp>
-
 namespace boost { namespace fusion
 {
     namespace result_of
@@ -20,23 +16,11 @@ namespace boost { namespace fusion
     }
 
     template <typename Sequence, typename F>
-    BOOST_FUSION_GPU_ENABLED
-    inline
-    typename
-        enable_if<
-            traits::is_sequence<Sequence>
-          , void
-        >::type
+    void
     for_each(Sequence& seq, F const& f);
 
     template <typename Sequence, typename F>
-    BOOST_FUSION_GPU_ENABLED
-    inline
-    typename
-        enable_if<
-            traits::is_sequence<Sequence>
-          , void
-        >::type
+    void
     for_each(Sequence const& seq, F const& f);
 }}
 

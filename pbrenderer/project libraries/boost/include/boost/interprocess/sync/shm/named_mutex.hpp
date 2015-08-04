@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,7 +11,7 @@
 #ifndef BOOST_INTERPROCESS_SHM_NAMED_MUTEX_HPP
 #define BOOST_INTERPROCESS_SHM_NAMED_MUTEX_HPP
 
-#if defined(_MSC_VER)
+#if (defined _MSC_VER) && (_MSC_VER >= 1200)
 #  pragma once
 #endif
 
@@ -42,14 +42,14 @@ class named_condition;
 //!each process should have it's own named mutex.
 class shm_named_mutex
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
 
    //Non-copyable
    shm_named_mutex();
    shm_named_mutex(const shm_named_mutex &);
    shm_named_mutex &operator=(const shm_named_mutex &);
    friend class named_condition;
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 
    public:
    //!Creates a global interprocess_mutex with a name.
@@ -99,21 +99,20 @@ class shm_named_mutex
    //!Returns false on error. Never throws.
    static bool remove(const char *name);
 
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
-   typedef interprocess_mutex internal_mutex_type;
-   interprocess_mutex &internal_mutex()
-   {  return *static_cast<interprocess_mutex*>(m_shmem.get_user_address()); }
+   /// @cond
+   interprocess_mutex *mutex() const
+   {  return static_cast<interprocess_mutex*>(m_shmem.get_user_address()); }
 
    private:
    friend class ipcdetail::interprocess_tester;
    void dont_close_on_destruction();
-   typedef ipcdetail::managed_open_or_create_impl<shared_memory_object, 0, true, false> open_create_impl_t;
-   open_create_impl_t m_shmem;
+
+   ipcdetail::managed_open_or_create_impl<shared_memory_object> m_shmem;
    typedef ipcdetail::named_creation_functor<interprocess_mutex> construct_func_t;
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 };
 
-#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+/// @cond
 
 inline void shm_named_mutex::dont_close_on_destruction()
 {  ipcdetail::interprocess_tester::dont_close_on_destruction(m_shmem);  }
@@ -125,7 +124,8 @@ inline shm_named_mutex::shm_named_mutex(create_only_t, const char *name, const p
    :  m_shmem  (create_only
                ,name
                ,sizeof(interprocess_mutex) +
-                  open_create_impl_t::ManagedOpenOrCreateUserOffset
+                  ipcdetail::managed_open_or_create_impl<shared_memory_object>::
+                     ManagedOpenOrCreateUserOffset
                ,read_write
                ,0
                ,construct_func_t(ipcdetail::DoCreate)
@@ -136,7 +136,8 @@ inline shm_named_mutex::shm_named_mutex(open_or_create_t, const char *name, cons
    :  m_shmem  (open_or_create
                ,name
                ,sizeof(interprocess_mutex) +
-                  open_create_impl_t::ManagedOpenOrCreateUserOffset
+                  ipcdetail::managed_open_or_create_impl<shared_memory_object>::
+                     ManagedOpenOrCreateUserOffset
                ,read_write
                ,0
                ,construct_func_t(ipcdetail::DoOpenOrCreate)
@@ -152,21 +153,27 @@ inline shm_named_mutex::shm_named_mutex(open_only_t, const char *name)
 {}
 
 inline void shm_named_mutex::lock()
-{  this->internal_mutex().lock();  }
+{  this->mutex()->lock();  }
 
 inline void shm_named_mutex::unlock()
-{  this->internal_mutex().unlock();  }
+{  this->mutex()->unlock();  }
 
 inline bool shm_named_mutex::try_lock()
-{  return this->internal_mutex().try_lock();  }
+{  return this->mutex()->try_lock();  }
 
 inline bool shm_named_mutex::timed_lock(const boost::posix_time::ptime &abs_time)
-{  return this->internal_mutex().timed_lock(abs_time);   }
+{
+   if(abs_time == boost::posix_time::pos_infin){
+      this->lock();
+      return true;
+   }
+   return this->mutex()->timed_lock(abs_time);
+}
 
 inline bool shm_named_mutex::remove(const char *name)
 {  return shared_memory_object::remove(name); }
 
-#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+/// @endcond
 
 }  //namespace ipcdetail {
 }  //namespace interprocess {

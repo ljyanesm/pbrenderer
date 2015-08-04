@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2006-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2006. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,15 +11,11 @@
 #ifndef BOOST_INTERPROCESS_DETAIL_FILE_WRAPPER_HPP
 #define BOOST_INTERPROCESS_DETAIL_FILE_WRAPPER_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
 #include <boost/interprocess/detail/os_file_functions.hpp>
 #include <boost/interprocess/creation_tags.hpp>
-#include <boost/move/utility_core.hpp>
+#include <boost/move/move.hpp>
 #include <boost/interprocess/creation_tags.hpp>
 
 namespace boost {
@@ -28,9 +24,9 @@ namespace ipcdetail{
 
 class file_wrapper
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    BOOST_MOVABLE_BUT_NOT_COPYABLE(file_wrapper)
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
    public:
 
    //!Default constructor.
@@ -64,10 +60,10 @@ class file_wrapper
    //!After the call, "moved" does not represent any file.
    //!Does not throw
    file_wrapper &operator=(BOOST_RV_REF(file_wrapper) moved)
-   {
+   { 
       file_wrapper tmp(boost::move(moved));
       this->swap(tmp);
-      return *this;
+      return *this; 
    }
 
    //!Swaps to file_wrappers.
@@ -77,7 +73,7 @@ class file_wrapper
    //!Erases a file from the system.
    //!Returns false on error. Never throws
    static bool remove(const char *name);
-
+  
    //!Sets the size of the file
    void truncate(offset_t length);
 
@@ -126,10 +122,10 @@ inline bool file_wrapper::get_size(offset_t &size) const
 {  return get_file_size((file_handle_t)m_handle, size);  }
 
 inline void file_wrapper::swap(file_wrapper &other)
-{
+{ 
    std::swap(m_handle,  other.m_handle);
    std::swap(m_mode,    other.m_mode);
-   m_filename.swap(other.m_filename);
+   m_filename.swap(other.m_filename);  
 }
 
 inline mapping_handle_t file_wrapper::get_mapping_handle() const
@@ -171,8 +167,7 @@ inline bool file_wrapper::priv_open_or_create
 
    //Check for error
    if(m_handle == invalid_file()){
-      error_info err = system_error_code();
-      throw interprocess_exception(err);
+      throw interprocess_exception(error_info(system_error_code()));
    }
 
    m_mode = mode;

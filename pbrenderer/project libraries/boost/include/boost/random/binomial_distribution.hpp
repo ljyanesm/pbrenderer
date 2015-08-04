@@ -378,19 +378,7 @@ private:
         while(u > r) {
             u = u - r;
             ++x;
-            RealType r1 = ((a/x) - s) * r;
-            // If r gets too small then the round-off error
-            // becomes a problem.  At this point, p(i) is
-            // decreasing exponentially, so if we just call
-            // it 0, it's close enough.  Note that the
-            // minimum value of q_n is about 1e-7, so we
-            // may need to be a little careful to make sure that
-            // we don't terminate the first time through the loop
-            // for float.  (Hence the test that r is decreasing)
-            if(r1 < std::numeric_limits<RealType>::epsilon() && r1 < r) {
-                break;
-            }
-            r = r1;
+            r = ((a/x) - s) * r;
         }
         return x;
     }

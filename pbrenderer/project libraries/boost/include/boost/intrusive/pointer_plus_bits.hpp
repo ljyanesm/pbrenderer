@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga  2007-2013
+// (C) Copyright Ion Gaztanaga  2007-2009
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
@@ -13,12 +13,6 @@
 #ifndef BOOST_INTRUSIVE_POINTER_PLUS_BITS_HPP
 #define BOOST_INTRUSIVE_POINTER_PLUS_BITS_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
-#include <boost/intrusive/detail/config_begin.hpp>
-#include <boost/intrusive/intrusive_fwd.hpp>
 #include <boost/intrusive/detail/mpl.hpp> //ls_zeros
 #include <boost/intrusive/detail/assert.hpp> //BOOST_INTRUSIVE_INVARIANT_ASSERT
 
@@ -53,11 +47,7 @@ struct max_pointer_plus_bits<void*, Alignment>
 //!has_pointer_plus_bits<>::value is non-zero can make use of these
 //!operations to embed the bits in the pointer.
 template<class Pointer, std::size_t NumBits>
-struct pointer_plus_bits
-   #ifdef BOOST_INTRUSIVE_DOXYGEN_INVOKED
-   {}
-   #endif
-;
+struct pointer_plus_bits;
 
 //!This is the specialization to embed extra bits of information
 //!in a raw pointer. The extra bits are stored in the lower bits of the pointer.
@@ -88,7 +78,5 @@ struct pointer_plus_bits<T*, NumBits>
 
 } //namespace intrusive
 } //namespace boost
-
-#include <boost/intrusive/detail/config_end.hpp>
 
 #endif //BOOST_INTRUSIVE_POINTER_PLUS_BITS_HPP

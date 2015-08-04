@@ -14,7 +14,7 @@ class LYKeyboardDevice :
 {
 public:
 	LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh);
-	virtual ~LYKeyboardDevice(void);
+	~LYKeyboardDevice(void);
 
 	bool isOk() const;
 };

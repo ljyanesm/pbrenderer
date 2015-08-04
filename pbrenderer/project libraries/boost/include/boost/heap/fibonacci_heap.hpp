@@ -10,7 +10,6 @@
 #define BOOST_HEAP_FIBONACCI_HEAP_HPP
 
 #include <algorithm>
-#include <utility>
 #include <vector>
 
 #include <boost/array.hpp>
@@ -20,11 +19,6 @@
 #include <boost/heap/detail/heap_node.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
-
-#ifdef BOOST_HAS_PRAGMA_ONCE
-#pragma once
-#endif
-
 
 #ifndef BOOST_DOXYGEN_INVOKED
 #ifdef BOOST_HEAP_SANITYCHECKS
@@ -68,28 +62,28 @@ struct make_fibonacci_heap_base
             base_type(arg)
         {}
 
-        type(type const & rhs):
-            base_type(static_cast<base_type const &>(rhs)),
-            allocator_type(static_cast<allocator_type const &>(rhs))
-        {}
-
-        type & operator=(type const & rhs)
-        {
-            base_type::operator=(static_cast<base_type const &>(rhs));
-            allocator_type::operator=(static_cast<allocator_type const &>(rhs));
-            return *this;
-        }
-
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifdef BOOST_HAS_RVALUE_REFS
         type(type && rhs):
             base_type(std::move(static_cast<base_type&>(rhs))),
             allocator_type(std::move(static_cast<allocator_type&>(rhs)))
+        {}
+
+        type(type & rhs):
+            base_type(static_cast<base_type&>(rhs)),
+            allocator_type(static_cast<allocator_type&>(rhs))
         {}
 
         type & operator=(type && rhs)
         {
             base_type::operator=(std::move(static_cast<base_type&>(rhs)));
             allocator_type::operator=(std::move(static_cast<allocator_type&>(rhs)));
+            return *this;
+        }
+
+        type & operator=(type const & rhs)
+        {
+            base_type::operator=(static_cast<base_type const &>(rhs));
+            allocator_type::operator=(static_cast<allocator_type const &>(rhs));
             return *this;
         }
 #endif
@@ -234,7 +228,7 @@ public:
         size_holder::set_size(rhs.size());
     }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifdef BOOST_HAS_RVALUE_REFS
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue &&)
     fibonacci_heap(fibonacci_heap && rhs):
         super_t(std::move(rhs)), top_element(rhs.top_element)
@@ -364,7 +358,7 @@ public:
         return handle_type(n);
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_HAS_RVALUE_REFS) && !defined(BOOST_NO_VARIADIC_TEMPLATES)
     /**
      * \b Effects: Adds a new element to the priority queue. The element is directly constructed in-place. Returns handle to element.
      *
@@ -402,7 +396,16 @@ public:
         node_pointer element = top_element;
         roots.erase(node_list_type::s_iterator_to(*element));
 
-        finish_erase_or_pop(element);
+        add_children_to_root(element);
+
+        element->~node();
+        allocator_type::deallocate(element, 1);
+
+        size_holder::decrement();
+        if (!empty())
+            consolidate();
+        else
+            top_element = NULL;
     }
 
     /**
@@ -422,7 +425,7 @@ public:
     /** \copydoc boost::heap::fibonacci_heap::update(handle_type, const_reference)
      *
      * \b Rationale: The lazy update function is a modification of the traditional update, that just invalidates
-     *               the iterator to the object referred to by the handle.
+     *               the iterator the the object referred to by the handle.
      * */
     void update_lazy(handle_type handle, const_reference v)
     {
@@ -453,7 +456,7 @@ public:
     /** \copydoc boost::heap::fibonacci_heap::update (handle_type handle)
      *
      * \b Rationale: The lazy update function is a modification of the traditional update, that just invalidates
-     *               the iterator to the object referred to by the handle.
+     *               the iterator the the object referred to by the handle.
      * */
     void update_lazy (handle_type handle)
     {
@@ -538,15 +541,21 @@ public:
      * */
     void erase(handle_type const & handle)
     {
-        node_pointer element = handle.node_;
-        node_pointer parent = element->get_parent();
+        node_pointer n = handle.node_;
+        node_pointer parent = n->get_parent();
 
         if (parent)
-            parent->children.erase(node_list_type::s_iterator_to(*element));
+            parent->children.erase(node_list_type::s_iterator_to(*n));
         else
-            roots.erase(node_list_type::s_iterator_to(*element));
+            roots.erase(node_list_type::s_iterator_to(*n));
 
-        finish_erase_or_pop(element);
+        add_children_to_root(n);
+        consolidate();
+
+        n->~node();
+        allocator_type::deallocate(n, 1);
+
+        size_holder::decrement();
     }
 
     /// \copydoc boost::heap::priority_queue::begin
@@ -573,7 +582,7 @@ public:
     }
 
     /**
-     * \b Effects: Returns an ordered iterator to the end of the priority queue.
+     * \b Effects: Returns an ordered iterator to the first element contained in the priority queue.
      *
      * \b Note: Ordered iterators traverse the priority queue in heap order.
      * */
@@ -598,10 +607,9 @@ public:
 
         roots.splice(roots.end(), rhs.roots);
 
-        rhs.top_element = NULL;
         rhs.set_size(0);
 
-        super_t::set_stability_count((std::max)(super_t::get_stability_count(),
+        super_t::set_stability_count(std::max(super_t::get_stability_count(),
                                      rhs.get_stability_count()));
         rhs.set_stability_count(0);
     }
@@ -706,9 +714,6 @@ private:
 
     void consolidate(void)
     {
-        if (roots.empty())
-            return;
-
         static const size_type max_log2 = sizeof(size_type) * 8;
         boost::array<node_pointer, max_log2> aux;
         aux.assign(NULL);
@@ -746,20 +751,6 @@ private:
                 top_element = n;
         }
         while (it != roots.end());
-    }
-
-    void finish_erase_or_pop(node_pointer erased_node)
-    {
-        add_children_to_root(erased_node);
-
-        erased_node->~node();
-        allocator_type::deallocate(erased_node, 1);
-
-        size_holder::decrement();
-        if (!empty())
-            consolidate();
-        else
-            top_element = NULL;
     }
 
     mutable node_pointer top_element;

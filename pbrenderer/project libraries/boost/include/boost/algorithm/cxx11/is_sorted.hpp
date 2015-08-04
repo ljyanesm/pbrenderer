@@ -27,7 +27,7 @@
 namespace boost { namespace algorithm {
 
 #if __cplusplus >= 201103L
-//  Use the C++11 versions of is_sorted/is_sorted_until if they are available
+//  Use the C++11 versions of iota if it is available
 using std::is_sorted_until; // Section 25.4.1.5
 using std::is_sorted;       // Section 25.4.1.5
 #else
@@ -46,7 +46,7 @@ using std::is_sorted;       // Section 25.4.1.5
         ForwardIterator next = first;
         while ( ++next != last )
         {
-            if ( p ( *next, *first ))
+            if ( !p ( *first, *next ))
                 return next;
             first = next;
         }
@@ -63,7 +63,7 @@ using std::is_sorted;       // Section 25.4.1.5
     ForwardIterator is_sorted_until ( ForwardIterator first, ForwardIterator last )
     {
         typedef typename std::iterator_traits<ForwardIterator>::value_type value_type;
-        return boost::algorithm::is_sorted_until ( first, last, std::less<value_type>());
+        return boost::algorithm::is_sorted_until ( first, last, std::less_equal<value_type>());
     }
 
 
@@ -125,6 +125,10 @@ using std::is_sorted;       // Section 25.4.1.5
         return boost::algorithm::is_sorted_until ( boost::begin ( range ), boost::end ( range ));
     }
 
+namespace detail {
+    typedef struct { typedef bool type; } bool_;
+};
+
 /// \fn is_sorted ( const R &range, Pred p )
 /// \return whether or not the entire range R is sorted
 ///     (according to the comparison predicate 'p').
@@ -169,7 +173,7 @@ using std::is_sorted;       // Section 25.4.1.5
     bool is_increasing ( ForwardIterator first, ForwardIterator last )
     {
         typedef typename std::iterator_traits<ForwardIterator>::value_type value_type;
-        return boost::algorithm::is_sorted (first, last, std::less<value_type>());
+        return boost::algorithm::is_sorted (first, last, std::less_equal<value_type>());
     }
 
 
@@ -202,7 +206,7 @@ using std::is_sorted;       // Section 25.4.1.5
     bool is_decreasing ( ForwardIterator first, ForwardIterator last )
     {
         typedef typename std::iterator_traits<ForwardIterator>::value_type value_type;
-        return boost::algorithm::is_sorted (first, last, std::greater<value_type>());
+        return boost::algorithm::is_sorted (first, last, std::greater_equal<value_type>());
     }
 
 /// \fn is_decreasing ( const R &range )
@@ -234,7 +238,7 @@ using std::is_sorted;       // Section 25.4.1.5
     bool is_strictly_increasing ( ForwardIterator first, ForwardIterator last )
     {
         typedef typename std::iterator_traits<ForwardIterator>::value_type value_type;
-        return boost::algorithm::is_sorted (first, last, std::less_equal<value_type>());
+        return boost::algorithm::is_sorted (first, last, std::less<value_type>());
     }
 
 /// \fn is_strictly_increasing ( const R &range )
@@ -265,7 +269,7 @@ using std::is_sorted;       // Section 25.4.1.5
     bool is_strictly_decreasing ( ForwardIterator first, ForwardIterator last )
     {
         typedef typename std::iterator_traits<ForwardIterator>::value_type value_type;
-        return boost::algorithm::is_sorted (first, last, std::greater_equal<value_type>());
+        return boost::algorithm::is_sorted (first, last, std::greater<value_type>());
     }
 
 /// \fn is_strictly_decreasing ( const R &range )

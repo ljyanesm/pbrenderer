@@ -1,6 +1,6 @@
  //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,7 +11,7 @@
 #ifndef BOOST_INTERPROCESS_SHM_NAMED_SEMAPHORE_HPP
 #define BOOST_INTERPROCESS_SHM_NAMED_SEMAPHORE_HPP
 
-#if defined(_MSC_VER)
+#if (defined _MSC_VER) && (_MSC_VER >= 1200)
 #  pragma once
 #endif
 
@@ -33,13 +33,13 @@ namespace ipcdetail {
 
 class shm_named_semaphore
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
 
    //Non-copyable
    shm_named_semaphore();
    shm_named_semaphore(const shm_named_semaphore &);
    shm_named_semaphore &operator=(const shm_named_semaphore &);
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 
    public:
    shm_named_semaphore(create_only_t, const char *name, unsigned int initialCount, const permissions &perm = permissions());
@@ -57,7 +57,7 @@ class shm_named_semaphore
 
    static bool remove(const char *name);
 
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    private:
    friend class interprocess_tester;
    void dont_close_on_destruction();
@@ -65,10 +65,9 @@ class shm_named_semaphore
    interprocess_semaphore *semaphore() const
    {  return static_cast<interprocess_semaphore*>(m_shmem.get_user_address()); }
 
-   typedef ipcdetail::managed_open_or_create_impl<shared_memory_object, 0, true, false> open_create_impl_t;
-   open_create_impl_t m_shmem;
+   managed_open_or_create_impl<shared_memory_object> m_shmem;
    typedef named_creation_functor<interprocess_semaphore, int> construct_func_t;
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 };
 
 inline shm_named_semaphore::~shm_named_semaphore()
@@ -82,7 +81,8 @@ inline shm_named_semaphore::shm_named_semaphore
    :  m_shmem  (create_only
                ,name
                ,sizeof(interprocess_semaphore) +
-                  open_create_impl_t::ManagedOpenOrCreateUserOffset
+                  managed_open_or_create_impl<shared_memory_object>::
+                     ManagedOpenOrCreateUserOffset
                ,read_write
                ,0
                ,construct_func_t(DoCreate, initialCount)
@@ -94,7 +94,8 @@ inline shm_named_semaphore::shm_named_semaphore
    :  m_shmem  (open_or_create
                ,name
                ,sizeof(interprocess_semaphore) +
-                  open_create_impl_t::ManagedOpenOrCreateUserOffset
+                  managed_open_or_create_impl<shared_memory_object>::
+                     ManagedOpenOrCreateUserOffset
                ,read_write
                ,0
                ,construct_func_t(DoOpenOrCreate, initialCount)
@@ -120,7 +121,13 @@ inline bool shm_named_semaphore::try_wait()
 {  return semaphore()->try_wait();   }
 
 inline bool shm_named_semaphore::timed_wait(const boost::posix_time::ptime &abs_time)
-{  return semaphore()->timed_wait(abs_time); }
+{
+   if(abs_time == boost::posix_time::pos_infin){
+      this->wait();
+      return true;
+   }
+   return semaphore()->timed_wait(abs_time);
+}
 
 inline bool shm_named_semaphore::remove(const char *name)
 {  return shared_memory_object::remove(name); }

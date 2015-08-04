@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013.
+// (C) Copyright Ion Gaztanaga 2005-2012.
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt or copy at
@@ -13,11 +13,11 @@
 #ifndef BOOST_CONTAINER_CONTAINER_DETAIL_PAIR_HPP
 #define BOOST_CONTAINER_CONTAINER_DETAIL_PAIR_HPP
 
-#if defined(_MSC_VER)
+#if (defined _MSC_VER) && (_MSC_VER >= 1200)
 #  pragma once
 #endif
 
-#include <boost/container/detail/config_begin.hpp>
+#include "config_begin.hpp"
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/container/detail/mpl.hpp>
@@ -26,10 +26,9 @@
 #include <boost/container/detail/type_traits.hpp>
 
 #include <utility>   //std::pair
-#include <algorithm> //std::swap
 
-#include <boost/move/utility_core.hpp>
-
+#include <boost/move/move.hpp>
+#include <boost/type_traits/is_class.hpp>
 
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>
@@ -330,42 +329,22 @@ struct is_enum< ::boost::container::container_detail::pair<T, U> >
    static const bool value = false;
 };
 
-template <class T>
-struct is_class;
-
 //This specialization is needed to avoid instantiation of pair in
 //is_class, and allow recursive maps.
 template <class T1, class T2>
 struct is_class< ::boost::container::container_detail::pair<T1, T2> >
-{
-   static const bool value = true;
-};
+   : public ::boost::true_type
+{};
 
-#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifdef BOOST_NO_RVALUE_REFERENCES
 
 template<class T1, class T2>
 struct has_move_emulation_enabled< ::boost::container::container_detail::pair<T1, T2> >
-{
-   static const bool value = true;
-};
+   : ::boost::true_type
+{};
 
 #endif
 
-namespace move_detail{
-
-template<class T>
-struct is_class_or_union;
-
-template <class T1, class T2>
-struct is_class_or_union< ::boost::container::container_detail::pair<T1, T2> >
-//This specialization is needed to avoid instantiation of pair in
-//is_class, and allow recursive maps.
-{
-   static const bool value = true;
-};
-
-
-}  //namespace move_detail{
 
 }  //namespace boost {
 

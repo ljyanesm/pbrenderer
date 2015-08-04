@@ -59,7 +59,6 @@
 
 #include <boost/msm/msm_grammar.hpp>
 #include <boost/msm/active_state_switching_policies.hpp>
-#include <boost/msm/event_traits.hpp>
 #include <boost/msm/front/functor_row.hpp>
 
 namespace proto = boost::proto;
@@ -200,7 +199,6 @@ struct euml_event: proto::extends<typename proto::terminal<event_tag>::type, EVT
         typedef EVT type;
     };
 };
-
 template <class STATE>
 struct euml_state_intern: proto::extends<typename proto::terminal< boost::msm::state_tag>::type, STATE, boost::msm::state_domain>
 {
@@ -951,7 +949,7 @@ struct Fsm_ : euml_action<Fsm_<Index> >
     }
     template <class EVT,class FSM,class SourceState,class TargetState>
     typename transition_action_result<EVT,FSM,SourceState,TargetState>::type 
-        operator()(EVT const& ,FSM& fsm,SourceState& ,TargetState&)const
+        operator()(EVT const& evt ,FSM& fsm,SourceState& ,TargetState&)const
     {
         return fsm.get_attribute(Index());
     }
@@ -1763,8 +1761,6 @@ Get_Flag_Helper const is_flag_ = Get_Flag_Helper();
 struct DeferEvent_ : euml_action< DeferEvent_ >
 {
     typedef ::boost::mpl::set<action_tag> tag_type;
-    // mark as deferring to avoid stack overflows in certain conditions
-    typedef int deferring_action;
     template <class EVT,class FSM,class SourceState,class TargetState>
     void operator()(EVT const& evt,FSM& fsm,SourceState& ,TargetState& ) const
     {
@@ -2455,7 +2451,7 @@ Exit_Pt_Helper const exit_pt_ = Exit_Pt_Helper();
 
 #define BOOST_MSM_EUML_ACTION(instance_name)                                                        \
     struct instance_name ## _impl;                                                              \
-    struct instance_name ## _helper :  boost::msm::front::euml::euml_action<instance_name ## _impl>    \
+    struct instance_name ## _helper :  msm::front::euml::euml_action<instance_name ## _impl>    \
     {                                                                                           \
         instance_name ## _helper(){}                                                            \
         typedef instance_name ## _impl action_name;                                             \
@@ -2465,7 +2461,7 @@ Exit_Pt_Helper const exit_pt_ = Exit_Pt_Helper();
 
 #define BOOST_MSM_EUML_DECLARE_ACTION(instance_name)                                                        \
     struct instance_name ;                                                                      \
-    struct instance_name ## _helper :  boost::msm::front::euml::euml_action<instance_name >     \
+    struct instance_name ## _helper :  msm::front::euml::euml_action<instance_name >            \
     {                                                                                           \
         instance_name ## _helper(){}                                                            \
         typedef instance_name action_name;                                                      \
@@ -2474,22 +2470,13 @@ Exit_Pt_Helper const exit_pt_ = Exit_Pt_Helper();
 
 
 #define BOOST_MSM_EUML_EVENT(instance_name)                                                     \
-    struct instance_name ## _helper : boost::msm::front::euml::euml_event<instance_name ## _helper>{   \
+    struct instance_name ## _helper : msm::front::euml::euml_event<instance_name ## _helper>{   \
     instance_name ## _helper(){}                                                                \
     instance_name ## _helper const& operator()() const {return *this;} };                       \
     static instance_name ## _helper instance_name;
 
-// an event matching any event
-struct kleene_ : boost::msm::front::euml::euml_event<kleene_>, public boost::any
-{
-    kleene_() : boost::any(){}
-    template<typename ValueType>
-    kleene_(const ValueType & v) : boost::any(v){}
-};
-static kleene_ kleene;
-
 #define BOOST_MSM_EUML_DECLARE_EVENT(instance_name)                                             \
-    struct instance_name : boost::msm::front::euml::euml_event<instance_name >{                 \
+    struct instance_name : msm::front::euml::euml_event<instance_name >{                        \
     instance_name(){}                                                                           \
     instance_name const& operator()() const {return *this;} };
 
@@ -2527,12 +2514,10 @@ static kleene_ kleene;
         BOOST_PP_CAT(instance,_helper) operator()                                               \
         (BOOST_PP_ENUM(n, MSM_EUML_EVENT_INSTANCE_HELPER_EXECUTE1, ~ ))const{                   \
         return BOOST_PP_CAT(instance,_helper) (BOOST_PP_ENUM(n, MSM_EUML_EVENT_INSTANCE_HELPER_EXECUTE2, ~ ));}
-        
-#if defined(FUSION_MAX_MAP_SIZE)
 
-#define BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(instance_name, attributes_name)                    \
+#define BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(instance_name, attributes_name)                          \
     struct instance_name ## _helper :                                                           \
-        boost::msm::front::euml::euml_event<instance_name ## _helper> , public attributes_name  \
+        msm::front::euml::euml_event<instance_name ## _helper> , public attributes_name         \
     {                                                                                           \
         template <class T,int checked_size> struct size_helper                                  \
         {                                                                                       \
@@ -2553,45 +2538,17 @@ static kleene_ kleene;
         MSM_EUML_EVENT_INSTANCE_HELPER_OPERATOR_IMPL, instance_name)                            \
     };                                                                                          \
     static instance_name ## _helper instance_name;
-
-#else
-
-#define BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(instance_name, attributes_name)                    \
-    struct instance_name ## _helper :                                                           \
-        boost::msm::front::euml::euml_event<instance_name ## _helper> , public attributes_name  \
-    {                                                                                           \
-        template <class T,int checked_size> struct size_helper                                  \
-        {                                                                                       \
-            typedef typename ::boost::mpl::less_equal<                                          \
-                typename ::boost::fusion::result_of::size<T>::type,                             \
-                ::boost::mpl::int_<checked_size> >::type type;                                  \
-        };                                                                                      \
-        BOOST_PP_CAT(instance_name,_helper()) : attributes_name(){}                             \
-        typedef attributes_name::attributes_type attribute_map;                                 \
-        typedef ::boost::fusion::result_of::as_vector<attribute_map>::type attribute_vec;       \
-        BOOST_PP_REPEAT_FROM_TO(1,BOOST_PP_ADD(10 ,1),                                          \
-        MSM_EUML_EVENT_HELPER_CONSTRUCTORS, (instance_name,attributes_name))                    \
-        BOOST_PP_REPEAT_FROM_TO(1,BOOST_PP_ADD(10 ,1),                                          \
-        MSM_EUML_EVENT_INSTANCE_HELPER_ATTRIBUTE_MAP, ~)                                        \
-        BOOST_PP_CAT(instance_name,_helper) operator()(){                                       \
-        return BOOST_PP_CAT(instance_name,_helper)();}                                          \
-        BOOST_PP_REPEAT_FROM_TO(1,BOOST_PP_ADD(10 ,1),                                          \
-        MSM_EUML_EVENT_INSTANCE_HELPER_OPERATOR_IMPL, instance_name)                            \
-    };                                                                                          \
-    static instance_name ## _helper instance_name;
-
-#endif
 
 #define BOOST_MSM_EUML_EVENT_NAME(instance_name) instance_name ## _helper
 
 #define BOOST_MSM_EUML_FLAG_NAME(instance_name) instance_name ## _helper
 
 #define BOOST_MSM_EUML_FLAG(instance_name)                                                      \
-    struct instance_name ## _helper : boost::msm::front::euml::euml_flag<instance_name ## _helper>{};  \
+    struct instance_name ## _helper : msm::front::euml::euml_flag<instance_name ## _helper>{};  \
     static instance_name ## _helper instance_name;
 
 #define BOOST_MSM_EUML_DECLARE_FLAG(instance_name)                                                      \
-    struct instance_name : boost::msm::front::euml::euml_flag<instance_name >{};
+    struct instance_name : msm::front::euml::euml_flag<instance_name >{};
 
 #define BOOST_MSM_EUML_STATE_NAME(instance_name) instance_name ## _helper
 
@@ -2702,13 +2659,5 @@ static kleene_ kleene;
 #endif
 
 }}}} // boost::msm::front::euml
-
-namespace boost { namespace msm{
-    template<> 
-    struct is_kleene_event< boost::msm::front::euml::kleene_ >
-    { 
-      typedef ::boost::mpl::true_ type;
-    };
-}}
 
 #endif // BOOST_MSM_FRONT_EUML_COMMON_H
