@@ -35,12 +35,7 @@ public:
 		DISPLAY_COLOR = 3,
 		DISPLAY_DIFFUSE = 4,
 		DISPLAY_DIFFUSE_SPEC = 5,
-		DISPLAY_FRESNEL = 6,
-		DISPLAY_REFLECTION = 7,
-		DISPLAY_FRES_REFL = 8,
-		DISPLAY_THICKNESS = 9,
-		DISPLAY_REFRAC = 10,
-		DISPLAY_TOTAL = 11,
+		DISPLAY_TOTAL = 6,
 		NUM_DISPLAY_MODES
 	};
 
@@ -70,7 +65,7 @@ public:
 
 	void dumpIntoPdb(std::string o);
 
-	GLuint getDepthFBO() { return m_depthTexture; }
+	GLuint getDepthFBO() { return m_FBO; }
 
 protected:
 	void _initQuad();

@@ -420,7 +420,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glEnable(GL_POINT_SPRITE_ARB);
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
-	glDepthMask(GL_TRUE);
+//	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
 	glDepthFunc(GL_LESS);
@@ -487,6 +487,8 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniform1i(glGetUniformLocation(blurDepthShader->getProgramId(), "u_Depthtex"),11);
 	glUniform1f( glGetUniformLocation(blurDepthShader->getProgramId(), "u_Far"), m_camera->getFar() );
 	glUniform1f( glGetUniformLocation(blurDepthShader->getProgramId(), "u_Near"), m_camera->getNear() );
+	glUniform1f(glGetUniformLocation(blurDepthShader->getProgramId(), "u_Width"), (GLfloat) 1.0 / m_camera->getWidth());
+	glUniform1f(glGetUniformLocation(blurDepthShader->getProgramId(), "u_Height"), (GLfloat) 1.0 / m_camera->getHeight());
 
 	glDrawElements(GL_TRIANGLES, m_device_quad.num_indices, GL_UNSIGNED_SHORT,0);
 

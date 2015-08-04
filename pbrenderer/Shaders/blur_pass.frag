@@ -4,6 +4,8 @@ uniform sampler2D u_Depthtex;
 
 uniform float u_Far;
 uniform float u_Near;
+uniform float u_Width;
+uniform float u_Height;
 
 in vec2 fs_Texcoord;
 
@@ -20,8 +22,10 @@ void main()
     //Get Depth Information about the Pixel
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
-    float blurRadius = (1.0f/lin_depth) * 0.0001;
-    int windowWidth = 5;
+
+	vec2 imgStep = vec2(u_Width, u_Height);
+    int windowWidth = 3;
+
     float sum = 0;
     float wsum = 0;
     
@@ -32,12 +36,12 @@ void main()
     
     for(int x = -windowWidth; x < windowWidth; x++){
 		for(int y = -windowWidth; y < windowWidth; y++){
-			vec2 samp = vec2(fs_Texcoord.s + x*blurRadius, fs_Texcoord.t + y*blurRadius);
+			vec2 samp = vec2(fs_Texcoord.s + x*imgStep.x, fs_Texcoord.t + y*imgStep.y);
 			float sampleDepth = texture(u_Depthtex, samp).r;
 			
 			if(sampleDepth < 0.9999){
 				//Spatial
-				float r = length(vec2(x,y)) * 0.01;
+				float r = length(vec2(x,y)) * 0.000001;
 				float w = exp(- (r*r));
 			
 				sum += sampleDepth * w ;

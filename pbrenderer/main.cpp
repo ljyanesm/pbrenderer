@@ -51,8 +51,8 @@ float	pointScale = 0.01f;
 float	influenceRadius = 0.2f;
 int		pointDiv = 0;
 
-const float NEARP = 1.0f;
-const float FARP = 100.0f;
+const float NEARP = .10f;
+const float FARP = 1000.0f;
 
 // view params
 int ox, oy;
@@ -143,7 +143,7 @@ enum {M_VIEW = 0, M_MOVE};
 namespace fs = ::boost::filesystem;
 std::vector<fs::path> modelFiles;
 
-void create_space_hanlder(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceHandler* &space_handler)
+void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceHandler* &space_handler)
 {
 	switch(spaceH_type)
 	{
@@ -176,14 +176,15 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 
 	if (fs::is_directory(root))
 	{
-		fs::recursive_directory_iterator it(root);
-		fs::recursive_directory_iterator endit;
+		fs::directory_iterator it(root);
+		fs::directory_iterator endit;
 		while(it != endit)
 		{
-			if (fs::is_regular_file(*it) && it->path().extension() == ext 
+			if (fs::is_regular_file(it->status()) && it->path().extension() == ext 
 				&& it->path().filename() != "proxy.ply" 
 				&& it->path().filename() != "hip.ply"
-				&& it->path().filename() != "bbox.ply")
+				&& it->path().filename() != "bbox.ply"
+				&& it->path().filename() != "surface.ply")
 			{
 
 				ret.push_back(it->path().filename());
@@ -284,7 +285,7 @@ void initGL(int *argc, char **argv){
 	//modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
 	//m_physModel = modelVoxelizer->getModel();
 
-	create_space_hanlder(spaceH_type, space_handler);
+	create_space_handler(spaceH_type, space_handler);
 
 	if (deviceType == LYHapticInterface::KEYBOARD_DEVICE) 
 		haptic_interface = new LYKeyboardDevice(space_handler, 
@@ -460,8 +461,8 @@ void keyboardFunc(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
+		create_space_handler(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
-		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -483,9 +484,8 @@ void keyboardFunc(unsigned char key, int x, int y)
 				modelFile = modelFiles.at(loadedModel).string();
 			}
 		}
-		create_space_hanlder(spaceH_type, space_handler);
+		create_space_handler(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
-		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -604,7 +604,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 			spaceH_type = (LYSpaceHandler::SpaceHandlerType) 
 				((spaceH_type+1)%(LYSpaceHandler::NUM_TYPES-1));
 
-			create_space_hanlder(spaceH_type, space_handler);
+			create_space_handler(spaceH_type, space_handler);
 			ioInterface->getDevice()->setSpaceHandler(space_handler);
 			ioInterface->getDevice()->start();
 			delete tmpSpace;
@@ -672,9 +672,9 @@ void display()
 	LYMesh *displayMesh = m_pMesh;
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
+
 	// render
-	//LARGE_INTEGER start_time;
-	//QueryPerformanceCounter((LARGE_INTEGER *) &start_time);
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewMatrix = glm::mat4();
 
@@ -758,37 +758,37 @@ void display()
 
 	/////////////////////////////////////////////////////////////////////////////////////////// 
 
-	sdkStopTimer(&graphicsTimer);
-	//LARGE_INTEGER end_time; QueryPerformanceCounter((LARGE_INTEGER *) &end_time);
-	//float diff_time = (float)
-	//	(((double) end_time.QuadPart - (double) start_time.QuadPart) / freq);
 	glutSwapBuffers();
 	glutReportErrors();
 
-	float averageTime = sdkGetAverageTimerValue(&hapticTimer);
+	sdkStopTimer(&graphicsTimer);
+
+	float graphicsFPS = 1000.0f / (sdkGetAverageTimerValue(&graphicsTimer));
+	float hapticFPS = 1000.f / sdkGetAverageTimerValue(&hapticTimer);
 
 	std::string spaceSubdivisionAlg = getSpaceHandlerString(spaceH_type);
 	sprintf(fps_string, "HPBR - %s - G FPS: %5.2f  H FPS: %5.2f  --   %s", 
-		modelFile.c_str(), 1000.0f / (sdkGetAverageTimerValue(&graphicsTimer)), 1000.0f / averageTime, spaceSubdivisionAlg.c_str());
-	static int measureNum = 0;
+		modelFile.c_str(), graphicsFPS, hapticFPS, spaceSubdivisionAlg.c_str());
 
 	if (captureHapticTime){
 		std::ofstream myfile;
 		switch (spaceH_type)
 		{
 		case LYSpaceHandler::GPU_SPATIAL_HASH:
-			myfile.open (modelFile.substr(0, modelFile.find('.')).append("-"+spaceSubdivisionAlg).append(".GPUlog"), std::ios::app);
-			myfile << averageTime << std::endl;
+			myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
+				.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
+				.append(".GPUlog"), std::ios::app);
+			myfile << hapticFPS << std::endl;
 			myfile.close();
 			break;
 		case LYSpaceHandler::CPU_SPATIAL_HASH:
 			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
-			myfile << averageTime << std::endl;
+			myfile << hapticFPS << std::endl;
 			myfile.close();
 			break;
 		case LYSpaceHandler::CPU_Z_ORDER:
 			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
-			myfile << averageTime << std::endl;
+			myfile << hapticFPS << std::endl;
 			myfile.close();
 			break;
 		}
