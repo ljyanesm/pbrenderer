@@ -119,12 +119,13 @@ LYHapticInterface::LYDEVICE_TYPE deviceType;
 ///////////////////////////////////////////////////////
 clock_t startTimer;
 clock_t endTimer;
-char fps_string[120];
+char fps_string[255];
 ///////////////////////////////////////////////////////
 
 // FPS Control variables for rendering
 ///////////////////////////////////////////////////////
 StopWatchInterface *hapticTimer = NULL;
+double freq = 0;
 StopWatchInterface *graphicsTimer = NULL;
 
 const int FRAMES_PER_SECOND = 30;
@@ -211,6 +212,14 @@ void cudaInit(int argc, char **argv)
 
 void initCUDA(int argc, char **argv)
 {
+	LARGE_INTEGER temp;
+
+	// get the tick frequency from the OS
+	QueryPerformanceFrequency((LARGE_INTEGER *) &temp);
+
+	// convert to type in which it is needed
+	freq = ((double) temp.QuadPart) / 1000.0;
+
 	cudaInit(argc, argv);
 	sdkCreateTimer(&hapticTimer);
 	sdkResetTimer(&hapticTimer);
@@ -247,6 +256,7 @@ void initGL(int *argc, char **argv){
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialize OpenGL and glew
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	initCUDA(*argc, argv);
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
@@ -261,8 +271,6 @@ void initGL(int *argc, char **argv){
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.75, 0.75, 0.75, 1);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	initCUDA(*argc, argv);
 
 	loadConfigFile(argv);
 
@@ -595,7 +603,6 @@ void idle(void)
 
 DWORD next_game_tick = GetTickCount();
 int sleep_time = 0;
-static int hapticFPS = 0;
 
 std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 {
@@ -622,10 +629,13 @@ std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 
 void display()
 {
+	static uint resetTimers = 0;
 	LYMesh *displayMesh = m_pMesh;
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
 	// render
+	//LARGE_INTEGER start_time;
+	//QueryPerformanceCounter((LARGE_INTEGER *) &start_time);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewMatrix = glm::mat4();
 
@@ -708,7 +718,7 @@ void display()
 	overlay_renderer->display();
 
 	/////////////////////////////////////////////////////////////////////////////////////////// 
-	
+
 	sdkStopTimer(&graphicsTimer);
 	float displayTimer = 1000.0f / sdkGetAverageTimerValue(&graphicsTimer);
 	glutSwapBuffers();
@@ -744,12 +754,35 @@ void display()
 		}
 	}
 
+	if (captureHapticTime){
+		std::ofstream myfile;
+		switch (spaceH_type)
+		{
+		case LYSpaceHandler::GPU_SPATIAL_HASH:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append("-"+spaceSubdivisionAlg).append(".GPUlog"), std::ios::app);
+			myfile << averageTime << std::endl;
+			myfile.close();
+			break;
+		case LYSpaceHandler::CPU_SPATIAL_HASH:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
+			myfile << averageTime << std::endl;
+			myfile.close();
+			break;
+		case LYSpaceHandler::CPU_Z_ORDER:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
+			myfile << averageTime << std::endl;
+			myfile.close();
+			break;
+		}
+	}
+
+
 	glutSetWindowTitle(fps_string);
-	hapticFPS++;
-	if (hapticFPS >= 20){
+	resetTimers++;
+	if (resetTimers >= 30){
 		sdkResetTimer(&graphicsTimer);
 		sdkResetTimer(&hapticTimer);
-		hapticFPS = 0;
+		resetTimers = 0;
 	}
 }
 

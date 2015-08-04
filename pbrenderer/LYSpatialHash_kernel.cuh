@@ -136,6 +136,7 @@ struct ToolCollisionCheckArgs {
 struct CollisionCheckArgs{
 	float4			forceVector;
 	float3			pos;
+	float			padding;
 	uint*			collectionCellStart;
 	uint*			collectionVertices;
 	LYVertex*		sortedPos;

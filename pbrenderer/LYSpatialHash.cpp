@@ -211,7 +211,7 @@ void	LYSpatialHash::update()
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (false && m_dirtyPos) {
+	if (m_dirtyPos) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
@@ -243,23 +243,23 @@ void	LYSpatialHash::update()
 				dPos,
 				m_numVertices);
 
-			updateDensities(
-				m_sorted_points,
-				dPos,
-				m_pointGridIndex,
-				m_cellStart,
-				m_cellEnd,
-				m_dParams,
-				m_numVertices);
+			//updateDensities(
+			//	m_sorted_points,
+			//	dPos,
+			//	m_pointGridIndex,
+			//	m_cellStart,
+			//	m_cellEnd,
+			//	m_dParams,
+			//	m_numVertices);
 
-			updateProperties(
-				m_sorted_points,
-				dPos,
-				m_pointGridIndex,
-				m_cellStart,
-				m_cellEnd,
-				m_dParams,
-				m_numVertices);
+			//updateProperties(
+			//	m_sorted_points,
+			//	dPos,
+			//	m_pointGridIndex,
+			//	m_cellStart,
+			//	m_cellEnd,
+			//	m_dParams,
+			//	m_numVertices);
 		}
 
 		LYCudaHelper::unmapGLBufferObject(m_vboRes);
@@ -275,6 +275,7 @@ float LYSpatialHash::calculateCollisions( float3 pos )
 	m_hParams->Nx = make_float3(0.0f);
 	collisionCheckArgs.pos = pos;
 	collisionCheckArgs.collisionCheckType = this->m_collisionCheckType;
+	collisionCheckArgs.forceVector = this->m_forceFeedback;
 
 	do{
 		collisionCheck(collisionCheckArgs);
@@ -323,6 +324,9 @@ void LYSpatialHash::dump()
 void LYSpatialHash::toggleUpdatePositions()
 {
 	m_updatePositions = !m_updatePositions;
+	std::cout << "Updating positions: ";
+	std::cout << m_updatePositions ? std::string("true") : std::string("false");
+	std::cout << std::endl;
 }
 
 void LYSpatialHash::resetPositions()
@@ -387,7 +391,7 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 			pos->scpPosition = Pseed;
 			pos->surfaceTgPlane = Nx;
 			m_forceFeedback = make_float4((Pseed - colliderPos), 0.0f);
-			if (length(m_forceFeedback) > 0.03f) m_dirtyPos = true;
+			if (length(m_forceFeedback) > 0.3f) m_dirtyPos = true;
 			return make_float3(m_forceFeedback);
 		} else {
 			pos->scpPosition = colliderPos;
