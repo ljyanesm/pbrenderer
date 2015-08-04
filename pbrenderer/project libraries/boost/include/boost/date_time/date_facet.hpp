@@ -208,8 +208,7 @@ namespace boost { namespace date_time {
       //  return do_put_special(next, a_ios, fill_char, d.as_special());
       //}
       //The following line of code required the date to support a to_tm function
-      std::tm dtm;
-      std::memset(&dtm, 0, sizeof(dtm));
+      std::tm dtm = {};
       dtm.tm_mon = m - 1;
       return do_put_tm(next, a_ios, fill_char, dtm, m_month_format);
     }
@@ -220,8 +219,7 @@ namespace boost { namespace date_time {
                 char_type fill_char,
                 const day_type& day) const
     {
-      std::tm dtm;
-      std::memset(&dtm, 0, sizeof(dtm));
+      std::tm dtm = {};
       dtm.tm_mday = day.as_number();
       char_type tmp[3] = {'%','d'};
       string_type temp_format(tmp);
@@ -237,8 +235,7 @@ namespace boost { namespace date_time {
       //  return do_put_special(next, a_ios, fill_char, d.as_special());
       //}
       //The following line of code required the date to support a to_tm function
-      std::tm dtm;
-      std::memset(&dtm, 0, sizeof(dtm));
+      std::tm dtm = {};
       dtm.tm_wday = dow;
       return do_put_tm(next, a_ios, fill_char, dtm, m_weekday_format);
     }

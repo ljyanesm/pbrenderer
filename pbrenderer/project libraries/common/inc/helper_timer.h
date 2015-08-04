@@ -1,5 +1,5 @@
 /**
- * Copyright 1993-2013 NVIDIA Corporation.  All rights reserved.
+ * Copyright 1993-2012 NVIDIA Corporation.  All rights reserved.
  *
  * Please refer to the NVIDIA end user license agreement (EULA) associated
  * with this source code for terms and conditions that govern your use of
@@ -12,10 +12,6 @@
 // Helper Timing Functions
 #ifndef HELPER_TIMER_H
 #define HELPER_TIMER_H
-
-#ifndef EXIT_WAIVED
-#define EXIT_WAIVED 2
-#endif
 
 // includes, system
 #include <vector>
@@ -55,7 +51,7 @@ class StopWatchInterface
 //////////////////////////////////////////////////////////////////
 // Begin Stopwatch timer class definitions for all OS platforms //
 //////////////////////////////////////////////////////////////////
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef WIN32
 // includes, system
 #define WINDOWS_LEAN_AND_MEAN
 #include <windows.h>
@@ -367,7 +363,7 @@ StopWatchLinux::getDiffTime()
     return (float)(1000.0 * (t_time.tv_sec - start_time.tv_sec)
                    + (0.001 * (t_time.tv_usec - start_time.tv_usec)));
 }
-#endif // WIN32
+#endif // _WIN32
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Timer functionality exported
@@ -381,7 +377,7 @@ inline bool
 sdkCreateTimer(StopWatchInterface **timer_interface)
 {
     //printf("sdkCreateTimer called object %08x\n", (void *)*timer_interface);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     *timer_interface = (StopWatchInterface *)new StopWatchWin();
 #else
     *timer_interface = (StopWatchInterface *)new StopWatchLinux();
@@ -458,7 +454,7 @@ sdkResetTimer(StopWatchInterface **timer_interface)
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Return the average time for timer execution as the total time
-//! for the timer dividied by the number of completed (stopped) runs the timer
+//! for the timer divided by the number of completed (stopped) runs the timer
 //! has made.
 //! Excludes the current running time if the timer is currently running.
 //! @param name  name of the timer to return the time of

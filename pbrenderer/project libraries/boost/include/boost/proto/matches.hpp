@@ -43,7 +43,7 @@
 #include <boost/proto/transform/when.hpp>
 #include <boost/proto/transform/impl.hpp>
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma warning(push)
 # pragma warning(disable:4305) // 'specialization' : truncation from 'const int' to 'bool'
 #endif
@@ -571,7 +571,11 @@ namespace boost { namespace proto
 
             /// \param expr An expression
             /// \return \c e
-            BOOST_PROTO_RETURN_TYPE_STRICT_LOOSE(result_type, typename impl::expr_param)
+            #ifdef BOOST_PROTO_STRICT_RESULT_OF
+            result_type
+            #else
+            typename impl::expr_param 
+            #endif
             operator()(
                 typename impl::expr_param e
               , typename impl::state_param
@@ -616,7 +620,11 @@ namespace boost { namespace proto
             /// \param e An expression
             /// \pre <tt>matches\<Expr,not_\>::value</tt> is \c true.
             /// \return \c e
-            BOOST_PROTO_RETURN_TYPE_STRICT_LOOSE(result_type, typename impl::expr_param)
+            #ifdef BOOST_PROTO_STRICT_RESULT_OF
+            result_type
+            #else
+            typename impl::expr_param 
+            #endif
             operator()(
                 typename impl::expr_param e
               , typename impl::state_param
@@ -940,7 +948,7 @@ namespace boost { namespace proto
 #undef BOOST_PROTO_LOGICAL_typename_G
 #undef BOOST_PROTO_LOGICAL_G
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma warning(pop)
 #endif
 

@@ -75,21 +75,21 @@ namespace detail {
                 if (it2 != it2_end && it2e != it2e_end) {
                     size_type it2_index = it2.index2 (), it2e_index = it2e.index2 ();
                     while (true) {
-                        difference_type compare2 = it2_index - it2e_index;
-                        if (compare2 == 0) {
+                        difference_type compare = it2_index - it2e_index;
+                        if (compare == 0) {
                             ++ it2, ++ it2e;
                             if (it2 != it2_end && it2e != it2e_end) {
                                 it2_index = it2.index2 ();
                                 it2e_index = it2e.index2 ();
                             } else
                                 break;
-                        } else if (compare2 < 0) {
-                            increment (it2, it2_end, - compare2);
+                        } else if (compare < 0) {
+                            increment (it2, it2_end, - compare);
                             if (it2 != it2_end)
                                 it2_index = it2.index2 ();
                             else
                                 break;
-                        } else if (compare2 > 0) {
+                        } else if (compare > 0) {
                             if (conformant_restrict_type::other (it2e.index1 (), it2e.index2 ()))
                                 if (static_cast<value_type>(*it2e) != value_type/*zero*/())
                                     index.push_back (std::pair<size_type, size_type> (it2e.index1 (), it2e.index2 ()));
@@ -178,21 +178,21 @@ namespace detail {
                 if (it1 != it1_end && it1e != it1e_end) {
                     size_type it1_index = it1.index1 (), it1e_index = it1e.index1 ();
                     while (true) {
-                        difference_type compare2 = it1_index - it1e_index;
-                        if (compare2 == 0) {
+                        difference_type compare = it1_index - it1e_index;
+                        if (compare == 0) {
                             ++ it1, ++ it1e;
                             if (it1 != it1_end && it1e != it1e_end) {
                                 it1_index = it1.index1 ();
                                 it1e_index = it1e.index1 ();
                             } else
                                 break;
-                        } else if (compare2 < 0) {
-                            increment (it1, it1_end, - compare2);
+                        } else if (compare < 0) {
+                            increment (it1, it1_end, - compare);
                             if (it1 != it1_end)
                                 it1_index = it1.index1 ();
                             else
                                 break;
-                        } else if (compare2 > 0) {
+                        } else if (compare > 0) {
                             if (conformant_restrict_type::other (it1e.index1 (), it1e.index2 ()))
                                 if (static_cast<value_type>(*it1e) != value_type/*zero*/())
                                     index.push_back (std::pair<size_type, size_type> (it1e.index1 (), it1e.index2 ()));
@@ -641,12 +641,10 @@ namespace detail {
         typedef F<typename M::iterator2::reference, expr_value_type> functor_type;
         // R unnecessary, make_conformant not required
         typedef typename M::difference_type difference_type;
-
+        typedef typename M::value_type value_type;
         BOOST_UBLAS_CHECK (m.size1 () == e ().size1 (), bad_size ());
         BOOST_UBLAS_CHECK (m.size2 () == e ().size2 (), bad_size ());
-
 #if BOOST_UBLAS_TYPE_CHECK
-        typedef typename M::value_type value_type;
         matrix<value_type, row_major> cm (m.size1 (), m.size2 ());
         indexing_matrix_assign<scalar_assign> (cm, m, row_major_tag ());
         indexing_matrix_assign<F> (cm, e, row_major_tag ());
@@ -773,12 +771,10 @@ namespace detail {
         typedef F<typename M::iterator1::reference, expr_value_type> functor_type;
         // R unnecessary, make_conformant not required
         typedef typename M::difference_type difference_type;
-
+        typedef typename M::value_type value_type;
         BOOST_UBLAS_CHECK (m.size2 () == e ().size2 (), bad_size ());
         BOOST_UBLAS_CHECK (m.size1 () == e ().size1 (), bad_size ());
-
 #if BOOST_UBLAS_TYPE_CHECK
-        typedef typename M::value_type value_type;
         matrix<value_type, column_major> cm (m.size1 (), m.size2 ());
         indexing_matrix_assign<scalar_assign> (cm, m, column_major_tag ());
         indexing_matrix_assign<F> (cm, e, column_major_tag ());
@@ -970,12 +966,10 @@ namespace detail {
         typedef R conformant_restrict_type;
         typedef typename M::size_type size_type;
         typedef typename M::difference_type difference_type;
-
+        typedef typename M::value_type value_type;
         BOOST_UBLAS_CHECK (m.size1 () == e ().size1 (), bad_size ());
         BOOST_UBLAS_CHECK (m.size2 () == e ().size2 (), bad_size ());
-
 #if BOOST_UBLAS_TYPE_CHECK
-        typedef typename M::value_type value_type;
         matrix<value_type, row_major> cm (m.size1 (), m.size2 ());
         indexing_matrix_assign<scalar_assign> (cm, m, row_major_tag ());
         indexing_matrix_assign<F> (cm, e, row_major_tag ());
@@ -1003,8 +997,8 @@ namespace detail {
                 if (it2 != it2_end && it2e != it2e_end) {
                     size_type it2_index = it2.index2 (), it2e_index = it2e.index2 ();
                     while (true) {
-                        difference_type compare2 = it2_index - it2e_index;
-                        if (compare2 == 0) {
+                        difference_type compare = it2_index - it2e_index;
+                        if (compare == 0) {
                             functor_type::apply (*it2, *it2e);
                             ++ it2, ++ it2e;
                             if (it2 != it2_end && it2e != it2e_end) {
@@ -1012,18 +1006,18 @@ namespace detail {
                                 it2e_index = it2e.index2 ();
                             } else
                                 break;
-                        } else if (compare2 < 0) {
+                        } else if (compare < 0) {
                             if (!functor_type::computed) {
                                 functor_type::apply (*it2, expr_value_type/*zero*/());
                                 ++ it2;
                             } else
-                                increment (it2, it2_end, - compare2);
+                                increment (it2, it2_end, - compare);
                             if (it2 != it2_end)
                                 it2_index = it2.index2 ();
                             else
                                 break;
-                        } else if (compare2 > 0) {
-                            increment (it2e, it2e_end, compare2);
+                        } else if (compare > 0) {
+                            increment (it2e, it2e_end, compare);
                             if (it2e != it2e_end)
                                 it2e_index = it2e.index2 ();
                             else
@@ -1093,12 +1087,10 @@ namespace detail {
         typedef R conformant_restrict_type;
         typedef typename M::size_type size_type;
         typedef typename M::difference_type difference_type;
-
+        typedef typename M::value_type value_type;
         BOOST_UBLAS_CHECK (m.size1 () == e ().size1 (), bad_size ());
         BOOST_UBLAS_CHECK (m.size2 () == e ().size2 (), bad_size ());
-
 #if BOOST_UBLAS_TYPE_CHECK
-        typedef typename M::value_type value_type;
         matrix<value_type, column_major> cm (m.size1 (), m.size2 ());
         indexing_matrix_assign<scalar_assign> (cm, m, column_major_tag ());
         indexing_matrix_assign<F> (cm, e, column_major_tag ());
@@ -1126,8 +1118,8 @@ namespace detail {
                 if (it1 != it1_end && it1e != it1e_end) {
                     size_type it1_index = it1.index1 (), it1e_index = it1e.index1 ();
                     while (true) {
-                        difference_type compare2 = it1_index - it1e_index;
-                        if (compare2 == 0) {
+                        difference_type compare = it1_index - it1e_index;
+                        if (compare == 0) {
                             functor_type::apply (*it1, *it1e);
                             ++ it1, ++ it1e;
                             if (it1 != it1_end && it1e != it1e_end) {
@@ -1135,18 +1127,18 @@ namespace detail {
                                 it1e_index = it1e.index1 ();
                             } else
                                 break;
-                        } else if (compare2 < 0) {
+                        } else if (compare < 0) {
                             if (!functor_type::computed) {
                                 functor_type::apply (*it1, expr_value_type/*zero*/()); // zeroing
                                 ++ it1;
                             } else
-                                increment (it1, it1_end, - compare2);
+                                increment (it1, it1_end, - compare);
                             if (it1 != it1_end)
                                 it1_index = it1.index1 ();
                             else
                                 break;
-                        } else if (compare2 > 0) {
-                            increment (it1e, it1e_end, compare2);
+                        } else if (compare > 0) {
+                            increment (it1e, it1e_end, compare);
                             if (it1e != it1e_end)
                                 it1e_index = it1e.index1 ();
                             else
@@ -1311,6 +1303,7 @@ namespace detail {
     void matrix_swap (M &m, matrix_expression<E> &e, packed_proxy_tag, row_major_tag) {
         typedef F<typename M::iterator2::reference, typename E::reference> functor_type;
         // R unnecessary, make_conformant not required
+        typedef typename M::size_type size_type;
         typedef typename M::difference_type difference_type;
         typename M::iterator1 it1 (m.begin1 ());
         typename E::iterator1 it1e (e ().begin1 ());
@@ -1336,6 +1329,7 @@ namespace detail {
     void matrix_swap (M &m, matrix_expression<E> &e, packed_proxy_tag, column_major_tag) {
         typedef F<typename M::iterator1::reference, typename E::reference> functor_type;
         // R unnecessary, make_conformant not required
+        typedef typename M::size_type size_type;
         typedef typename M::difference_type difference_type;
         typename M::iterator2 it2 (m.begin2 ());
         typename E::iterator2 it2e (e ().begin2 ());
@@ -1363,6 +1357,7 @@ namespace detail {
         typedef R conformant_restrict_type;
         typedef typename M::size_type size_type;
         typedef typename M::difference_type difference_type;
+        typedef typename M::value_type value_type;
         BOOST_UBLAS_CHECK (m.size1 () == e ().size1 (), bad_size ());
         BOOST_UBLAS_CHECK (m.size2 () == e ().size2 (), bad_size ());
 
@@ -1391,8 +1386,8 @@ namespace detail {
                 if (it2 != it2_end && it2e != it2e_end) {
                     size_type it2_index = it2.index2 (), it2e_index = it2e.index2 ();
                     while (true) {
-                        difference_type compare2 = it2_index - it2e_index;
-                        if (compare2 == 0) {
+                        difference_type compare = it2_index - it2e_index;
+                        if (compare == 0) {
                             functor_type::apply (*it2, *it2e);
                             ++ it2, ++ it2e;
                             if (it2 != it2_end && it2e != it2e_end) {
@@ -1400,14 +1395,14 @@ namespace detail {
                                 it2e_index = it2e.index2 ();
                             } else
                                 break;
-                        } else if (compare2 < 0) {
-                            increment (it2, it2_end, - compare2);
+                        } else if (compare < 0) {
+                            increment (it2, it2_end, - compare);
                             if (it2 != it2_end)
                                 it2_index = it2.index2 ();
                             else
                                 break;
-                        } else if (compare2 > 0) {
-                            increment (it2e, it2e_end, compare2);
+                        } else if (compare > 0) {
+                            increment (it2e, it2e_end, compare);
                             if (it2e != it2e_end)
                                 it2e_index = it2e.index2 ();
                             else
@@ -1487,7 +1482,7 @@ namespace detail {
         typedef R conformant_restrict_type;
         typedef typename M::size_type size_type;
         typedef typename M::difference_type difference_type;
-
+        typedef typename M::value_type value_type;
         BOOST_UBLAS_CHECK (m.size1 () == e ().size1 (), bad_size ());
         BOOST_UBLAS_CHECK (m.size2 () == e ().size2 (), bad_size ());
 
@@ -1516,8 +1511,8 @@ namespace detail {
                 if (it1 != it1_end && it1e != it1e_end) {
                     size_type it1_index = it1.index1 (), it1e_index = it1e.index1 ();
                     while (true) {
-                        difference_type compare2 = it1_index - it1e_index;
-                        if (compare2 == 0) {
+                        difference_type compare = it1_index - it1e_index;
+                        if (compare == 0) {
                             functor_type::apply (*it1, *it1e);
                             ++ it1, ++ it1e;
                             if (it1 != it1_end && it1e != it1e_end) {
@@ -1525,14 +1520,14 @@ namespace detail {
                                 it1e_index = it1e.index1 ();
                             } else
                                 break;
-                        }  else if (compare2 < 0) {
-                            increment (it1, it1_end, - compare2);
+                        }  else if (compare < 0) {
+                            increment (it1, it1_end, - compare);
                             if (it1 != it1_end)
                                 it1_index = it1.index1 ();
                             else
                                 break;
-                        } else if (compare2 > 0) {
-                            increment (it1e, it1e_end, compare2);
+                        } else if (compare > 0) {
+                            increment (it1e, it1e_end, compare);
                             if (it1e != it1e_end)
                                 it1e_index = it1e.index1 ();
                             else

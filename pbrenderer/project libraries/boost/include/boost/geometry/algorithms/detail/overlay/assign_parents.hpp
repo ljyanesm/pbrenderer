@@ -18,10 +18,6 @@
 
 #include <boost/geometry/geometries/box.hpp>
 
-#ifdef BOOST_GEOMETRY_TIME_OVERLAY
-#  include <boost/timer.hpp>
-#endif
-
 
 namespace boost { namespace geometry
 {
@@ -127,30 +123,30 @@ struct assign_visitor
     template <typename Item>
     inline void apply(Item const& outer, Item const& inner, bool first = true)
     {
-        if (first && outer.abs_area < inner.abs_area)
+        if (first && outer.real_area < 0)
         {
-            // Apply with reversed arguments
+            // Reverse arguments
             apply(inner, outer, false);
             return;
         }
 
-        if (m_check_for_orientation
-         || (math::larger(outer.real_area, 0)
-          && math::smaller(inner.real_area, 0)))
+        if (math::larger(outer.real_area, 0))
         {
-            ring_info_type& inner_in_map = m_ring_map[inner.id];
-
-            if (geometry::within(inner_in_map.point, outer.envelope)
-               && within_selected_input(inner_in_map, outer.id, m_geometry1, m_geometry2, m_collection)
-               )
+            if (inner.real_area < 0 || m_check_for_orientation)
             {
-                // Assign a parent if there was no earlier parent, or the newly
-                // found parent is smaller than the previous one
-                if (inner_in_map.parent.source_index == -1
-                    || outer.abs_area < inner_in_map.parent_area)
+                ring_info_type& inner_in_map = m_ring_map[inner.id];
+
+                if (geometry::within(inner_in_map.point, outer.envelope)
+                   && within_selected_input(inner_in_map, outer.id, m_geometry1, m_geometry2, m_collection)
+                   )
                 {
-                    inner_in_map.parent = outer.id;
-                    inner_in_map.parent_area = outer.abs_area;
+                    // Only assign parent if that parent is smaller (or if it is the first)
+                    if (inner_in_map.parent.source_index == -1
+                        || outer.abs_area < inner_in_map.parent_area)
+                    {
+                        inner_in_map.parent = outer.id;
+                        inner_in_map.parent_area = outer.abs_area;
+                    }
                 }
             }
         }
@@ -247,7 +243,7 @@ inline void assign_parents(Geometry1 const& geometry1,
                 //    a dramatic improvement (factor 5 for star_comb testcase)
                 ring_identifier id_of_positive = vector[index_positive].id;
                 ring_info_type& outer = ring_map[id_of_positive];
-                index = 0;
+                std::size_t index = 0;
                 for (vector_iterator_type it = boost::begin(vector);
                     it != boost::end(vector); ++it, ++index)
                 {
@@ -288,21 +284,13 @@ inline void assign_parents(Geometry1 const& geometry1,
             {
                 it->second.discarded = true;
             }
-            else if (it->second.parent.source_index >= 0
-                    && math::larger(it->second.get_area(), 0))
+            else if (it->second.parent.source_index >= 0 && it->second.get_area() > 0)
             {
-                const ring_info_type& parent = ring_map[it->second.parent];
-
-                if (math::larger(parent.area, 0))
-                {
-                    // Discard positive inner ring with positive parent
-                    it->second.discarded = true;
-                }
-                // Remove parent ID from any positive inner ring
+                // Discard positive inner ring with parent
+                it->second.discarded = true;
                 it->second.parent.source_index = -1;
             }
-            else if (it->second.parent.source_index < 0
-                    && math::smaller(it->second.get_area(), 0))
+            else if (it->second.parent.source_index < 0 && it->second.get_area() < 0)
             {
                 // Reverse negative ring without parent
                 it->second.reversed = true;
@@ -321,8 +309,6 @@ inline void assign_parents(Geometry1 const& geometry1,
     }
 }
 
-
-// Version for one geometry (called by buffer)
 template
 <
     typename Geometry,
@@ -334,7 +320,7 @@ inline void assign_parents(Geometry const& geometry,
             RingMap& ring_map,
             bool check_for_orientation)
 {
-    // Call it with an empty geometry as second geometry (source_id == 1)
+    // Call it with an empty geometry
     // (ring_map should be empty for source_id==1)
 
     Geometry empty;

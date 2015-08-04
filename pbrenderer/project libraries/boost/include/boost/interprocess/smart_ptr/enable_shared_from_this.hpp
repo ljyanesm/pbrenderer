@@ -3,7 +3,7 @@
 // This file is the adaptation for Interprocess of boost/enable_shared_from_this.hpp
 //
 // (C) Copyright Peter Dimov 2002
-// (C) Copyright Ion Gaztanaga 2006-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2006. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -13,10 +13,6 @@
 
 #ifndef BOOST_INTERPROCESS_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
 #define BOOST_INTERPROCESS_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
-
-#if defined(_MSC_VER)
-#  pragma once
-#endif
 
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
@@ -38,7 +34,7 @@ namespace interprocess{
 template<class T, class A, class D>
 class enable_shared_from_this
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    protected:
    enable_shared_from_this()
    {}
@@ -51,7 +47,7 @@ class enable_shared_from_this
 
    ~enable_shared_from_this()
    {}
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 
    public:
    shared_ptr<T, A, D> shared_from_this()
@@ -68,10 +64,10 @@ class enable_shared_from_this
       return p;
    }
 
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    typedef T element_type;
    mutable weak_ptr<element_type, A, D> _internal_weak_this;
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 };
 
 } // namespace interprocess

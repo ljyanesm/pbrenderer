@@ -14,17 +14,17 @@
 #  define BOOST_GEOMETRY_DEBUG_SEGMENT_IDENTIFIER
 #endif
 
-#if defined(BOOST_GEOMETRY_DEBUG_SEGMENT_IDENTIFIER)
-#include <iostream>
-#endif
+
+#include <vector>
 
 
-#include <boost/geometry/algorithms/detail/signed_index_type.hpp>
+#include <boost/geometry/core/access.hpp>
+#include <boost/geometry/core/coordinate_dimension.hpp>
+
 
 
 namespace boost { namespace geometry
 {
-
 
 
 // Internal struct to uniquely identify a segment
@@ -40,10 +40,7 @@ struct segment_identifier
         , segment_index(-1)
     {}
 
-    inline segment_identifier(signed_index_type src,
-                              signed_index_type mul,
-                              signed_index_type rin,
-                              signed_index_type seg)
+    inline segment_identifier(int src, int mul, int rin, int seg)
         : source_index(src)
         , multi_index(mul)
         , ring_index(rin)
@@ -71,20 +68,20 @@ struct segment_identifier
 #if defined(BOOST_GEOMETRY_DEBUG_SEGMENT_IDENTIFIER)
     friend std::ostream& operator<<(std::ostream &os, segment_identifier const& seg_id)
     {
-        os
+        std::cout
             << "s:" << seg_id.source_index
-            << ", v:" << seg_id.segment_index // v:vertex because s is used for source
+            << ", v:" << seg_id.segment_index // ~vertex
             ;
-        if (seg_id.ring_index >= 0) os << ", r:" << seg_id.ring_index;
-        if (seg_id.multi_index >= 0) os << ", m:" << seg_id.multi_index;
+        if (seg_id.ring_index >= 0) std::cout << ", r:" << seg_id.ring_index;
+        if (seg_id.multi_index >= 0) std::cout << ", m:" << seg_id.multi_index;
         return os;
     }
 #endif
 
-    signed_index_type source_index;
-    signed_index_type multi_index;
-    signed_index_type ring_index;
-    signed_index_type segment_index;
+    int source_index;
+    int multi_index;
+    int ring_index;
+    int segment_index;
 };
 
 

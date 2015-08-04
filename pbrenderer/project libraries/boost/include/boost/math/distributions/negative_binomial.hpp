@@ -460,15 +460,6 @@ namespace boost
       { // p <= pdf(dist, 0) == cdf(dist, 0)
         return 0;
       }
-      if(p == 0)
-      {  // Would need +infinity failures for total confidence.
-         result = policies::raise_overflow_error<RealType>(
-            function,
-            "Success fraction is 0, which implies infinite failures !", Policy());
-         return result;
-         // usually means return +std::numeric_limits<RealType>::infinity();
-         // unless #define BOOST_MATH_THROW_ON_OVERFLOW_ERROR
-      }
       /*
       // Calculate quantile of negative_binomial using the inverse incomplete beta function.
       using boost::math::ibeta_invb;
@@ -497,7 +488,7 @@ namespace boost
       return detail::inverse_discrete_quantile(
          dist,
          P,
-         false,
+         1-P,
          guess,
          factor,
          RealType(1),
@@ -536,26 +527,16 @@ namespace boost
           // since the probability of zero failures may be non-zero,
           return 0; // but zero is the best we can do:
        }
+       if (-Q <= boost::math::powm1(dist.success_fraction(), dist.successes(), Policy()))
+       {  // q <= cdf(complement(dist, 0)) == pdf(dist, 0)
+          return 0; //
+       }
        if(Q == 0)
        {  // Probability 1 - Q  == 1 so infinite failures to achieve certainty.
           // Would need +infinity failures for total confidence.
           result = policies::raise_overflow_error<RealType>(
              function,
              "Probability argument complement is 0, which implies infinite failures !", Policy());
-          return result;
-          // usually means return +std::numeric_limits<RealType>::infinity();
-          // unless #define BOOST_MATH_THROW_ON_OVERFLOW_ERROR
-       }
-       if (-Q <= boost::math::powm1(dist.success_fraction(), dist.successes(), Policy()))
-       {  // q <= cdf(complement(dist, 0)) == pdf(dist, 0)
-          return 0; //
-       }
-       if(p == 0)
-       {  // Success fraction is 0 so infinite failures to achieve certainty.
-          // Would need +infinity failures for total confidence.
-          result = policies::raise_overflow_error<RealType>(
-             function,
-             "Success fraction is 0, which implies infinite failures !", Policy());
           return result;
           // usually means return +std::numeric_limits<RealType>::infinity();
           // unless #define BOOST_MATH_THROW_ON_OVERFLOW_ERROR
@@ -583,8 +564,8 @@ namespace boost
        typedef typename Policy::discrete_quantile_type discrete_type;
        return detail::inverse_discrete_quantile(
           dist,
+          1-Q,
           Q,
-          true,
           guess,
           factor,
           RealType(1),

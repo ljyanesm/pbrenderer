@@ -1,6 +1,5 @@
-//#define BOOST_FILESYSTEM_VERSION 3
-#define BOOST_SYSTEM_DYN_LINK
-//#define BOOST_FILESYSTEM_NO_DEPRECATED 
+#define BOOST_FILESYSTEM_VERSION 3
+#define BOOST_FILESYSTEM_NO_DEPRECATED 
 #include <boost/filesystem.hpp>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
@@ -52,7 +51,7 @@ float	pointScale = 0.01f;
 float	influenceRadius = 0.2f;
 int		pointDiv = 0;
 
-const float NEARP = 0.1f;
+const float NEARP = .10f;
 const float FARP = 1000.0f;
 
 // view params
@@ -119,12 +118,13 @@ LYHapticInterface::LYDEVICE_TYPE deviceType;
 ///////////////////////////////////////////////////////
 clock_t startTimer;
 clock_t endTimer;
-char fps_string[120];
+char fps_string[255];
 ///////////////////////////////////////////////////////
 
 // FPS Control variables for rendering
 ///////////////////////////////////////////////////////
 StopWatchInterface *hapticTimer = NULL;
+double freq = 0;
 StopWatchInterface *graphicsTimer = NULL;
 
 const int FRAMES_PER_SECOND = 30;
@@ -156,7 +156,7 @@ void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceH
 	case LYSpaceHandler::GPU_SPATIAL_HASH:
 		{
 			std::cout << "Creating GPU Hash" << std::endl;
-			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(64));
+			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(128));
 		}
 		break;
 	case LYSpaceHandler::CPU_Z_ORDER:
@@ -186,6 +186,7 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 				&& it->path().filename() != "bbox.ply"
 				&& it->path().filename() != "surface.ply")
 			{
+
 				ret.push_back(it->path().filename());
 			}
 			++it;
@@ -204,6 +205,7 @@ void cudaInit(int argc, char **argv)
 		printf("No CUDA Capable devices found, exiting...\n");
 		exit(EXIT_SUCCESS);
 	}
+	cudaSetDevice(devID);
 	cudaDeviceSynchronize();
 	cudaThreadSynchronize();
 }
@@ -211,9 +213,18 @@ void cudaInit(int argc, char **argv)
 
 void initCUDA(int argc, char **argv)
 {
+	LARGE_INTEGER temp;
+
+	// get the tick frequency from the OS
+	QueryPerformanceFrequency((LARGE_INTEGER *) &temp);
+
+	// convert to type in which it is needed
+	freq = ((double) temp.QuadPart) / 1000.0;
+
 	cudaInit(argc, argv);
+	float* p;
+	checkCudaErrors(cudaMalloc((void **) &p, sizeof(float)));
 	sdkCreateTimer(&hapticTimer);
-	sdkResetTimer(&hapticTimer);
 	sdkCreateTimer(&graphicsTimer);
 }
 
@@ -233,9 +244,8 @@ void loadConfigFile( char ** argv )
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 5;
+	loadedModel = 4;
 	get_all(".", ".ply", modelFiles);
-	std::sort(modelFiles.begin(), modelFiles.end());
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 }
@@ -247,6 +257,7 @@ void initGL(int *argc, char **argv){
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialize OpenGL and glew
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	initCUDA(*argc, argv);
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
@@ -262,11 +273,9 @@ void initGL(int *argc, char **argv){
 	glClearColor(0.75, 0.75, 0.75, 1);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	initCUDA(*argc, argv);
-
 	loadConfigFile(argv);
 
-	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,10), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
+	m_pCamera = new LYCamera(width, height, glm::vec3(0,0,50), glm::vec4(2.4f, 4.0f, 0.0f, 0.0f));
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
@@ -354,6 +363,9 @@ void motion(int x, int y)
 	dx = (float)(x - ox);
 	dy = (float)(y - oy);
 
+	switch (M_VIEW)
+	{
+	case M_VIEW:
 		if (buttonState == 3)
 		{
 			// left+middle = zoom
@@ -372,6 +384,41 @@ void motion(int x, int y)
 			camera_rot[0] += dy / 5.0f;
 			camera_rot[1] += dx / 5.0f;
 		}
+
+		break;
+
+	case M_MOVE:
+		{
+			float translateSpeed = 0.003f;
+			float3 p = ioInterface->getDevice()->getPosition();
+
+			if (buttonState==1)
+			{
+				float v[3];
+				v[0] = dx*translateSpeed;
+				v[1] = -dy*translateSpeed;
+				v[2] = 0.0f;
+				glm::vec4 r = modelViewMatrix * glm::vec4(v[0], v[1], v[2],1.0);
+				p.x += r.x;
+				p.y += r.y;
+				p.z += r.z;
+			}
+			else if (buttonState==2)
+			{
+				float v[3];
+				v[0] = 0.0f;
+				v[1] = 0.0f;
+				v[2] = dy*translateSpeed;
+				glm::vec4 r = modelViewMatrix*glm::vec4(v[0], v[1], v[2], 1.0);
+				p.x += r.x;
+				p.y += r.y;
+				p.z += r.z;
+			}
+
+			ioInterface->getDevice()->setPosition(p);
+		}
+		break;
+	}
 
 	ox = x;
 	oy = y;
@@ -579,13 +626,14 @@ void special(int k, int x, int y)
 void cleanup()
 {
 	printf("Cleaning up!\n");
-
-	//delete m_plyLoader;
-	//delete screenspace_renderer;
-	//delete space_handler;
-	//delete m_pMesh;
-	//delete m_pCamera;
-	//delete ioInterface;
+	sdkDeleteTimer(&graphicsTimer);
+	sdkDeleteTimer(&hapticTimer);
+	delete m_plyLoader;
+	delete screenspace_renderer;
+	delete space_handler;
+	delete m_pMesh;
+	delete m_pCamera;
+	delete ioInterface;
 }
 
 void idle(void)
@@ -595,7 +643,6 @@ void idle(void)
 
 DWORD next_game_tick = GetTickCount();
 int sleep_time = 0;
-static int hapticFPS = 0;
 
 std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 {
@@ -619,13 +666,15 @@ std::string getSpaceHandlerString(LYSpaceHandler::SpaceHandlerType &sht)
 	return rString;
 }
 
-
 void display()
 {
+	static uint resetTimers = 0;
 	LYMesh *displayMesh = m_pMesh;
 	sdkStartTimer(&graphicsTimer);
 	Sleep(20);
+
 	// render
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewMatrix = glm::mat4();
 
@@ -665,7 +714,7 @@ void display()
 	/////////////////////////////////////////////////////////////////////////////////////////*/
 	glm::mat4 viewTransformation = glm::mat4();
 	viewMatrix *= glm::lookAt(m_pCamera->getPosition(), glm::vec3(0,0,0), glm::vec3(0,1,0));
-	viewTransformation *= glm::translate(glm::vec3(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]));
+	viewTransformation *= glm::translate(camera_trans_lag[0], camera_trans_lag[1], camera_trans_lag[2]);
 	viewTransformation *= glm::rotate(camera_rot_lag[0], glm::vec3(1,0,0));
 	viewTransformation *= glm::rotate(camera_rot_lag[1], glm::vec3(0,1,0));
 	viewMatrix *= viewTransformation;
@@ -708,54 +757,55 @@ void display()
 	overlay_renderer->display();
 
 	/////////////////////////////////////////////////////////////////////////////////////////// 
-	
-	sdkStopTimer(&graphicsTimer);
-	float displayTimer = 1000.0f / sdkGetAverageTimerValue(&graphicsTimer);
+
 	glutSwapBuffers();
 	glutReportErrors();
 
-	float averageTimer = 1000.0f / sdkGetAverageTimerValue(&hapticTimer);
+	sdkStopTimer(&graphicsTimer);
+
+	float graphicsFPS = 1000.0f / (sdkGetAverageTimerValue(&graphicsTimer));
+	float hapticFPS = 1000.f / sdkGetAverageTimerValue(&hapticTimer);
 
 	std::string spaceSubdivisionAlg = getSpaceHandlerString(spaceH_type);
-	sprintf(fps_string, "Model - %s - GraphicFPS: %5.2f HapticFPS: %5.2f - %s", 
-		modelFile.c_str(), displayTimer, averageTimer, spaceSubdivisionAlg.c_str());
+	sprintf(fps_string, "HPBR - %s - G FPS: %5.2f  H FPS: %5.2f  --   %s", 
+		modelFile.c_str(), graphicsFPS, hapticFPS, spaceSubdivisionAlg.c_str());
 
 	if (captureHapticTime){
 		std::ofstream myfile;
 		switch (spaceH_type)
 		{
-			case LYSpaceHandler::GPU_SPATIAL_HASH:
-				myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
-					.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
-					.append(".GPUlog"), std::ios::app);
-				myfile << averageTimer << std::endl;
-				myfile.close();
-				break;
-			case LYSpaceHandler::CPU_SPATIAL_HASH:
-				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
-				myfile << averageTimer << std::endl;
-				myfile.close();
-				break;
-			case LYSpaceHandler::CPU_Z_ORDER:
-				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
-				myfile << averageTimer << std::endl;
-				myfile.close();
-				break;
+		case LYSpaceHandler::GPU_SPATIAL_HASH:
+			myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
+				.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
+				.append(".GPUlog"), std::ios::app);
+			myfile << hapticFPS << std::endl;
+			myfile.close();
+			break;
+		case LYSpaceHandler::CPU_SPATIAL_HASH:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
+			myfile << hapticFPS << std::endl;
+			myfile.close();
+			break;
+		case LYSpaceHandler::CPU_Z_ORDER:
+			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
+			myfile << hapticFPS << std::endl;
+			myfile.close();
+			break;
 		}
 	}
 
+
 	glutSetWindowTitle(fps_string);
-	hapticFPS++;
-	if (hapticFPS >= 20){
+	resetTimers++;
+	if (resetTimers >= 30){
 		sdkResetTimer(&graphicsTimer);
 		sdkResetTimer(&hapticTimer);
-		hapticFPS = 0;
+		resetTimers = 0;
 	}
 }
 
 int main(int argc, char **argv)
 {
-
 	initGL(&argc, argv);
 
 	glutDisplayFunc(display);

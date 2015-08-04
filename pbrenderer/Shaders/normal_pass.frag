@@ -52,6 +52,7 @@ void main()
 	vec3 posEye = uvToEye(fs_Texcoord, exp_depth);
 	vec3 position = uvToEye(fs_Texcoord, exp_depth);
 	
+
 	out_Normal = vec4(normalize(cross(dFdx(position.xyz), dFdy(position.xyz))), 1.0f);
 	return;
 	//Compute Gradients of Depth and Cross Product Them to Get Normal
@@ -70,4 +71,5 @@ void main()
 
 	vec3 N = cross(ddx,ddy);
 	out_Normal = vec4(normalize(N), 1.0);
+	out_Normal = vec4(normalize(cross(dFdx(position.xyz), dFdy(position.xyz))), 1.0f);
 }

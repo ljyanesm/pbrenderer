@@ -18,7 +18,7 @@ extern "C"
 		size_t   numVertices,
 		uint   numCells);
 
-	void sortParticlesThrust(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices);
+	void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, size_t numVertices);
 
 	void collisionCheck  (const ccConfiguration &arguments);
 	void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceVector, uint *gridParticleIndex, uint *cellStart, uint *cellEnd, SimParams *dev_params, size_t numVertices);

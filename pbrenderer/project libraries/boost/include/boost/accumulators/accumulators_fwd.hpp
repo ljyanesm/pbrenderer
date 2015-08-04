@@ -11,7 +11,6 @@
 #include <boost/config.hpp>
 #include <boost/mpl/apply_fwd.hpp> // for mpl::na
 #include <boost/mpl/limits/vector.hpp>
-#include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/arithmetic/inc.hpp>
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/preprocessor/repetition/enum_trailing_params.hpp>
@@ -186,18 +185,8 @@ namespace detail
 
     inline void ignore_variable(void const *) {}
 
-#define BOOST_ACCUMULATORS_IGNORE_GLOBAL(X)                             \
-    namespace detail                                                    \
-    {                                                                   \
-        struct BOOST_PP_CAT(ignore_, X)                                 \
-        {                                                               \
-            void ignore()                                               \
-            {                                                           \
-                boost::accumulators::detail::ignore_variable(&X);       \
-            }                                                           \
-        };                                                              \
-    }                                                                   \
-    /**/
+  #define BOOST_ACCUMULATORS_IGNORE_GLOBAL(X)\
+    namespace detail { inline void BOOST_PP_CAT(ignore_, X)() { boost::accumulators::detail::ignore_variable(&X); } }
 }
 
 }} // namespace boost::accumulators

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,10 +11,6 @@
 #ifndef BOOST_INTERPROCESS_FILE_MAPPING_HPP
 #define BOOST_INTERPROCESS_FILE_MAPPING_HPP
 
-#if defined(_MSC_VER)
-#  pragma once
-#endif
-
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
 
@@ -23,7 +19,7 @@
 #include <boost/interprocess/detail/utilities.hpp>
 #include <boost/interprocess/creation_tags.hpp>
 #include <boost/interprocess/detail/os_file_functions.hpp>
-#include <boost/move/utility_core.hpp>
+#include <boost/move/move.hpp>
 #include <string>    //std::string
 
 //!\file
@@ -36,9 +32,9 @@ namespace interprocess {
 //!create mapped regions from the mapped files
 class file_mapping
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    BOOST_MOVABLE_BUT_NOT_COPYABLE(file_mapping)
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 
    public:
    //!Constructs an empty file mapping.
@@ -56,7 +52,6 @@ class file_mapping
    //!Does not throw
    file_mapping(BOOST_RV_REF(file_mapping) moved)
       :  m_handle(file_handle_t(ipcdetail::invalid_file()))
-      ,  m_mode(read_only)
    {  this->swap(moved);   }
 
    //!Moves the ownership of "moved"'s file mapping to *this.
@@ -66,7 +61,7 @@ class file_mapping
    {
       file_mapping tmp(boost::move(moved));
       this->swap(tmp);
-      return *this;
+      return *this; 
    }
 
    //!Swaps to file_mappings.
@@ -95,19 +90,18 @@ class file_mapping
    //!being used other processes and no deletion permission was shared.
    static bool remove(const char *filename);
 
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    private:
    //!Closes a previously opened file mapping. Never throws.
    void priv_close();
    file_handle_t  m_handle;
-   mode_t         m_mode;
-   std::string    m_filename;
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   mode_t    m_mode;
+   std::string       m_filename;
+   /// @endcond
 };
 
 inline file_mapping::file_mapping()
    :  m_handle(file_handle_t(ipcdetail::invalid_file()))
-   ,  m_mode(read_only)
 {}
 
 inline file_mapping::~file_mapping()
@@ -117,10 +111,10 @@ inline const char *file_mapping::get_name() const
 {  return m_filename.c_str(); }
 
 inline void file_mapping::swap(file_mapping &other)
-{
+{ 
    std::swap(m_handle, other.m_handle);
    std::swap(m_mode, other.m_mode);
-   m_filename.swap(other.m_filename);
+   m_filename.swap(other.m_filename);  
 }
 
 inline mapping_handle_t file_mapping::get_mapping_handle() const
@@ -154,7 +148,7 @@ inline file_mapping::file_mapping
 inline bool file_mapping::remove(const char *filename)
 {  return ipcdetail::delete_file(filename);  }
 
-#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+///@cond
 
 inline void file_mapping::priv_close()
 {
@@ -163,6 +157,8 @@ inline void file_mapping::priv_close()
       m_handle = ipcdetail::invalid_file();
    }
 }
+
+///@endcond
 
 //!A class that stores the name of a file
 //!and tries to remove it in its destructor
@@ -179,8 +175,6 @@ class remove_file_on_destroy
    ~remove_file_on_destroy()
    {  ipcdetail::delete_file(m_name);  }
 };
-
-#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 }  //namespace interprocess {
 }  //namespace boost {

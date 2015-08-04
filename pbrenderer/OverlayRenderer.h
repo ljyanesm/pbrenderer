@@ -33,5 +33,4 @@ public:
 	void setSurfacePosition(float4 p) { surfacePosition = p; }
 	void setSurfaceNormal(float4 n) {surfaceNormal = n; }
 	void setForceVector(float4 f) { forceVector = f; }
-
 };

@@ -44,8 +44,18 @@ typedef struct _SimParams
 
 	uint3 gridSize;
 
+	float dmin;
 	float w_tot;
+	float wn_tot;
 	float R;
+	float RMAX;
+	float RMIN;
+	float colliderRadius;
+    
+	uint numCells;
+    size_t numBodies;
+    uint maxParticlesPerCell;
+	
 }SimParams;
 
 enum CollisionCheckType{
@@ -53,13 +63,13 @@ enum CollisionCheckType{
 	NAIVE,
 	DYNAMIC,
 	TWO_STEP,
-	REDUCTION,
 	NUM_TYPES
 };
 
-struct ccConfiguration { // Collision check configuration call object
+class ccConfiguration { // Collision check configuration call object
+public:
 	float3					pos;
-	float					padding;
+	float					pad;
 	float4					forceVector; 
 	size_t					numVertices;
 	size_t					numToolVertices;
@@ -136,6 +146,7 @@ struct ToolCollisionCheckArgs {
 struct CollisionCheckArgs{
 	float4			forceVector;
 	float3			pos;
+	float			padding;
 	uint*			collectionCellStart;
 	uint*			collectionVertices;
 	LYVertex*		sortedPos;
@@ -149,6 +160,6 @@ struct OvershootArgs{
 	float4			*sinking;				// Device pointer to the float4 sinking property
 	float3			pos;
 	float			influenceRadius;
-	size_t			numVertices;
+	uint			numVertices;
 };
 #endif

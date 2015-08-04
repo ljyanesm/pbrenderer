@@ -63,11 +63,9 @@ void main()
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
     vec3 Color = texture(u_Colortex,fs_Texcoord).xyz;
-    vec3 BackColor = vec3(0.75, 0.75, 0.75);//texture(u_Backgroundtex,fs_Texcoord).xyz;
+    vec3 BackColor = vec3(0.75, 0.75, 0.75);
 	vec3 position = texture(u_Positiontex,fs_Texcoord).xyz;
-	float thickness = 1.0; //clamp(texture(u_Thicktex,fs_Texcoord).r,0.0f,1.0f);
-    //vec3 position = uvToEye(fs_Texcoord,lin_depth).xyz;
-    
+	float thickness = 1.0;
     vec3 incident = normalize(lightDir.xyz);
     vec3 viewer = normalize(-position.xyz);
     
@@ -78,13 +76,13 @@ void main()
     
     //Background Only Pixels
     if(exp_depth > 0.99999999){
-		out_Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		out_Color = vec4(1.0f, 1.0f, 1.0f, 0.0f);
 		return;
 	}
         
     //Background Refraction
     vec4 refrac_color = vec4(0.75, 0.75, 0.75, 0.0);
-
+    
     vec3 final_color = refrac_color.rgb;
     
 	switch(u_DisplayType) {

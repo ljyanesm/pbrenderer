@@ -21,6 +21,11 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/limits.hpp>
 
+#if BOOST_WORKAROUND(BOOST_MSVC, < 1300)
+// Stay out of the way of the concept checking class
+# define Graph Graph_
+#endif
+
 namespace boost {
 
   // This is a bit more convenient than std::numeric_limits because
@@ -39,7 +44,7 @@ namespace boost {
       on_discover_vertex_num, on_finish_vertex_num, on_examine_vertex_num,
       on_examine_edge_num, on_tree_edge_num, on_non_tree_edge_num,
       on_gray_target_num, on_black_target_num,
-      on_forward_or_cross_edge_num, on_back_edge_num, on_finish_edge_num,
+      on_forward_or_cross_edge_num, on_back_edge_num,
       on_edge_relaxed_num, on_edge_not_relaxed_num,
       on_edge_minimized_num, on_edge_not_minimized_num
     };
@@ -70,7 +75,6 @@ namespace boost {
   struct on_forward_or_cross_edge {
     enum { num = detail::on_forward_or_cross_edge_num }; };
   struct on_back_edge { enum { num = detail::on_back_edge_num }; };
-  struct on_finish_edge { enum { num = detail::on_finish_edge_num }; };
 
   struct on_edge_relaxed { enum { num = detail::on_edge_relaxed_num }; };
   struct on_edge_not_relaxed {
@@ -118,6 +122,16 @@ namespace boost {
     detail::invoke_dispatch(vlist.first, x, g, IsSameTag());
     invoke_visitors(vlist.second, x, g, tag);
   }
+#if defined(BOOST_MSVC) && BOOST_MSVC <= 1300
+  template <class Visitor, class T, class Graph, class Tag>
+  inline void
+  invoke_visitors(base_visitor<Visitor>& vis, T x, Graph& g, Tag) {
+    typedef typename Visitor::event_filter Category;
+    typedef typename is_same<Category, Tag>::type IsSameTag;
+    Visitor& v = static_cast<Visitor&>(vis);
+    detail::invoke_dispatch(v, x, g, IsSameTag());
+  }
+#else
   template <class Visitor, class T, class Graph, class Tag>
   inline void
   invoke_visitors(Visitor& v, T x, Graph& g, Tag) {
@@ -125,6 +139,7 @@ namespace boost {
     typedef typename is_same<Category, Tag>::type IsSameTag;
     detail::invoke_dispatch(v, x, g, IsSameTag());
   }
+#endif
 
   //========================================================================
   // predecessor_recorder
@@ -254,7 +269,7 @@ namespace boost {
     {}
 
     template <typename VertexOrEdge, typename Graph>
-    void operator() (VertexOrEdge v, const Graph&)
+    void operator() (VertexOrEdge v, const Graph& g)
     {
       put (property_map_, v, value_);
     }
@@ -277,7 +292,7 @@ namespace boost {
     inline property_put <PropertyMap, EventTag>
     put_property (PropertyMap property_map,
                   typename property_traits <PropertyMap>::value_type value,
-                  EventTag)
+                  EventTag tag)
     {
       return property_put <PropertyMap, EventTag> (property_map, value);
     }
@@ -296,5 +311,10 @@ namespace boost {
     }
 
 } /* namespace boost */
+
+#if BOOST_WORKAROUND(BOOST_MSVC, < 1300)
+// Stay out of the way of the concept checking class
+# undef Graph
+#endif
 
 #endif

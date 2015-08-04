@@ -14,10 +14,11 @@
 #ifndef BOOST_GEOMETRY_CORE_TAG_HPP
 #define BOOST_GEOMETRY_CORE_TAG_HPP
 
+
 #include <boost/mpl/assert.hpp>
+#include <boost/type_traits/remove_const.hpp>
 
 #include <boost/geometry/core/tags.hpp>
-#include <boost/geometry/util/bare_type.hpp>
 
 
 namespace boost { namespace geometry
@@ -46,12 +47,11 @@ struct tag
 } // namespace traits
 
 
-
 /*!
 \brief \brief_meta{type, tag, \meta_geometry_type}
 \details With Boost.Geometry, tags are the driving force of the tag dispatching
     mechanism. The tag metafunction is therefore used in every free function.
-\tparam Geometry \tparam_geometry
+\tparam Geometry \tparam_geometry 
 \ingroup core
 
 \qbk{[include reference/core/tag.qbk]}
@@ -61,7 +61,7 @@ struct tag
 {
     typedef typename traits::tag
         <
-            typename geometry::util::bare_type<Geometry>::type
+            typename boost::remove_const<Geometry>::type
         >::type type;
 };
 

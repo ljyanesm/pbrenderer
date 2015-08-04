@@ -14,9 +14,7 @@
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
 #include <boost/thread/thread_time.hpp>
-#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
-#endif
 #include <boost/detail/interlocked.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
@@ -60,7 +58,7 @@ namespace boost
             }
 
 
-            bool try_lock() BOOST_NOEXCEPT
+            bool try_lock()
             {
                 return !win32::interlocked_bit_test_and_set(&active_count,lock_flag_bit);
             }
@@ -81,10 +79,8 @@ namespace boost
 
                     do
                     {
-                        unsigned const retval(win32::WaitForSingleObjectEx(sem, ::boost::detail::win32::infinite,0));
-                        BOOST_VERIFY(0 == retval || ::boost::detail::win32::wait_abandoned == retval);
-//                        BOOST_VERIFY(win32::WaitForSingleObject(
-//                                         sem,::boost::detail::win32::infinite)==0);
+                        BOOST_VERIFY(win32::WaitForSingleObject(
+                                         sem,::boost::detail::win32::infinite)==0);
                         clear_waiting_and_try_lock(old_count);
                         lock_acquired=!(old_count&lock_flag_value);
                     }
@@ -95,13 +91,10 @@ namespace boost
             {
                 for(;;)
                 {
-                    bool const was_locked=(old_count&lock_flag_value) ? true : false;
-                    long const new_count=was_locked?(old_count+1):(old_count|lock_flag_value);
+                    long const new_count=(old_count&lock_flag_value)?(old_count+1):(old_count|lock_flag_value);
                     long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,new_count,old_count);
                     if(current==old_count)
                     {
-                        if(was_locked)
-                            old_count=new_count;
                         break;
                     }
                     old_count=current;
@@ -125,7 +118,6 @@ namespace boost
             }
 
 
-#if defined BOOST_THREAD_USES_DATETIME
             bool timed_lock(::boost::system_time const& wait_until)
             {
                 if(try_lock())
@@ -142,7 +134,7 @@ namespace boost
 
                     do
                     {
-                        if(win32::WaitForSingleObjectEx(sem,::boost::detail::get_milliseconds_until(wait_until),0)!=0)
+                        if(win32::WaitForSingleObject(sem,::boost::detail::get_milliseconds_until(wait_until))!=0)
                         {
                             BOOST_INTERLOCKED_DECREMENT(&active_count);
                             return false;
@@ -155,6 +147,7 @@ namespace boost
                 return true;
             }
 
+
             template<typename Duration>
             bool timed_lock(Duration const& timeout)
             {
@@ -165,8 +158,7 @@ namespace boost
             {
                 return timed_lock(system_time(timeout));
             }
-#endif
-#ifdef BOOST_THREAD_USES_CHRONO
+
             template <class Rep, class Period>
             bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
             {
@@ -203,14 +195,9 @@ namespace boost
 
                   do
                   {
-                      chrono::time_point<chrono::system_clock, chrono::system_clock::duration> now = chrono::system_clock::now();
-                      if (tp<=now) {
-                        BOOST_INTERLOCKED_DECREMENT(&active_count);
-                        return false;
-                      }
-                      chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-now);
+                      chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
 
-                      if(win32::WaitForSingleObjectEx(sem,static_cast<unsigned long>(rel_time.count()),0)!=0)
+                      if(win32::WaitForSingleObject(sem,static_cast<unsigned long>(rel_time.count()))!=0)
                       {
                           BOOST_INTERLOCKED_DECREMENT(&active_count);
                           return false;
@@ -222,7 +209,6 @@ namespace boost
               }
               return true;
             }
-#endif
 
             void unlock()
             {

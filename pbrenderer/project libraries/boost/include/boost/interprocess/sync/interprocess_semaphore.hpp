@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,9 +11,9 @@
 #ifndef BOOST_INTERPROCESS_SEMAPHORE_HPP
 #define BOOST_INTERPROCESS_SEMAPHORE_HPP
 
-#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+/// @cond
 
-#if defined(_MSC_VER)
+#if (defined _MSC_VER) && (_MSC_VER >= 1200)
 #  pragma once
 #endif
 
@@ -37,7 +37,7 @@
    #define BOOST_INTERPROCESS_USE_GENERIC_EMULATION
 #endif
 
-#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+/// @endcond
 
 //!\file
 //!Describes a interprocess_semaphore class for inter-process synchronization
@@ -49,11 +49,11 @@ namespace interprocess {
 //!shared between processes. Allows timed lock tries
 class interprocess_semaphore
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    //Non-copyable
    interprocess_semaphore(const interprocess_semaphore &);
    interprocess_semaphore &operator=(const interprocess_semaphore &);
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
    public:
    //!Creates a interprocess_semaphore with the given initial count.
    //!interprocess_exception if there is an error.*/
@@ -87,7 +87,7 @@ class interprocess_semaphore
 
    //!Returns the interprocess_semaphore count
 //   int get_count() const;
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    private:
    #if defined(BOOST_INTERPROCESS_USE_GENERIC_EMULATION)
       #undef BOOST_INTERPROCESS_USE_GENERIC_EMULATION
@@ -99,7 +99,7 @@ class interprocess_semaphore
       #undef BOOST_INTERPROCESS_USE_POSIX
       ipcdetail::posix_semaphore m_sem;
    #endif   //#if defined(BOOST_INTERPROCESS_USE_GENERIC_EMULATION)
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 };
 
 }  //namespace interprocess {

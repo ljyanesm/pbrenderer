@@ -22,16 +22,12 @@ void main()
     //Get Depth Information about the Pixel
     float exp_depth = texture(u_Depthtex,fs_Texcoord).r;
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
-    //float blurRadius = (1.0f/lin_depth) * 0.0001;
+
 	vec2 imgStep = vec2(u_Width, u_Height);
     int windowWidth = 3;
+
     float sum = 0;
     float wsum = 0;
-	
-	// FIXME: REMOVE THIS FOR REAL APPLICATION!
-	// Only to test the smoothing process!!
-	//out_Depth = vec4(exp_depth);
-	//return;
     
     if(exp_depth >= 0.9999){
 		out_Depth = vec4(exp_depth);

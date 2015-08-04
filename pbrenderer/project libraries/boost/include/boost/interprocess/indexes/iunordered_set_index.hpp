@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -10,10 +10,6 @@
 
 #ifndef BOOST_INTERPROCESS_IUNORDERED_SET_INDEX_HPP
 #define BOOST_INTERPROCESS_IUNORDERED_SET_INDEX_HPP
-
-#if defined(_MSC_VER)
-#  pragma once
-#endif
 
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
@@ -32,7 +28,7 @@
 
 namespace boost { namespace interprocess {
 
-#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+/// @cond
 
 //!Helper class to define typedefs
 //!from IndexTraits
@@ -62,21 +58,21 @@ struct iunordered_set_index_aux
    struct equal_function
    {
       bool operator()(const intrusive_compare_key_type &i, const value_type &b) const
-      {
+      { 
          return (i.m_len == b.name_length()) &&
                   (std::char_traits<char_type>::compare
                      (i.mp_str, b.name(), i.m_len) == 0);
       }
 
       bool operator()(const value_type &b, const intrusive_compare_key_type &i) const
-      {
+      { 
          return (i.m_len == b.name_length()) &&
                   (std::char_traits<char_type>::compare
                      (i.mp_str, b.name(), i.m_len) == 0);
       }
 
       bool operator()(const value_type &b1, const value_type &b2) const
-      {
+      { 
          return (b1.name_length() == b2.name_length()) &&
                   (std::char_traits<char_type>::compare
                      (b1.name(), b2.name(), b1.name_length()) == 0);
@@ -120,7 +116,7 @@ struct iunordered_set_index_aux
       bucket_type init_bucket;
    };
 };
-#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+/// @endcond
 
 //!Index type based in boost::intrusive::set.
 //!Just derives from boost::intrusive::set
@@ -131,7 +127,7 @@ class iunordered_set_index
    :  private iunordered_set_index_aux<MapConfig>::allocator_holder
    ,  public iunordered_set_index_aux<MapConfig>::index_t
 {
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    typedef iunordered_set_index_aux<MapConfig>           index_aux;
    typedef typename index_aux::index_t                   index_type;
    typedef typename MapConfig::
@@ -143,7 +139,7 @@ class iunordered_set_index
       iunordered_set_index_aux<MapConfig>::allocator_type      allocator_type;
    typedef typename
       iunordered_set_index_aux<MapConfig>::allocator_holder    allocator_holder;
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 
    public:
    typedef typename index_type::iterator                 iterator;
@@ -155,7 +151,7 @@ class iunordered_set_index
    typedef typename index_type::bucket_traits            bucket_traits;
    typedef typename index_type::size_type                size_type;
 
-   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   /// @cond
    private:
    typedef typename index_aux::
       segment_manager_base             segment_manager_base;
@@ -194,7 +190,7 @@ class iunordered_set_index
 
       bucket_ptr shunk_p = alloc.allocation_command
          (boost::interprocess::shrink_in_place | boost::interprocess::nothrow_allocation, received_size, received_size, received_size, buckets).first;
-      BOOST_ASSERT(buckets == shunk_p); (void)shunk_p;
+      BOOST_ASSERT(buckets == shunk_p);
 
       bucket_ptr buckets_init = buckets + received_size;
       for(size_type i = 0; i < (old_size - received_size); ++i){
@@ -240,7 +236,7 @@ class iunordered_set_index
    iunordered_set_index<MapConfig>* get_this_pointer()
    {  return this;   }
 
-   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+   /// @endcond
 
    public:
    //!Constructor. Takes a pointer to the
@@ -294,7 +290,7 @@ class iunordered_set_index
       size_type cur_size   = this->size();
       size_type cur_count  = this->bucket_count();
       bucket_ptr old_p = this->bucket_pointer();
-
+     
       if(!this->size() && old_p != bucket_ptr(&this->init_bucket)){
          this->rehash(bucket_traits(bucket_ptr(&this->init_bucket), 1));
          destroy_buckets(this->alloc, old_p, cur_count);
@@ -341,7 +337,7 @@ class iunordered_set_index
             //Strong guarantee: if something goes wrong
             //we should remove the insertion.
             //
-            //We can use the iterator because the hash function
+            //We can use the iterator because the hash function  
             //can't throw and this means that "reserve" will
             //throw only because of the memory allocation:
             //the iterator has not been invalidated.
@@ -353,7 +349,7 @@ class iunordered_set_index
    }
 };
 
-#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+/// @cond
 
 //!Trait class to detect if an index is an intrusive
 //!index
@@ -363,7 +359,7 @@ struct is_intrusive_index
 {
    static const bool value = true;
 };
-#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
+/// @endcond
 
 }}   //namespace boost { namespace interprocess {
 

@@ -14,7 +14,7 @@
 #ifndef BOOST_HASH_VARIANT_FUNCTION_HPP
 #define BOOST_HASH_VARIANT_FUNCTION_HPP
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
 #endif
 
@@ -29,7 +29,8 @@ namespace boost {
         struct variant_hasher: public boost::static_visitor<std::size_t> {
             template <class T>
             std::size_t operator()(T const& val) const {
-                boost::hash<T> hasher;
+                using namespace boost;
+                hash<T> hasher;
                 return hasher(val);
             }
         };

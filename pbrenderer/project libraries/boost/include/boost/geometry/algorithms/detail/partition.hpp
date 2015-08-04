@@ -1,6 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2011-2014 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2011-2012 Barend Gehrels, Amsterdam, the Netherlands.
 
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -10,7 +10,6 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_PARTITION_HPP
 
 #include <vector>
-#include <boost/assert.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/core/coordinate_type.hpp>
@@ -24,7 +23,7 @@ namespace detail { namespace partition
 typedef std::vector<std::size_t> index_vector_type;
 
 template <int Dimension, typename Box>
-void divide_box(Box const& box, Box& lower_box, Box& upper_box)
+inline void divide_box(Box const& box, Box& lower_box, Box& upper_box)
 {
     typedef typename coordinate_type<Box>::type ctype;
 
@@ -40,10 +39,10 @@ void divide_box(Box const& box, Box& lower_box, Box& upper_box)
 }
 
 // Divide collection into three subsets: lower, upper and oversized
-// (not-fitting)
+// (not-fitting) 
 // (lower == left or bottom, upper == right or top)
 template <typename OverlapsPolicy, typename InputCollection, typename Box>
-inline void divide_into_subsets(Box const& lower_box,
+static inline void divide_into_subsets(Box const& lower_box,
         Box const& upper_box,
         InputCollection const& collection,
         index_vector_type const& input,
@@ -80,14 +79,14 @@ inline void divide_into_subsets(Box const& lower_box,
         else
         {
             // Is nowhere! Should not occur!
-            BOOST_ASSERT(false);
+            BOOST_ASSERT(true);
         }
     }
 }
 
 // Match collection with itself
 template <typename InputCollection, typename Policy>
-inline void handle_one(InputCollection const& collection,
+static inline void handle_one(InputCollection const& collection,
         index_vector_type const& input,
         Policy& policy)
 {
@@ -107,15 +106,10 @@ inline void handle_one(InputCollection const& collection,
 }
 
 // Match collection 1 with collection 2
-template
-<
-    typename InputCollection1,
-    typename InputCollection2,
-    typename Policy
->
-inline void handle_two(
-        InputCollection1 const& collection1, index_vector_type const& input1,
-        InputCollection2 const& collection2, index_vector_type const& input2,
+template <typename InputCollection, typename Policy>
+static inline void handle_two(
+        InputCollection const& collection1, index_vector_type const& input1,
+        InputCollection const& collection2, index_vector_type const& input2,
         Policy& policy)
 {
     typedef boost::range_iterator
@@ -215,8 +209,7 @@ template
 <
     int Dimension,
     typename Box,
-    typename OverlapsPolicy1,
-    typename OverlapsPolicy2,
+    typename OverlapsPolicy,
     typename VisitBoxPolicy
 >
 class partition_two_collections
@@ -227,21 +220,15 @@ class partition_two_collections
             <
                 1 - Dimension,
                 Box,
-                OverlapsPolicy1,
-                OverlapsPolicy2,
+                OverlapsPolicy,
                 VisitBoxPolicy
             > sub_divide;
 
-    template
-    <
-        typename InputCollection1,
-        typename InputCollection2,
-        typename Policy
-    >
+    template <typename InputCollection, typename Policy>
     static inline void next_level(Box const& box,
-            InputCollection1 const& collection1,
+            InputCollection const& collection1,
             index_vector_type const& input1,
-            InputCollection2 const& collection2,
+            InputCollection const& collection2,
             index_vector_type const& input2,
             int level, std::size_t min_elements,
             Policy& policy, VisitBoxPolicy& box_policy)
@@ -265,15 +252,10 @@ class partition_two_collections
     }
 
 public :
-    template
-    <
-        typename InputCollection1,
-        typename InputCollection2,
-        typename Policy
-    >
+    template <typename InputCollection, typename Policy>
     static inline void apply(Box const& box,
-            InputCollection1 const& collection1, index_vector_type const& input1,
-            InputCollection2 const& collection2, index_vector_type const& input2,
+            InputCollection const& collection1, index_vector_type const& input1,
+            InputCollection const& collection2, index_vector_type const& input2,
             int level,
             std::size_t min_elements,
             Policy& policy, VisitBoxPolicy& box_policy)
@@ -285,9 +267,9 @@ public :
 
         index_vector_type lower1, upper1, exceeding1;
         index_vector_type lower2, upper2, exceeding2;
-        divide_into_subsets<OverlapsPolicy1>(lower_box, upper_box, collection1,
+        divide_into_subsets<OverlapsPolicy>(lower_box, upper_box, collection1,
                     input1, lower1, upper1, exceeding1);
-        divide_into_subsets<OverlapsPolicy2>(lower_box, upper_box, collection2,
+        divide_into_subsets<OverlapsPolicy>(lower_box, upper_box, collection2,
                     input2, lower2, upper2, exceeding2);
 
         if (boost::size(exceeding1) > 0)
@@ -326,17 +308,15 @@ struct visit_no_policy
 template
 <
     typename Box,
-    typename ExpandPolicy1,
-    typename OverlapsPolicy1,
-    typename ExpandPolicy2 = ExpandPolicy1,
-    typename OverlapsPolicy2 = OverlapsPolicy1,
+    typename ExpandPolicy,
+    typename OverlapsPolicy,
     typename VisitBoxPolicy = visit_no_policy
 >
 class partition
 {
     typedef std::vector<std::size_t> index_vector_type;
 
-    template <typename ExpandPolicy, typename InputCollection>
+    template <typename InputCollection>
     static inline void expand_to_collection(InputCollection const& collection,
                 Box& total, index_vector_type& index_vector)
     {
@@ -364,12 +344,12 @@ public :
             index_vector_type index_vector;
             Box total;
             assign_inverse(total);
-            expand_to_collection<ExpandPolicy1>(collection, total, index_vector);
+            expand_to_collection(collection, total, index_vector);
 
             detail::partition::partition_one_collection
                 <
                     0, Box,
-                    OverlapsPolicy1,
+                    OverlapsPolicy,
                     VisitBoxPolicy
                 >::apply(total, collection, index_vector, 0, min_elements,
                                 visitor, box_visitor);
@@ -393,14 +373,9 @@ public :
         }
     }
 
-    template
-    <
-        typename InputCollection1,
-        typename InputCollection2,
-        typename VisitPolicy
-    >
-    static inline void apply(InputCollection1 const& collection1,
-                InputCollection2 const& collection2,
+    template <typename InputCollection, typename VisitPolicy>
+    static inline void apply(InputCollection const& collection1,
+                InputCollection const& collection2,
                 VisitPolicy& visitor,
                 std::size_t min_elements = 16,
                 VisitBoxPolicy box_visitor = visit_no_policy()
@@ -412,12 +387,12 @@ public :
             index_vector_type index_vector1, index_vector2;
             Box total;
             assign_inverse(total);
-            expand_to_collection<ExpandPolicy1>(collection1, total, index_vector1);
-            expand_to_collection<ExpandPolicy2>(collection2, total, index_vector2);
+            expand_to_collection(collection1, total, index_vector1);
+            expand_to_collection(collection2, total, index_vector2);
 
             detail::partition::partition_two_collections
                 <
-                    0, Box, OverlapsPolicy1, OverlapsPolicy2, VisitBoxPolicy
+                    0, Box, OverlapsPolicy, VisitBoxPolicy
                 >::apply(total,
                     collection1, index_vector1,
                     collection2, index_vector2,
@@ -427,17 +402,13 @@ public :
         {
             typedef typename boost::range_iterator
                 <
-                    InputCollection1 const
-                >::type iterator_type1;
-            typedef typename boost::range_iterator
-                <
-                    InputCollection2 const
-                >::type iterator_type2;
-            for(iterator_type1 it1 = boost::begin(collection1);
+                    InputCollection const
+                >::type iterator_type;
+            for(iterator_type it1 = boost::begin(collection1);
                 it1 != boost::end(collection1);
                 ++it1)
             {
-                for(iterator_type2 it2 = boost::begin(collection2);
+                for(iterator_type it2 = boost::begin(collection2);
                     it2 != boost::end(collection2);
                     ++it2)
                 {
@@ -446,8 +417,8 @@ public :
             }
         }
     }
-};
 
+};
 
 }} // namespace boost::geometry
 

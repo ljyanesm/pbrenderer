@@ -98,7 +98,7 @@ namespace boost { namespace spirit
         typedef Locals locals_type;
 
         context(typename Attributes::car_type attribute)
-          : attributes(attribute, fusion::nil_()), locals() {}
+          : attributes(attribute, fusion::nil()), locals() {}
 
         template <typename Args, typename Context>
         context(
@@ -116,8 +116,8 @@ namespace boost { namespace spirit
             )
           , locals() {}
 
-        context(Attributes const& attributes_)
-          : attributes(attributes_), locals() {}
+        context(Attributes const& attributes)
+          : attributes(attributes), locals() {}
 
         Attributes attributes;  // The attributes
         Locals locals;          // Local variables

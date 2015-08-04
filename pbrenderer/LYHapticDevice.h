@@ -31,13 +31,11 @@ private:
 	bool m_ok;
 public:
 	LYHapticDevice(LYSpaceHandler *sh, LYMesh *p, LYMesh *h);
-	virtual ~LYHapticDevice();
+	~LYHapticDevice();
 
 	bool isOk() const;
 	void obtainHapticState();
 	bool initHD();
-	bool stopHD();
-	bool startHD();
 	bool loadDevices();
 	void touchTool();
 };

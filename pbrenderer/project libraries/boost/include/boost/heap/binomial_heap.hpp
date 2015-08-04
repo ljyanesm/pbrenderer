@@ -10,7 +10,6 @@
 #define BOOST_HEAP_BINOMIAL_HEAP_HPP
 
 #include <algorithm>
-#include <utility>
 #include <vector>
 
 #include <boost/assert.hpp>
@@ -19,10 +18,6 @@
 #include <boost/heap/detail/heap_node.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
-
-#ifdef BOOST_HAS_PRAGMA_ONCE
-#pragma once
-#endif
 
 #ifndef BOOST_DOXYGEN_INVOKED
 #ifdef BOOST_HEAP_SANITYCHECKS
@@ -66,7 +61,7 @@ struct make_binomial_heap_base
             base_type(arg)
         {}
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifdef BOOST_HAS_RVALUE_REFS
         type(type const & rhs):
             base_type(rhs), allocator_type(rhs)
         {}
@@ -131,7 +126,6 @@ class binomial_heap:
 
     typedef typename super_t::internal_type internal_type;
     typedef typename super_t::size_holder_type size_holder;
-    typedef typename super_t::stability_counter_type stability_counter_type;
     typedef typename base_maker::allocator_argument allocator_argument;
 
     template <typename Heap1, typename Heap2>
@@ -251,7 +245,7 @@ public:
         return *this;
     }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifdef BOOST_HAS_RVALUE_REFS
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue &&)
     binomial_heap(binomial_heap && rhs):
         super_t(std::move(rhs)), top_element(rhs.top_element)
@@ -359,7 +353,7 @@ public:
         return handle_type(n);
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_HAS_RVALUE_REFS) && !defined(BOOST_NO_VARIADIC_TEMPLATES)
     /**
      * \b Effects: Adds a new element to the priority queue. The element is directly constructed in-place. Returns handle to element.
      *
@@ -400,15 +394,11 @@ public:
 
         if (element->child_count()) {
             size_type sz = (1 << element->child_count()) - 1;
-
             binomial_heap children(value_comp(), element->children, sz);
-            if (trees.empty()) {
-                stability_counter_type stability_count = super_t::get_stability_count();
+            if (trees.empty())
                 swap(children);
-                super_t::set_stability_count(stability_count);
-            } else
+            else
                 merge_and_clear_nodes(children);
-
         }
 
         if (trees.empty())
@@ -538,7 +528,7 @@ public:
         rhs.set_size(0);
         rhs.top_element = NULL;
 
-        super_t::set_stability_count((std::max)(super_t::get_stability_count(),
+        super_t::set_stability_count(std::max(super_t::get_stability_count(),
                                      rhs.get_stability_count()));
         rhs.set_stability_count(0);
     }

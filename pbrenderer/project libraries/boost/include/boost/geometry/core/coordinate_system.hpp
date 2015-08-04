@@ -16,9 +16,8 @@
 
 
 #include <boost/mpl/assert.hpp>
-
+#include <boost/type_traits/remove_const.hpp>
 #include <boost/geometry/core/point_type.hpp>
-#include <boost/geometry/util/bare_type.hpp>
 
 
 namespace boost { namespace geometry
@@ -62,13 +61,10 @@ namespace core_dispatch
     };
 
 
-    template <typename Point>
-    struct coordinate_system<point_tag, Point>
+    template <typename P>
+    struct coordinate_system<point_tag, P>
     {
-        typedef typename traits::coordinate_system
-            <
-                typename geometry::util::bare_type<Point>::type
-            >::type type;
+        typedef typename traits::coordinate_system<P>::type type;
     };
 
 
@@ -86,10 +82,11 @@ namespace core_dispatch
 template <typename Geometry>
 struct coordinate_system
 {
+    typedef typename boost::remove_const<Geometry>::type ncg;
     typedef typename core_dispatch::coordinate_system
         <
             typename tag<Geometry>::type,
-            typename geometry::util::bare_type<Geometry>::type
+            ncg
         >::type type;
 };
 

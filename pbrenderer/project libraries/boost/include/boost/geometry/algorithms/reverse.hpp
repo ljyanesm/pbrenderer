@@ -3,7 +3,6 @@
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
-// Copyright (c) 2014 Adam Wulkiewicz, Lodz, Poland.
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -18,15 +17,9 @@
 #include <algorithm>
 
 #include <boost/range.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/variant_fwd.hpp>
+#include <boost/typeof/typeof.hpp>
 
-#include <boost/geometry/algorithms/detail/interior_iterator.hpp>
-#include <boost/geometry/algorithms/detail/multi_modify.hpp>
 #include <boost/geometry/core/interior_rings.hpp>
-#include <boost/geometry/core/tags.hpp>
 #include <boost/geometry/geometries/concepts/check.hpp>
 
 
@@ -39,9 +32,9 @@ namespace detail { namespace reverse
 {
 
 
+template <typename Range>
 struct range_reverse
 {
-    template <typename Range>
     static inline void apply(Range& range)
     {
         std::reverse(boost::begin(range), boost::end(range));
@@ -49,20 +42,21 @@ struct range_reverse
 };
 
 
-struct polygon_reverse: private range_reverse
+template <typename Polygon>
+struct polygon_reverse
 {
-    template <typename Polygon>
     static inline void apply(Polygon& polygon)
     {
-        range_reverse::apply(exterior_ring(polygon));
+        typedef typename geometry::ring_type<Polygon>::type ring_type;
 
-        typename interior_return_type<Polygon>::type
-            rings = interior_rings(polygon);
+        typedef range_reverse<ring_type> per_range;
+        per_range::apply(exterior_ring(polygon));
 
-        for (typename detail::interior_iterator<Polygon>::type
-                it = boost::begin(rings); it != boost::end(rings); ++it)
+        typename interior_return_type<Polygon>::type rings
+                    = interior_rings(polygon);
+        for (BOOST_AUTO_TPL(it, boost::begin(rings)); it != boost::end(rings); ++it)
         {
-            range_reverse::apply(*it);
+            per_range::apply(*it);
         }
     }
 };
@@ -77,7 +71,11 @@ namespace dispatch
 {
 
 
-template <typename Geometry, typename Tag = typename tag<Geometry>::type>
+template
+<
+    typename Tag,
+    typename Geometry
+>
 struct reverse
 {
     static inline void apply(Geometry&)
@@ -86,80 +84,25 @@ struct reverse
 
 
 template <typename Ring>
-struct reverse<Ring, ring_tag>
-    : detail::reverse::range_reverse
+struct reverse<ring_tag, Ring>
+    : detail::reverse::range_reverse<Ring>
 {};
 
 
 template <typename LineString>
-struct reverse<LineString, linestring_tag>
-    : detail::reverse::range_reverse
+struct reverse<linestring_tag, LineString>
+    : detail::reverse::range_reverse<LineString>
 {};
 
 
 template <typename Polygon>
-struct reverse<Polygon, polygon_tag>
-    : detail::reverse::polygon_reverse
+struct reverse<polygon_tag, Polygon>
+    : detail::reverse::polygon_reverse<Polygon>
 {};
-
-
-template <typename Geometry>
-struct reverse<Geometry, multi_linestring_tag>
-    : detail::multi_modify
-        <
-            Geometry,
-            detail::reverse::range_reverse
-        >
-{};
-
-
-template <typename Geometry>
-struct reverse<Geometry, multi_polygon_tag>
-    : detail::multi_modify
-        <
-            Geometry,
-            detail::reverse::polygon_reverse
-        >
-{};
-
 
 
 } // namespace dispatch
 #endif
-
-
-namespace resolve_variant
-{
-
-template <typename Geometry>
-struct reverse
-{
-    static void apply(Geometry& geometry)
-    {
-        concept::check<Geometry>();
-        dispatch::reverse<Geometry>::apply(geometry);
-    }
-};
-
-template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
-struct reverse<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
-{
-    struct visitor: boost::static_visitor<void>
-    {
-        template <typename Geometry>
-        void operator()(Geometry& geometry) const
-        {
-            reverse<Geometry>::apply(geometry);
-        }
-    };
-
-    static inline void apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& geometry)
-    {
-        boost::apply_visitor(visitor(), geometry);
-    }
-};
-
-} // namespace resolve_variant
 
 
 /*!
@@ -176,7 +119,13 @@ struct reverse<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
 template <typename Geometry>
 inline void reverse(Geometry& geometry)
 {
-    resolve_variant::reverse<Geometry>::apply(geometry);
+    concept::check<Geometry>();
+
+    dispatch::reverse
+        <
+            typename tag<Geometry>::type,
+            Geometry
+        >::apply(geometry);
 }
 
 }} // namespace boost::geometry

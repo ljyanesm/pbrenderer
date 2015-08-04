@@ -13,11 +13,6 @@
 #include <boost/heap/heap_concepts.hpp>
 #include <boost/type_traits/is_same.hpp>
 
-#ifdef BOOST_HAS_PRAGMA_ONCE
-#pragma once
-#endif
-
-
 namespace boost  {
 namespace heap   {
 namespace detail {
@@ -61,8 +56,8 @@ struct heap_merge_emulate
             rhs.pop();
         }
 
-        lhs.set_stability_count((std::max)(lhs.get_stability_count(),
-                                           rhs.get_stability_count()));
+        lhs.set_stability_count(std::max(lhs.get_stability_count(),
+                                         rhs.get_stability_count()));
         rhs.set_stability_count(0);
     }
 

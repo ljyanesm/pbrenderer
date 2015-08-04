@@ -2,7 +2,7 @@
 // detail/impl/win_iocp_handle_service.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2012 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -46,8 +46,7 @@ public:
       // As documented in GetQueuedCompletionStatus, setting the low order
       // bit of this event prevents our synchronous writes from being treated
       // as completion port events.
-      DWORD_PTR tmp = reinterpret_cast<DWORD_PTR>(hEvent);
-      hEvent = reinterpret_cast<HANDLE>(tmp | 1);
+      *reinterpret_cast<DWORD_PTR*>(&hEvent) |= 1;
     }
     else
     {
@@ -294,7 +293,7 @@ boost::system::error_code win_iocp_handle_service::cancel(
 }
 
 size_t win_iocp_handle_service::do_write(
-    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
     const boost::asio::const_buffer& buffer, boost::system::error_code& ec)
 {
   if (!is_open(impl))
@@ -350,7 +349,7 @@ size_t win_iocp_handle_service::do_write(
 }
 
 void win_iocp_handle_service::start_write_op(
-    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
     const boost::asio::const_buffer& buffer, operation* op)
 {
   update_cancellation_thread_id(impl);
@@ -388,7 +387,7 @@ void win_iocp_handle_service::start_write_op(
 }
 
 size_t win_iocp_handle_service::do_read(
-    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
     const boost::asio::mutable_buffer& buffer, boost::system::error_code& ec)
 {
   if (!is_open(impl))
@@ -450,7 +449,7 @@ size_t win_iocp_handle_service::do_read(
       ec = boost::system::error_code(last_error,
           boost::asio::error::get_system_category());
     }
-    return (last_error == ERROR_MORE_DATA) ? bytes_transferred : 0;
+    return 0;
   }
 
   ec = boost::system::error_code();
@@ -458,7 +457,7 @@ size_t win_iocp_handle_service::do_read(
 }
 
 void win_iocp_handle_service::start_read_op(
-    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
     const boost::asio::mutable_buffer& buffer, operation* op)
 {
   update_cancellation_thread_id(impl);

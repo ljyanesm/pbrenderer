@@ -109,13 +109,13 @@ std::pair<T, T> bisect(F f, T min, T max, Tol tol, boost::uintmax_t& max_iter, c
    static const char* function = "boost::math::tools::bisect<%1%>";
    if(min >= max)
    {
-      return boost::math::detail::pair_from_single(policies::raise_evaluation_error(function,
-         "Arguments in wrong order in boost::math::tools::bisect (first arg=%1%)", min, pol));
+      policies::raise_evaluation_error(function, 
+         "Arguments in wrong order in boost::math::tools::bisect (first arg=%1%)", min, pol);
    }
    if(fmin * fmax >= 0)
    {
-      return boost::math::detail::pair_from_single(policies::raise_evaluation_error(function,
-         "No change of sign in boost::math::tools::bisect, either there is no root to find, or there are multiple roots in the interval (f(min) = %1%).", fmin, pol));
+      policies::raise_evaluation_error(function, 
+         "No change of sign in boost::math::tools::bisect, either there is no root to find, or there are multiple roots in the interval (f(min) = %1%).", fmin, pol);
    }
 
    //
@@ -302,7 +302,7 @@ T halley_iterate(F f, T guess, T min, T max, int digits, boost::uintmax_t& max_i
       
       if(0 == f0)
          break;
-      if(f1 == 0)
+      if((f1 == 0) && (f2 == 0))
       {
          // Oops zero derivative!!!
 #ifdef BOOST_MATH_INSTRUMENT
@@ -329,18 +329,8 @@ T halley_iterate(F f, T guess, T min, T max, int digits, boost::uintmax_t& max_i
                delta = denom / num;
             if(delta * f1 / f0 < 0)
             {
-               // Oh dear, we have a problem as Newton and Halley steps
-               // disagree about which way we should move.  Probably
-               // there is cancelation error in the calculation of the
-               // Halley step, or else the derivatives are so small
-               // that their values are basically trash.  We will move
-               // in the direction indicated by a Newton step, but
-               // by no more than twice the current guess value, otherwise
-               // we can jump way out of bounds if we're not careful.
-               // See https://svn.boost.org/trac/boost/ticket/8314.
+               // probably cancellation error, try a Newton step instead:
                delta = f0 / f1;
-               if(fabs(delta) > 2 * fabs(guess))
-                  delta = (delta < 0 ? -1 : 1) * 2 * fabs(guess);
             }
          }
          else

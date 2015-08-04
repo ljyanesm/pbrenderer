@@ -1,14 +1,8 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2007-2014 Barend Gehrels, Amsterdam, the Netherlands.
-// Copyright (c) 2008-2014 Bruno Lalande, Paris, France.
-// Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
-// Copyright (c) 2014 Adam Wulkiewicz, Lodz, Poland.
-
-// This file was modified by Oracle on 2014.
-// Modifications copyright (c) 2014, Oracle and/or its affiliates.
-
-// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
+// Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -24,24 +18,17 @@
 #include <algorithm>
 
 #include <boost/range.hpp>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
+#include <boost/typeof/typeof.hpp>
 
-#include <boost/geometry/algorithms/detail/interior_iterator.hpp>
-#include <boost/geometry/algorithms/not_implemented.hpp>
-#include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/exterior_ring.hpp>
 #include <boost/geometry/core/interior_rings.hpp>
-#include <boost/geometry/core/point_type.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
-#include <boost/geometry/core/tags.hpp>
 
 #include <boost/geometry/geometries/concepts/check.hpp>
 
 #include <boost/geometry/geometries/segment.hpp>
 
 #include <boost/geometry/util/add_const_if_c.hpp>
-#include <boost/geometry/util/range.hpp>
 
 
 namespace boost { namespace geometry
@@ -52,162 +39,127 @@ namespace detail { namespace for_each
 {
 
 
+template <typename Point, typename Functor, bool IsConst>
 struct fe_point_per_point
 {
-    template <typename Point, typename Functor>
-    static inline void apply(Point& point, Functor& f)
+    static inline Functor apply(
+                typename add_const_if_c<IsConst, Point>::type& point, Functor f)
     {
         f(point);
+        return f;
     }
 };
 
 
+template <typename Point, typename Functor, bool IsConst>
 struct fe_point_per_segment
 {
-    template <typename Point, typename Functor>
-    static inline void apply(Point& , Functor& /*f*/)
+    static inline Functor apply(
+                typename add_const_if_c<IsConst, Point>::type& , Functor f)
     {
         // TODO: if non-const, we should extract the points from the segment
         // and call the functor on those two points
+        return f;
     }
 };
 
 
+template <typename Range, typename Functor, bool IsConst>
 struct fe_range_per_point
 {
-    template <typename Range, typename Functor>
-    static inline void apply(Range& range, Functor& f)
+    static inline Functor apply(
+                    typename add_const_if_c<IsConst, Range>::type& range,
+                    Functor f)
     {
-        // The previous implementation called the std library:
-        // return (std::for_each(boost::begin(range), boost::end(range), f));
-        // But that is not accepted for capturing lambda's.
-        // It needs to do it like that to return the state of Functor f (f is passed by value in std::for_each).
-
-        // So we now loop manually.
-
-        for (typename boost::range_iterator<Range>::type
-                it = boost::begin(range); it != boost::end(range); ++it)
-        {
-            f(*it);
-        }
+        return (std::for_each(boost::begin(range), boost::end(range), f));
     }
 };
 
 
-template <closure_selector Closure>
-struct fe_range_per_segment_with_closure
+template <typename Range, typename Functor, bool IsConst>
+struct fe_range_per_segment
 {
-    template <typename Range, typename Functor>
-    static inline void apply(Range& range, Functor& f)
+    static inline Functor apply(
+                typename add_const_if_c<IsConst, Range>::type& range,
+                Functor f)
     {
         typedef typename add_const_if_c
             <
-                is_const<Range>::value,
+                IsConst,
                 typename point_type<Range>::type
             >::type point_type;
 
-        typedef typename boost::range_iterator<Range>::type iterator_type;
-
-        iterator_type it = boost::begin(range);
-        iterator_type previous = it++;
+        BOOST_AUTO_TPL(it, boost::begin(range));
+        BOOST_AUTO_TPL(previous, it++);
         while(it != boost::end(range))
         {
             model::referring_segment<point_type> s(*previous, *it);
             f(s);
             previous = it++;
         }
+
+        return f;
     }
 };
 
 
-template <>
-struct fe_range_per_segment_with_closure<open>
-{
-    template <typename Range, typename Functor>
-    static inline void apply(Range& range, Functor& f)
-    {    
-        fe_range_per_segment_with_closure<closed>::apply(range, f);
-
-        model::referring_segment
-            <
-                typename add_const_if_c
-                    <
-                        is_const<Range>::value,
-                        typename point_type<Range>::type
-                    >::type
-            > s(range::back(range), range::front(range));
-
-        f(s);
-    }
-};
-
-
-struct fe_range_per_segment
-{
-    template <typename Range, typename Functor>
-    static inline void apply(Range& range, Functor& f)
-    {
-        fe_range_per_segment_with_closure
-            <
-                closure<Range>::value
-            >::apply(range, f);
-    }
-};
-
-
+template <typename Polygon, typename Functor, bool IsConst>
 struct fe_polygon_per_point
 {
-    template <typename Polygon, typename Functor>
-    static inline void apply(Polygon& poly, Functor& f)
+    typedef typename add_const_if_c<IsConst, Polygon>::type poly_type;
+
+    static inline Functor apply(poly_type& poly, Functor f)
     {
-        fe_range_per_point::apply(exterior_ring(poly), f);
+        typedef fe_range_per_point
+                <
+                    typename ring_type<Polygon>::type,
+                    Functor,
+                    IsConst
+                > per_ring;
 
-        typename interior_return_type<Polygon>::type
-            rings = interior_rings(poly);
+        f = per_ring::apply(exterior_ring(poly), f);
 
-        for (typename detail::interior_iterator<Polygon>::type
-                it = boost::begin(rings); it != boost::end(rings); ++it)
+        typename interior_return_type<poly_type>::type rings
+                    = interior_rings(poly);
+        for (BOOST_AUTO_TPL(it, boost::begin(rings)); it != boost::end(rings); ++it)
         {
-            fe_range_per_point::apply(*it, f);
+            f = per_ring::apply(*it, f);
         }
+
+        return f;
     }
 
 };
 
+
+template <typename Polygon, typename Functor, bool IsConst>
 struct fe_polygon_per_segment
 {
-    template <typename Polygon, typename Functor>
-    static inline void apply(Polygon& poly, Functor& f)
+    typedef typename add_const_if_c<IsConst, Polygon>::type poly_type;
+
+    static inline Functor apply(poly_type& poly, Functor f)
     {
-        fe_range_per_segment::apply(exterior_ring(poly), f);
+        typedef fe_range_per_segment
+            <
+                typename ring_type<Polygon>::type,
+                Functor,
+                IsConst
+            > per_ring;
 
-        typename interior_return_type<Polygon>::type
-            rings = interior_rings(poly);
+        f = per_ring::apply(exterior_ring(poly), f);
 
-        for (typename detail::interior_iterator<Polygon>::type
-                it = boost::begin(rings); it != boost::end(rings); ++it)
+        typename interior_return_type<poly_type>::type rings
+                    = interior_rings(poly);
+        for (BOOST_AUTO_TPL(it, boost::begin(rings)); it != boost::end(rings); ++it)
         {
-            fe_range_per_segment::apply(*it, f);
+            f = per_ring::apply(*it, f);
         }
+
+        return f;
     }
 
 };
 
-// Implementation of multi, for both point and segment,
-// just calling the single version.
-template <typename Policy>
-struct for_each_multi
-{
-    template <typename MultiGeometry, typename Functor>
-    static inline void apply(MultiGeometry& multi, Functor& f)
-    {
-        for (typename boost::range_iterator<MultiGeometry>::type
-                it = boost::begin(multi); it != boost::end(multi); ++it)
-        {
-            Policy::apply(*it, f);
-        }
-    }
-};
 
 }} // namespace detail::for_each
 #endif // DOXYGEN_NO_DETAIL
@@ -219,105 +171,102 @@ namespace dispatch
 
 template
 <
+    typename Tag,
     typename Geometry,
-    typename Tag = typename tag_cast<typename tag<Geometry>::type, multi_tag>::type
+    typename Functor,
+    bool IsConst
 >
-struct for_each_point: not_implemented<Tag>
+struct for_each_point {};
+
+
+template <typename Point, typename Functor, bool IsConst>
+struct for_each_point<point_tag, Point, Functor, IsConst>
+    : detail::for_each::fe_point_per_point<Point, Functor, IsConst>
 {};
 
 
-template <typename Point>
-struct for_each_point<Point, point_tag>
-    : detail::for_each::fe_point_per_point
+template <typename Linestring, typename Functor, bool IsConst>
+struct for_each_point<linestring_tag, Linestring, Functor, IsConst>
+    : detail::for_each::fe_range_per_point<Linestring, Functor, IsConst>
 {};
 
 
-template <typename Linestring>
-struct for_each_point<Linestring, linestring_tag>
-    : detail::for_each::fe_range_per_point
+template <typename Ring, typename Functor, bool IsConst>
+struct for_each_point<ring_tag, Ring, Functor, IsConst>
+    : detail::for_each::fe_range_per_point<Ring, Functor, IsConst>
 {};
 
 
-template <typename Ring>
-struct for_each_point<Ring, ring_tag>
-    : detail::for_each::fe_range_per_point
-{};
-
-
-template <typename Polygon>
-struct for_each_point<Polygon, polygon_tag>
-    : detail::for_each::fe_polygon_per_point
+template <typename Polygon, typename Functor, bool IsConst>
+struct for_each_point<polygon_tag, Polygon, Functor, IsConst>
+    : detail::for_each::fe_polygon_per_point<Polygon, Functor, IsConst>
 {};
 
 
 template
 <
+    typename Tag,
     typename Geometry,
-    typename Tag = typename tag_cast<typename tag<Geometry>::type, multi_tag>::type
+    typename Functor,
+    bool IsConst
 >
-struct for_each_segment: not_implemented<Tag>
-{};
+struct for_each_segment {};
 
-template <typename Point>
-struct for_each_segment<Point, point_tag>
-    : detail::for_each::fe_point_per_segment
-{};
-
-
-template <typename Linestring>
-struct for_each_segment<Linestring, linestring_tag>
-    : detail::for_each::fe_range_per_segment
+template <typename Point, typename Functor, bool IsConst>
+struct for_each_segment<point_tag, Point, Functor, IsConst>
+    : detail::for_each::fe_point_per_segment<Point, Functor, IsConst>
 {};
 
 
-template <typename Ring>
-struct for_each_segment<Ring, ring_tag>
-    : detail::for_each::fe_range_per_segment
+template <typename Linestring, typename Functor, bool IsConst>
+struct for_each_segment<linestring_tag, Linestring, Functor, IsConst>
+    : detail::for_each::fe_range_per_segment<Linestring, Functor, IsConst>
 {};
 
 
-template <typename Polygon>
-struct for_each_segment<Polygon, polygon_tag>
-    : detail::for_each::fe_polygon_per_segment
+template <typename Ring, typename Functor, bool IsConst>
+struct for_each_segment<ring_tag, Ring, Functor, IsConst>
+    : detail::for_each::fe_range_per_segment<Ring, Functor, IsConst>
 {};
 
 
-template <typename MultiGeometry>
-struct for_each_point<MultiGeometry, multi_tag>
-    : detail::for_each::for_each_multi
-        <
-            // Specify the dispatch of the single-version as policy
-            for_each_point
-                <
-                    typename add_const_if_c
-                        <
-                            is_const<MultiGeometry>::value,
-                            typename boost::range_value<MultiGeometry>::type
-                        >::type
-                >
-        >
-{};
-
-
-template <typename MultiGeometry>
-struct for_each_segment<MultiGeometry, multi_tag>
-    : detail::for_each::for_each_multi
-        <
-            // Specify the dispatch of the single-version as policy
-            for_each_segment
-                <
-                    typename add_const_if_c
-                        <
-                            is_const<MultiGeometry>::value,
-                            typename boost::range_value<MultiGeometry>::type
-                        >::type
-                >
-        >
+template <typename Polygon, typename Functor, bool IsConst>
+struct for_each_segment<polygon_tag, Polygon, Functor, IsConst>
+    : detail::for_each::fe_polygon_per_segment<Polygon, Functor, IsConst>
 {};
 
 
 } // namespace dispatch
 #endif // DOXYGEN_NO_DISPATCH
+
+
+/*!
+\brief \brf_for_each{point}
+\details \det_for_each{point}
+\ingroup for_each
+\param geometry \param_geometry
+\param f \par_for_each_f{const point}
+\tparam Geometry \tparam_geometry
+\tparam Functor \tparam_functor
+
+\qbk{distinguish,const version}
+\qbk{[include reference/algorithms/for_each_point.qbk]}
+\qbk{[heading Example]}
+\qbk{[for_each_point_const] [for_each_point_const_output]}
+*/
+template<typename Geometry, typename Functor>
+inline Functor for_each_point(Geometry const& geometry, Functor f)
+{
+    concept::check<Geometry const>();
+
+    return dispatch::for_each_point
+        <
+            typename tag_cast<typename tag<Geometry>::type, multi_tag>::type,
+            Geometry,
+            Functor,
+            true
+        >::apply(geometry, f);
+}
 
 
 /*!
@@ -332,15 +281,48 @@ struct for_each_segment<MultiGeometry, multi_tag>
 \qbk{[include reference/algorithms/for_each_point.qbk]}
 \qbk{[heading Example]}
 \qbk{[for_each_point] [for_each_point_output]}
-\qbk{[for_each_point_const] [for_each_point_const_output]}
 */
 template<typename Geometry, typename Functor>
 inline Functor for_each_point(Geometry& geometry, Functor f)
 {
     concept::check<Geometry>();
 
-    dispatch::for_each_point<Geometry>::apply(geometry, f);
-    return f;
+    return dispatch::for_each_point
+        <
+            typename tag_cast<typename tag<Geometry>::type, multi_tag>::type,
+            Geometry,
+            Functor,
+            false
+        >::apply(geometry, f);
+}
+
+
+/*!
+\brief \brf_for_each{segment}
+\details \det_for_each{segment}
+\ingroup for_each
+\param geometry \param_geometry
+\param f \par_for_each_f{const segment}
+\tparam Geometry \tparam_geometry
+\tparam Functor \tparam_functor
+
+\qbk{distinguish,const version}
+\qbk{[include reference/algorithms/for_each_segment.qbk]}
+\qbk{[heading Example]}
+\qbk{[for_each_segment_const] [for_each_segment_const_output]}
+*/
+template<typename Geometry, typename Functor>
+inline Functor for_each_segment(Geometry const& geometry, Functor f)
+{
+    concept::check<Geometry const>();
+
+    return dispatch::for_each_segment
+        <
+            typename tag_cast<typename tag<Geometry>::type, multi_tag>::type,
+            Geometry,
+            Functor,
+            true
+        >::apply(geometry, f);
 }
 
 
@@ -354,16 +336,19 @@ inline Functor for_each_point(Geometry& geometry, Functor f)
 \tparam Functor \tparam_functor
 
 \qbk{[include reference/algorithms/for_each_segment.qbk]}
-\qbk{[heading Example]}
-\qbk{[for_each_segment_const] [for_each_segment_const_output]}
 */
 template<typename Geometry, typename Functor>
 inline Functor for_each_segment(Geometry& geometry, Functor f)
 {
     concept::check<Geometry>();
 
-    dispatch::for_each_segment<Geometry>::apply(geometry, f);
-    return f;
+    return dispatch::for_each_segment
+        <
+            typename tag_cast<typename tag<Geometry>::type, multi_tag>::type,
+            Geometry,
+            Functor,
+            false
+        >::apply(geometry, f);
 }
 
 
