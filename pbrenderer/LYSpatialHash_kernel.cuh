@@ -53,7 +53,6 @@ enum CollisionCheckType{
 	NAIVE,
 	DYNAMIC,
 	TWO_STEP,
-	REDUCTION,
 	NUM_TYPES
 };
 

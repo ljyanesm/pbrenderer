@@ -422,6 +422,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 		}
 		create_space_handler(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
+		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -445,6 +446,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 		}
 		create_space_handler(spaceH_type, space_handler);
 		ioInterface->getDevice()->setSpaceHandler(space_handler);
+		ioInterface->getDevice()->start();
 		delete tmpModel;
 		delete tmpSpace;
 		break;
@@ -737,17 +739,17 @@ void display()
 				myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
 					.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
 					.append(".GPUlog"), std::ios::app);
-				myfile << averageTimer << std::endl;
+				myfile << hapticFPS << std::endl;
 				myfile.close();
 				break;
 			case LYSpaceHandler::CPU_SPATIAL_HASH:
 				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
-				myfile << averageTimer << std::endl;
+				myfile << hapticFPS << std::endl;
 				myfile.close();
 				break;
 			case LYSpaceHandler::CPU_Z_ORDER:
 				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
-				myfile << averageTimer << std::endl;
+				myfile << hapticFPS << std::endl;
 				myfile.close();
 				break;
 		}

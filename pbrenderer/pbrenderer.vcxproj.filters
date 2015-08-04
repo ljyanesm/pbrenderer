@@ -70,9 +70,6 @@
     <ClCompile Include="LYOctree.cpp">
       <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
-    <ClCompile Include="LYSpatialHash.cpp">
-      <Filter>Space Partitioning\Source</Filter>
-    </ClCompile>
     <ClCompile Include="LYKeyboardDevice.cpp">
       <Filter>IODevices\Keyboard</Filter>
     </ClCompile>
@@ -120,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="LYHapticInterface.cpp">
       <Filter>IODevices</Filter>
+    </ClCompile>
+    <ClCompile Include="LYSpatialHash.cpp">
+      <Filter>Space Partitioning\Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

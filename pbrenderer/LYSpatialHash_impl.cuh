@@ -119,7 +119,7 @@ __global__
 
 		// Now use the sorted index to reorder the pos and vel data
 		uint sortedIndex = gridParticleIndex[index];
-		LYVertex pos = oldPos[sortedIndex];       // macro does either global read or texture fetch
+		LYVertex pos = FETCH(oldPos,sortedIndex);       // macro does either global read or texture fetch
 		sortedPos[index] = pos;
 	}
 
