@@ -182,6 +182,7 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 		while(it != endit)
 		{
 			if (fs::is_regular_file(it->status()) && it->path().extension() == ext 
+				&& it->path().filename() != "arrow.ply" 
 				&& it->path().filename() != "proxy.ply" 
 				&& it->path().filename() != "hip.ply"
 				&& it->path().filename() != "bbox.ply"
@@ -241,8 +242,8 @@ void loadConfigFile( char ** argv )
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 5;
-	get_all(".", ".ply", modelFiles);
+	loadedModel = 1;
+	get_all("./models", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
 	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
 }
@@ -387,6 +388,7 @@ void motion(int x, int y)
 
 void keyboardFunc(unsigned char key, int x, int y)
 {
+	static bool oriented(false);
 	LYMesh *tmpModel = m_pMesh;
 	LYSpaceHandler *tmpSpace = space_handler;
 	float3 pos = make_float3(0.0);
@@ -575,6 +577,11 @@ void keyboardFunc(unsigned char key, int x, int y)
 		{
 			captureHapticTime = !captureHapticTime;
 		} break;
+	case 'n':
+		{
+			oriented = !oriented;
+			screenspace_renderer->setOriented(oriented);
+		} break;
 	}
 	devPosition += pos;
 	glutPostRedisplay();
@@ -733,52 +740,30 @@ void display()
 		modelFile.c_str(), graphicsFPS, hapticFPS, spaceSubdivisionAlg.c_str());
 	if (captureHapticTime){
 		std::ofstream myfile;
+		std::string dir("./performance/");
+		std::string modelName(modelFile.substr(0, modelFile.find('.')));
 		switch (spaceH_type)
 		{
 			case LYSpaceHandler::GPU_SPATIAL_HASH:
-				myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
-					.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
-					.append(".GPUlog"), std::ios::app);
+				myfile.open ( dir + modelName + "_" 
+					+ (dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString()
+					+ (space_handler->getUpdatePos()? "update" : "" )
+					+ ".GPUlog", std::ios::app);
 				myfile << hapticFPS << std::endl;
 				myfile.close();
 				break;
 			case LYSpaceHandler::CPU_SPATIAL_HASH:
-				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
+				myfile.open (dir + modelName + ".CPUlog", std::ios::app);
 				myfile << hapticFPS << std::endl;
 				myfile.close();
 				break;
 			case LYSpaceHandler::CPU_Z_ORDER:
-				myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
+				myfile.open (dir + modelName + ".Zlog", std::ios::app);
 				myfile << hapticFPS << std::endl;
 				myfile.close();
 				break;
 		}
 	}
-
-	if (captureHapticTime){
-		std::ofstream myfile;
-		switch (spaceH_type)
-		{
-		case LYSpaceHandler::GPU_SPATIAL_HASH:
-			myfile.open ( modelFile.substr(0, modelFile.find('.')).append("_")
-				.append((dynamic_cast<LYSpatialHash*>(space_handler))->getCollisionCheckString())
-				.append(".GPUlog"), std::ios::app);
-			myfile << hapticFPS << std::endl;
-			myfile.close();
-			break;
-		case LYSpaceHandler::CPU_SPATIAL_HASH:
-			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".CPUlog"), std::ios::app);
-			myfile << hapticFPS << std::endl;
-			myfile.close();
-			break;
-		case LYSpaceHandler::CPU_Z_ORDER:
-			myfile.open (modelFile.substr(0, modelFile.find('.')).append(".Zlog"), std::ios::app);
-			myfile << hapticFPS << std::endl;
-			myfile.close();
-			break;
-		}
-	}
-
 
 	glutSetWindowTitle(fps_string);
 	resetTimers++;

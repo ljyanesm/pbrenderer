@@ -289,7 +289,7 @@ __global__
 				uint numThreads, numBlocks;
 				computeGridSize(N, 16, numBlocks, numThreads);
 				// Launch N child threads to add information from neighbor cells
-#if (__CUDA_ARCH__ > 350)
+#if (__CUDA_ARCH__ >= 350)
 				naiveChildCollisionKernel<<<1, N>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, cellStartI, N);
 #endif
 				totalVertices += N;
@@ -517,7 +517,7 @@ __global__
 	uint numThreads, numBlocks;
 	computeGridSize(totalVertices, 256, numBlocks, numThreads);
 	// TODO: Improve by making a block per cellToCheck!!
-#if (__CUDA_ARCH__ > 350)
+#if (__CUDA_ARCH__ >= 350)
 	childCollisionKernel<<<numBlocks, numThreads>>>(args.pos, args.sortedPos, args.force, args.forceVector, args.gridParticleIndex, args.dev_params, totalCells, totalVertices);
 #endif
 	__syncthreads();

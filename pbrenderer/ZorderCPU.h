@@ -42,9 +42,7 @@ private:
 
 	float4		m_forceFeedback;
 
-	bool		m_updatePositions;
 	bool		m_touched;
-	bool		m_dirtyPos;
 
 	uint		m_srcVBO;
 	size_t		m_numVertices;

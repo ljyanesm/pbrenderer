@@ -46,6 +46,5 @@ private:
 	float4					m_forceFeedback;
 
 	bool					m_touched;
-	bool					m_dirtyPos;
 };
 
