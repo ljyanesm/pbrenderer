@@ -86,9 +86,7 @@ private:
 
 	float4		m_forceFeedback;
 
-	bool		m_updatePositions;
 	bool		m_touched;
-	bool		m_dirtyPos;
 
 
 	CollisionCheckType	m_collisionCheckType;

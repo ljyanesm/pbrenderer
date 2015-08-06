@@ -25,16 +25,18 @@ CPUHashSTL::~CPUHashSTL(void)
 void CPUHashSTL::update()
 {
 
-	if (false && m_dirtyPos)
+	if (m_dirtyPos)
 	{
 		std::vector<LYVertex> v;
 		v.reserve(lookup.size());
 
-		for (LYVertexLookup::const_iterator& elem = lookup.begin(); elem != lookup.end(); ++elem)
-			v.push_back(elem->second);
+		if (m_updatePositions) {
+			for (LYVertexLookup::const_iterator& elem = lookup.begin(); elem != lookup.end(); ++elem)
+				v.push_back(elem->second);
 
-		originalMesh->setPositions(v);
-		this->resetPositions();
+			originalMesh->setPositions(v);
+			this->resetPositions();
+		}
 	}
 }
 
@@ -58,7 +60,6 @@ float3 CPUHashSTL::calculateFeedbackUpdateProxy(Collider *pos)
 	float3 colliderPos = pos->hapticPosition;
 	float3 Pseed = make_float3(0.0f);
 	float3 dP = make_float3(0.0f);
-	float error = 9999.999f;
 	float3 Ax, Nx;
 	float Fx;
 

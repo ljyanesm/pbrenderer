@@ -60,6 +60,7 @@ public:
 	void setMesh(LYMesh *m);
 	void setPointRadius(float r);
 	void setPointScale(float s);
+	void setOriented(int o);
 	void setPointDiv(int d);
 	void setCollider(LYHapticInterface* haptic);
 
@@ -101,6 +102,8 @@ private:
 
 	float		m_pointRadius;
 	float		m_pointScale;
+
+	int			m_oriented;
 
 	device_mesh2_t m_device_quad;
 

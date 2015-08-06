@@ -229,32 +229,6 @@ extern "C" {
 				gpuErrchk(cudaPeekAtLastError());
 			} break;
 		}
-#if 0
-		if (arguments.naiveDynamicCollisionCheck)
-		{
-			_naiveDynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
-				(LYVertex *) arguments.sortedPos,
-				(float4 *) arguments.force,
-				arguments.forceVector,
-				arguments.gridParticleIndex,
-				arguments.cellStart,
-				arguments.cellEnd,
-				arguments.dev_params,
-				arguments.numVertices);
-		}
-		else 
-		{
-			_dynamicCollisionCheckD<<< 1, 1 >>>(	arguments.pos,
-				(LYVertex *) arguments.sortedPos,
-				(float4 *) arguments.force,
-				arguments.forceVector,
-				arguments.gridParticleIndex,
-				arguments.cellStart,
-				arguments.cellEnd,
-				arguments.dev_params,
-				arguments.numVertices);
-		}
-#endif
 	}
 
 	void updatePositions(LYVertex *sortedPos, float4 *force, LYVertex *oldPos, size_t numVertices)

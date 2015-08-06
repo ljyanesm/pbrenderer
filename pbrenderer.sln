@@ -11,6 +11,8 @@ Global
 		Debug Host|x64 = Debug Host|x64
 		Debug sm20|Win32 = Debug sm20|Win32
 		Debug sm20|x64 = Debug sm20|x64
+		Debug sm3.5 dp|Win32 = Debug sm3.5 dp|Win32
+		Debug sm3.5 dp|x64 = Debug sm3.5 dp|x64
 		Release sm20|Win32 = Release sm20|Win32
 		Release sm20|x64 = Release sm20|x64
 		Release sm3.5 dp|Win32 = Release sm3.5 dp|Win32
@@ -31,6 +33,10 @@ Global
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm20|Win32.Build.0 = Debug sm20|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm20|x64.ActiveCfg = Debug sm20|x64
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm20|x64.Build.0 = Debug sm20|x64
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm3.5 dp|Win32.ActiveCfg = Debug sm3.5 dp|Win32
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm3.5 dp|Win32.Build.0 = Debug sm3.5 dp|Win32
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm3.5 dp|x64.ActiveCfg = Debug sm3.5 dp|x64
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Debug sm3.5 dp|x64.Build.0 = Debug sm3.5 dp|x64
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm20|Win32.ActiveCfg = Release sm20|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm20|Win32.Build.0 = Release sm20|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm20|x64.ActiveCfg = Release sm20|x64

@@ -31,7 +31,8 @@ void checkFramebufferStatus(GLenum framebufferStatus) {
 }
 
 LYScreenspaceRenderer::LYScreenspaceRenderer():
-	m_pointDiv(1)
+	m_pointDiv(1),
+	m_oriented(false)
 {
 	_initShaders();
 	_initFBO(m_camera->getWidth(), m_camera->getHeight());
@@ -40,7 +41,8 @@ LYScreenspaceRenderer::LYScreenspaceRenderer():
 
 LYScreenspaceRenderer::LYScreenspaceRenderer(LYCamera *c) :
 	m_camera(c),
-	m_pointDiv(1)
+	m_pointDiv(1),
+	m_oriented(false)
 {
 	_initShaders();
 	_initFBO(m_camera->getWidth(), m_camera->getHeight());
@@ -363,6 +365,7 @@ void LYScreenspaceRenderer::displayTriangleMesh(LYMesh *m_mesh, DisplayMode mode
 	inverse_transposed = glm::inverse(modelViewMatrix);
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+	glUniform1i( glGetUniformLocation(depthShader->getProgramId(), "oriented"), m_oriented );
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
@@ -396,6 +399,7 @@ void LYScreenspaceRenderer::displayPointMesh(LYMesh *m_mesh, DisplayMode mode = 
 	inverse_transposed = glm::inverse(modelViewMatrix);
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+	glUniform1i( glGetUniformLocation(depthShader->getProgramId(), "oriented"), m_oriented );
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
@@ -439,6 +443,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 		inverse_transposed = glm::inverse(glm::transpose(glm::mat3(modelViewMatrix)));
 		glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_pointScale);
 		glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), m_pointRadius );
+		glUniform1i( glGetUniformLocation(depthShader->getProgramId(), "oriented"), m_oriented );
 		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_ModelView"),1,GL_FALSE, &modelViewMatrix[0][0]);
 		glUniformMatrix4fv(glGetUniformLocation(depthShader->getProgramId(),"u_Persp"),1,GL_FALSE,&m_camera->getProjection()[0][0]);
 		glUniformMatrix3fv(glGetUniformLocation(depthShader->getProgramId(),"u_InvTrans"),1,GL_FALSE,&inverse_transposed[0][0]);
@@ -591,6 +596,8 @@ void LYScreenspaceRenderer::setPointRadius( float r )
 {
 	m_pointRadius = r;
 }
+
+void LYScreenspaceRenderer::setOriented( int o ){ m_oriented = o; }
 
 void LYScreenspaceRenderer::setCamera( LYCamera *c )
 {

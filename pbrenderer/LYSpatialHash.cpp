@@ -334,7 +334,7 @@ void LYSpatialHash::toggleUpdatePositions()
 {
 	m_updatePositions = !m_updatePositions;
 	std::cout << "Updating positions: ";
-	std::cout << m_updatePositions ? std::string("true") : std::string("false");
+	std::cout << (m_updatePositions ? std::string("Yes") : std::string("No"));
 	std::cout << std::endl;
 }
 
@@ -382,7 +382,6 @@ float3 LYSpatialHash::implicitSurfaceApproach(Collider * pos)
 	float3 colliderPos = pos->hapticPosition;
 	float3 Pseed = make_float3(0.0f);
 	float3 dP = make_float3(0.0f);
-	float error = 9999.999f;
 	float3 Ax, Nx;
 	float Fx;
 
