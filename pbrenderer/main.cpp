@@ -188,7 +188,7 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 				&& it->path().filename() != "bbox.ply"
 				&& it->path().filename() != "surface.ply")
 			{
-				ret.push_back(it->path().filename());
+				ret.push_back(it->path());
 			}
 			++it;
 		}
