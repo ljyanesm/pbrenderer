@@ -397,7 +397,7 @@ __global__
 			Ax += w * pos2.m_pos;
 			Nx += w * pos2.m_normal;
 			uint sortedIndex = gridParticleIndex[vIndex];
-			if (length(forceVector) > 0.03) force[sortedIndex] += forceVector*0.1f;
+			if (length(forceVector) > 0.03f) force[sortedIndex] += forceVector*0.001f;
 			atomicAdd(&dev_params->Ax.x, Ax.x);
 			atomicAdd(&dev_params->Ax.y, Ax.y);
 			atomicAdd(&dev_params->Ax.z, Ax.z);
@@ -445,7 +445,7 @@ __global__
 			Ax += w * pos2.m_pos;
 			Nx += w * pos2.m_normal;
 			uint sortedIndex = gridParticleIndex[vIndex];
-			if (length(forceVector) > 0.03) force[sortedIndex] += forceVector*0.1f;
+			if (length(forceVector) > 0.03f) force[sortedIndex] += forceVector*0.001f;
 			atomicAdd(&dev_params->Ax.x, Ax.x);
 			atomicAdd(&dev_params->Ax.y, Ax.y);
 			atomicAdd(&dev_params->Ax.z, Ax.z);
@@ -617,8 +617,7 @@ void _collisionCheckD(float3 pos, LYVertex *oldPos, float4 *force, float4 forceV
 		Ax += w * pos2.m_pos;
 		Nx += w * pos2.m_normal;
 		uint sortedIndex = gridParticleIndex[index];
-		if (length(forceVector) > 0.03) 
-			force[sortedIndex] += forceVector*0.1f;
+		if (length(forceVector) > 0.03f) force[sortedIndex] += forceVector*0.001f;
 		atomicAdd(&dev_params->Ax.x, Ax.x);
 		atomicAdd(&dev_params->Ax.y, Ax.y);
 		atomicAdd(&dev_params->Ax.z, Ax.z);
