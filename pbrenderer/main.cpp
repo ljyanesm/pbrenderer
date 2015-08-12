@@ -242,10 +242,10 @@ void loadConfigFile( char ** argv )
 	{
 		printf("%s", e.c_str());
 	}
-	loadedModel = 1;
+	loadedModel = 0;
 	get_all("./models", ".ply", modelFiles);
 	if (modelFile.empty()) modelFile = argv[1];
-	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).filename().string();
+	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).string();
 }
 
 // initialize OpenGL
@@ -741,7 +741,7 @@ void display()
 	if (captureHapticTime){
 		std::ofstream myfile;
 		std::string dir("./performance/");
-		std::string modelName(modelFile.substr(0, modelFile.find('.')));
+		std::string modelName( modelFile.begin()+modelFile.find_last_of('\\')+1, modelFile.begin()+modelFile.rfind('.') );
 		switch (spaceH_type)
 		{
 			case LYSpaceHandler::GPU_SPATIAL_HASH:
