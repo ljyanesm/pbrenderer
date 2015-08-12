@@ -20,15 +20,15 @@ void main(void)
     vec3 N;
 
 	if (!oriented){
-		N.xy = gl_PointCoord.xy*vec2(2.0, -2.0) + vec2(-1.0, 1.0);
+		N.xy = gl_PointCoord.xy*vec2(2.0f, -2.0f) + vec2(-1.0f, 1.0f);
 		float mag = dot(N.xy, N.xy);
-		if (mag >= 1.0) discard;   // kill pixels outside circle
-		N.z = sqrt(1.0-mag);
+		if (mag >= 1.0f) discard;   // kill pixels outside circle
+		N.z = sqrt(1.0f-mag);
 	} else {
-		vec2 ptC = gl_PointCoord- vec2(0.5);
+		vec2 ptC = gl_PointCoord- vec2(0.5f);
 		float depth = -PtNormal.x/PtNormal.z*ptC.x - PtNormal.y/PtNormal.z*ptC.y; 
 		float sqrMag = ptC.x*ptC.x + ptC.y*ptC.y + depth*depth; 
-		if(sqrMag > 0.25) { discard; }
+		if(sqrMag > 0.25f) { discard; }
 		N = PtNormal;
 	}
 

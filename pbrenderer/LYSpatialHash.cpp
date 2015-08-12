@@ -210,7 +210,7 @@ void LYSpatialHash::setInfluenceRadius(float r){
 	neighborhoodRadius = r;
 	collisionCheckArgs.R = r;
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-
+	setParameters(m_hParams);
 	printf("NSize = %d\n", (int) glm::round(r/m_hParams->cellSize.x));
 }
 

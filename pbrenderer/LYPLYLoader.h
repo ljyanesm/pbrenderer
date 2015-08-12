@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <numeric>
 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
@@ -176,18 +177,43 @@ public:
 		ply_set_read_cb(ply, "vertex", "blue", vertex_b,(void *) &m_Vertices, 8);
 
 		m_Vertices.resize(nvertices);
-
 		if (!ply_read(ply))
 		{
 			throw 1;
 		}
 		ply_close(ply);
 
-		std::vector<unsigned int> Indices;
-		for (unsigned long i = 0; i < nvertices; i++)
-		{
-			Indices.push_back(i);
+		glm::vec3 max, min;
+		max = glm::vec3(-99999999.9f);
+		min = glm::vec3( 99999999.9f);
+		for (std::vector<LYVertex>::const_iterator i = m_Vertices.begin(); i != m_Vertices.end(); ++i){
+			if (max.x < i->m_pos.x) max.x = i->m_pos.x;
+			if (max.y < i->m_pos.y) max.y = i->m_pos.y;
+			if (max.z < i->m_pos.z) max.z = i->m_pos.z;
+
+			if (min.x > i->m_pos.x) min.x = i->m_pos.x;
+			if (min.y > i->m_pos.y) min.y = i->m_pos.y;
+			if (min.z > i->m_pos.z) min.z = i->m_pos.z;
 		}
+
+		float3 lMin, lMax;
+		float3 rMin, rMax;
+
+		rMin = make_float3(0.f); rMax = make_float3(1.f);
+		lMin = make_float3(min.x, min.y, min.z); lMax = make_float3(max.x, max.y, max.z);
+		float3 lSpan = lMax-lMin;
+		float3 rSpan = rMax-rMin;
+
+		float span = std::max(std::max(lSpan.x, lSpan.y), lSpan.z);
+		for (std::vector<LYVertex>::iterator i = m_Vertices.begin(); i != m_Vertices.end(); ++i){
+
+			float3 valueScaled = ((*i).m_pos - lMin) / span;
+
+			(*i).m_pos = rMin + (valueScaled * rSpan);
+		}
+
+		std::vector<unsigned int> Indices(nvertices);
+		std::iota(Indices.begin(), Indices.end(), 0);
 
 		ret = new LYMesh(m_Vertices, Indices);
 		LYPLYLoader::nX  = LYPLYLoader::nY = 0;

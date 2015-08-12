@@ -33,6 +33,8 @@ LYMesh::LYMesh(const std::vector<LYVertex>& Vertices,
 		if (min.y > i->m_pos.y) min.y = i->m_pos.y;
 		if (min.z > i->m_pos.z) min.z = i->m_pos.z;
 	}
+	if (m_points)
+		printf("min (%.2f, %.2f, %.2f)   max (%.2f, %.2f, %.2f)", min.x, min.y, min.z, max.x, max.y, max.z);
 
 	modelCentre = (max+min)*0.5f;
 	modelMatrix = glm::mat4();
