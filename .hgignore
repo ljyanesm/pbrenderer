@@ -19,3 +19,16 @@ pbrenderer/x64/Debug sm20/*
 pbrenderer/x64/Release sm20/*
 x64/Debug sm20/*
 x64/Release sm20/*
+pbrenderer/Win32/*
+Win32/*
+pbrenderer/Debug sm20/*
+pbrenderer/Release sm20/*
+pbrenderer/Release sm3.5 dp/*
+pbrenderer/x64/*
+pbrenderer/vc110.pdb
+pbrenderer/Thumbs.db
+pbrenderer.v11.suo
+desktop.ini
+pbrenderer/*.GPUlog
+pbrenderer/performance/*
+Thumbs.db

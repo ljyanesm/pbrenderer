@@ -73,7 +73,12 @@ void main()
     vec3 H = normalize(incident + viewer);
     float specular = pow(max(0.0f, dot(H,N)),15.0f);
     float diffuse = max(0.0f, dot(incident, N));
-    
+
+    incident = -incident;
+    H = normalize(incident + viewer);
+    specular += pow(max(0.0f, dot(H,N)),15.0f);
+    diffuse += max(0.0f, dot(incident, N));
+
     //Background Only Pixels
     if(exp_depth > 0.99999999){
 		out_Color = vec4(1.0f, 1.0f, 1.0f, 0.0f);
@@ -105,7 +110,7 @@ void main()
 			out_Color = vec4(Color.rgb * diffuse + specular * vec3(1.0f), 1.0f);
 			break;
 		case(DISPLAY_TOTAL):
-			out_Color = vec4(final_color.rgb + specular * vec3(1.0f), 1.0f);
+			out_Color = vec4(final_color.rgb * diffuse + specular * vec3(1.0f), 1.0f);
 			break;
 	}
 	return;

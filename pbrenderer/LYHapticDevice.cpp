@@ -113,6 +113,7 @@ void LYHapticDevice::touchTool()
 	hdBeginFrame(ghHD);
 	if(COLLISION_FORCEFEEDBACK)
 	{
+		bool validForce = true;
 		hdGetIntegerv(HD_CURRENT_BUTTONS, &currentButtons);
 		glm::vec3 pos = glm::vec3((float) pState->position[0], (float) pState->position[1], (float) pState->position[2]);
 		pos.x *= m_workspaceScale.x;
@@ -121,20 +122,22 @@ void LYHapticDevice::touchTool()
 
 		this->setPosition(make_float3(pos.x, pos.y, pos.z));
 		float3 tmpForce = this->calculateFeedbackUpdateProxy();
-
+		if (abs(tmpForce.x) > 100.f) validForce = false;
 		// Apply the current modelView rotation transformation (NO TRANSLATION) to the force vector
-		glm::mat4 noTranslationMat = this->m_ViewMatrix;
-		noTranslationMat[3][0] = 0; noTranslationMat[3][1] = 0; noTranslationMat[3][2] = 0; noTranslationMat[3][3] = 1;
-		glm::vec3 p = glm::vec3(noTranslationMat * glm::vec4(tmpForce.x, tmpForce.y, tmpForce.z,1));
-		tmpForce = make_float3(p.x, p.y, p.z);
+		if (validForce){
+			glm::mat4 noTranslationMat = this->m_ViewMatrix;
+			noTranslationMat[3][0] = 0; noTranslationMat[3][1] = 0; noTranslationMat[3][2] = 0; noTranslationMat[3][3] = 1;
+			glm::vec3 p = glm::vec3(noTranslationMat * glm::vec4(tmpForce.x, tmpForce.y, tmpForce.z,1));
+			tmpForce = make_float3(p.x, p.y, p.z);
 
-		float f[3]={0,0,0};
-		float damping = 0.1f;
-		float3 _force;
-		_force = tmpForce * 20.0f;
-		force[0] = _force.x;
-		force[1] = _force.y;
-		force[2] = _force.z;
+			float f[3]={0,0,0};
+			float damping = 0.1f;
+			float3 _force;
+			_force = tmpForce * 20.0f;
+			force[0] = _force.x;
+			force[1] = _force.y;
+			force[2] = _force.z;
+		}
 	}
 	hdSetDoublev(HD_CURRENT_FORCE, force);
 	hdEndFrame(ghHD);
