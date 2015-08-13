@@ -17,6 +17,8 @@ Global
 		Release sm20|x64 = Release sm20|x64
 		Release sm3.5 dp|Win32 = Release sm3.5 dp|Win32
 		Release sm3.5 dp|x64 = Release sm3.5 dp|x64
+		Release sm5.2 dp|Win32 = Release sm5.2 dp|Win32
+		Release sm5.2 dp|x64 = Release sm5.2 dp|x64
 		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
 	EndGlobalSection
@@ -45,6 +47,10 @@ Global
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|Win32.Build.0 = Release sm3.5 dp|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|x64.ActiveCfg = Release sm3.5 dp|x64
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm3.5 dp|x64.Build.0 = Release sm3.5 dp|x64
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm5.2 dp|Win32.ActiveCfg = Release sm5.2 dp|Win32
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm5.2 dp|Win32.Build.0 = Release sm5.2 dp|Win32
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm5.2 dp|x64.ActiveCfg = Release sm5.2 dp|x64
+		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release sm5.2 dp|x64.Build.0 = Release sm5.2 dp|x64
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release|Win32.ActiveCfg = Release|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release|Win32.Build.0 = Release|Win32
 		{AA9C3575-365C-4CD7-8CB2-2156E8557AC0}.Release|x64.ActiveCfg = Release|x64
