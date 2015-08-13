@@ -87,7 +87,7 @@ private:
 	float4		m_forceFeedback;
 
 	bool		m_touched;
-
+	float		maxR;
 
 	CollisionCheckType	m_collisionCheckType;
 	HapticRenderingMethods renderingMethod;

@@ -18,8 +18,10 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 
 	m_params.gridSize = m_gridSize;
 	m_params.cellSize = make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
-	m_params.R			= 0.02f;
+	m_params.R			= m_params.cellSize.x*1.5f;
 	neighborhoodRadius	= 0.02f;
+
+	maxR = m_params.cellSize.x * 7.f;
 
 	m_hParams->gridSize		= m_gridSize;
 	m_hParams->cellSize		= make_float3(1.0f/gridSize.x, 1.0f/gridSize.y, 1.0f/gridSize.z);
@@ -205,6 +207,7 @@ void	LYSpatialHash::setDeviceVertices(LYVertex *hostVertices)
 }
 
 void LYSpatialHash::setInfluenceRadius(float r){
+	if (r > this->maxR) return;
 	m_params.R = r;
 	this->m_hParams->R = r;
 	neighborhoodRadius = r;
@@ -221,7 +224,7 @@ void	LYSpatialHash::update()
 	m_hParams->Ax = make_float3(0.0f);
 	m_hParams->Nx = make_float3(0.0f);
 	LYCudaHelper::copyArrayToDevice(m_dParams, m_hParams, 0, sizeof(SimParams));
-	if (m_dirtyPos) {
+	if (m_dirtyPos && m_updatePositions) {
 		LYVertex *dPos = (LYVertex *) LYCudaHelper::mapGLBufferObject(&m_vboRes);
 		// calculate grid hash
 		calcHash(
