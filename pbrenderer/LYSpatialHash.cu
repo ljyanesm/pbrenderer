@@ -207,7 +207,6 @@ extern "C" {
 				if (maxPointsCell > 0) _computeCollisionCheck <<< totalNeighborhoodSize, maxPointsCell >>> (args2);
 				gpuErrchk(cudaPeekAtLastError());
 				checkCudaErrors(cudaMemset(arguments.collectionVertices, 0, totalNeighborhoodSize*sizeof(uint)));
-
 			} break;
 		case CollisionCheckType::BASIC:
 			{
