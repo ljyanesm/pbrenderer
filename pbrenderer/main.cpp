@@ -151,13 +151,13 @@ void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceH
 	case LYSpaceHandler::CPU_SPATIAL_HASH:
 		{
 			std::cout << "Creating CPU Hash" << std::endl;
-			space_handler = new CPUHashSTL(m_pMesh, 9999);
+			space_handler = new CPUHashSTL(m_pMesh, 9999, std::string(modelFile.begin()+modelFile.find_last_of('\\')+1, modelFile.begin()+modelFile.rfind('.')) );
 		}
 		break;
 	case LYSpaceHandler::GPU_SPATIAL_HASH:
 		{
 			std::cout << "Creating GPU Hash" << std::endl;
-			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(64));
+			space_handler = new LYSpatialHash(m_pMesh->getVBO(), m_pMesh->getNumVertices(), make_uint3(64), std::string(modelFile.begin()+modelFile.find_last_of('\\')+1, modelFile.begin()+modelFile.rfind('.')));
 		}
 		break;
 	case LYSpaceHandler::CPU_Z_ORDER:

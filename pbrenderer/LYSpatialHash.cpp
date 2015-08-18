@@ -1,6 +1,6 @@
 #include "LYSpatialHash.h"
 
-LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
+LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize, std::string modelName) :
 	m_gridSize(gridSize),
 	renderingMethod(HapticRenderingMethods::IMPLICIT_SURFACE),
 	maxSearchRange(7),
@@ -118,6 +118,9 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 	cudaMemcpy(m_src_points, dPos, numVertices*sizeof(LYVertex), cudaMemcpyDeviceToDevice);
 	cudaDeviceSynchronize();
 
+	StopWatchInterface *spatialHashTimer=nullptr;
+	sdkCreateTimer(&spatialHashTimer);
+	sdkStartTimer(&spatialHashTimer);
 	// calculate grid hash
 	calcHash(
 		m_pointHash,
@@ -139,6 +142,11 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize) :
 		dPos,
 		m_numVertices,
 		m_numGridCells);
+	sdkStopTimer(&spatialHashTimer);
+
+	std::ofstream myfile("./performance/spatialHash.txt", std::ios::app);
+	myfile << "GPU; " << modelName << "; " << this->m_numVertices << "; " << sdkGetAverageTimerValue(&spatialHashTimer) << std::endl;
+	myfile.close();
 
 	LYCudaHelper::unmapGLBufferObject(m_vboRes);
 
