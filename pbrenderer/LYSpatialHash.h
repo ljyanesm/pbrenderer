@@ -20,7 +20,7 @@ class LYSpatialHash : public LYSpaceHandler
 {
 
 public:
-	LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize);
+	LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize, std::string modelName = "");
 	~LYSpatialHash(void);
 
 	void	update();

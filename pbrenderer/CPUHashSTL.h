@@ -11,7 +11,7 @@ class CPUHashSTL :
 {
 public:
 	typedef std::unordered_multimap<uint, LYVertex> LYVertexLookup;
-	CPUHashSTL(LYMesh* m, int numBuckets);
+	CPUHashSTL(LYMesh* m, int numBuckets, std::string modelName);
 	~CPUHashSTL(void);
 
 	void update();

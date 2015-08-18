@@ -1,7 +1,7 @@
 #include "CPUHashSTL.h"
 
 
-CPUHashSTL::CPUHashSTL(LYMesh* m, int numBuckets) :
+CPUHashSTL::CPUHashSTL(LYMesh* m, int numBuckets, std::string modelName) :
 originalMesh(m),
 nBuckets(numBuckets),
 influenceRadius(0.02f),
@@ -11,10 +11,18 @@ cellSize(0.02f)
 	originalPoints = *m->getVertices();
 	m_touched = false;
 
+	StopWatchInterface *spatialHashTimer=nullptr;
+	sdkCreateTimer(&spatialHashTimer);
+	sdkStartTimer(&spatialHashTimer);
 	for (auto it = originalPoints.begin(); it != originalPoints.end(); ++it)
 	{
 		lookup.insert(std::make_pair(hashFunction(getGridPos(it->m_pos)), *it));
 	}
+	sdkStopTimer(&spatialHashTimer);
+
+	std::ofstream myfile("./performance/spatialHash.txt", std::ios::app);
+	myfile << "CPU; " << modelName << "; " << m->getNumVertices() << "; " << sdkGetAverageTimerValue(&spatialHashTimer) << std::endl;
+	myfile.close();
 }
 
 

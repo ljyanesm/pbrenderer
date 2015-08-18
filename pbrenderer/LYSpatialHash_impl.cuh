@@ -350,14 +350,9 @@ __global__
 // Number of 'CellStarts' and 'N vertices' is based on the formula for Moore's neighborhood for up to r = 15
 // Neighbors = (2r + 1)^3
 // 
-__device__ uint cellsToCheck[29791];
-__device__ uint numVertsCell[29791];
-__device__ uint numVertsCheck[29791];
 
-//__device__ uint vertexIndex[50000];
+__device__ uint vertexIndex[50000];
 //__device__ uint vertexToolIndex[4913][50000];
-
-__device__ uint vertexIndex[1];
 __device__ uint vertexToolIndex[1][1];
 
 __global__
