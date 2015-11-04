@@ -5,7 +5,7 @@ LYSpatialHash::LYSpatialHash(uint vbo, size_t numVertices, uint3 gridSize, std::
 	renderingMethod(HapticRenderingMethods::IMPLICIT_SURFACE),
 	maxSearchRange(7),
 	maxSearchRangeSq(maxSearchRange*maxSearchRange),
-	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1))
+	m_maxNumCollectionElements((2*maxSearchRange+1)*(2*maxSearchRange+1)*(2*maxSearchRange+1)) // (2r+1)^3
 {
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	m_srcVBO		= vbo;
