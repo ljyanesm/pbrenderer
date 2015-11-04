@@ -3,7 +3,7 @@
 
 LYKeyboardDevice::LYKeyboardDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh)
 {
-
+	bPause = true;
 	m_spaceHandler = sh;
 	m_deviceType = LYHapticInterface::KEYBOARD_DEVICE;
 	m_collider =	Collider();

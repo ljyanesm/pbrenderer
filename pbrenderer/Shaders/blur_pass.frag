@@ -24,7 +24,7 @@ void main()
     float lin_depth = linearizeDepth(exp_depth,u_Near,u_Far);
 
 	vec2 imgStep = vec2(u_Width, u_Height);
-    int windowWidth = 3;
+    int windowWidth = 5;
 
     float sum = 0;
     float wsum = 0;
