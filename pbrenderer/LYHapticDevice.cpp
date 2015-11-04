@@ -5,7 +5,7 @@ using namespace std;
 
 LYHapticDevice::LYHapticDevice(LYSpaceHandler *sh, LYMesh *proxyMesh, LYMesh *hipMesh)
 {
-	
+	bPause = true;
 	COLLISION_FORCEFEEDBACK = false;
 	m_spaceHandler		= sh;
 	m_deviceType		= LYHapticInterface::HAPTIC_DEVICE;
