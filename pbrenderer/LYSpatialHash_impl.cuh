@@ -168,10 +168,14 @@ __global__
 	int3 neighbourPos = gridPos + make_int3(x , y, z);
 	uint  neighbourGridPos = calcGridHash(neighbourPos);
 	uint cellStartI = FETCH(arguments.cellStart, neighbourGridPos);
-	if (cellStartI == 0xffffffff) return;
-	uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
-	arguments.collectionCellStart[index] = cellStartI;
-	arguments.collectionVertices[index] = N;
+	if (cellStartI == 0xffffffff){
+		arguments.collectionCellStart[index] = 0;
+		arguments.collectionVertices[index] = 0;
+	} else {
+		uint N = FETCH(arguments.cellEnd, neighbourGridPos) - cellStartI;
+		arguments.collectionCellStart[index] = cellStartI;
+		arguments.collectionVertices[index] = N;
+	}
 
 	__syncthreads();
 }
@@ -349,6 +353,7 @@ __global__
 
 // Number of 'CellStarts' and 'N vertices' is based on the formula for Moore's neighborhood for up to r = 15
 // Neighbors = (2r + 1)^3
+// vertexIndex size = (2r + 1)^3*maxPointsPerCell
 // 
 
 __device__ uint vertexIndex[50000];

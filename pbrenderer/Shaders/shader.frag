@@ -74,21 +74,21 @@ void main()
     float specular = pow(max(0.0f, dot(H,N)),15.0f);
     float diffuse = max(0.0f, dot(incident, N));
 
-    incident = -incident;
+    incident = -2.0f*incident;
     H = normalize(incident + viewer);
     specular += pow(max(0.0f, dot(H,N)),15.0f);
     diffuse += max(0.0f, dot(incident, N));
 
     //Background Only Pixels
     if(exp_depth > 0.99999999){
-		out_Color = vec4(1.0f, 1.0f, 1.0f, 0.0f);
+		out_Color = vec4(0.75f, 0.75f, 0.75f, 0.0f);
 		return;
 	}
         
     //Background Refraction
     vec4 refrac_color = vec4(0.75, 0.75, 0.75, 0.0);
     
-    vec3 final_color = refrac_color.rgb;
+    vec3 final_color = Color;
     
 	switch(u_DisplayType) {
 		case(DISPLAY_DEPTH):

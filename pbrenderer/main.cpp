@@ -1,7 +1,4 @@
-//#define BOOST_FILESYSTEM_VERSION 3
-#define BOOST_SYSTEM_DYN_LINK
-//#define BOOST_FILESYSTEM_NO_DEPRECATED 
-#include <boost/filesystem.hpp>
+#include "ModelInfo.h"
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <cstdio>
@@ -30,7 +27,6 @@
 
 #include "IOManager.h"
 #include "LYHapticDevice.h"
-
 #include "LYWorld.h"
 #include "LYMesh.h"
 #include "LYCamera.h"
@@ -142,7 +138,7 @@ float objectScale = 0.0;
 enum {M_VIEW = 0, M_MOVE};
 
 namespace fs = ::boost::filesystem;
-std::vector<fs::path> modelFiles;
+std::vector<ModelInfo> modelFiles;
 
 void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceHandler* &space_handler)
 {
@@ -169,9 +165,27 @@ void create_space_handler(LYSpaceHandler::SpaceHandlerType spaceH_type, LYSpaceH
 }
 
 
+void loadModelInfo(::boost::filesystem::path modelPath, ModelInfo* m)
+{
+	std::cout << "Loading " + modelPath.string() + " parameters..." << std::endl;
+	config4cpp::Configuration *cfg = config4cpp::Configuration::create();
+	try
+	{
+		cfg->parse(std::string(modelPath.string().substr(0, modelPath.string().length()-4)+".cfg").c_str());
+		m->global_point_scale	= cfg->lookupFloat("", "global_point_scale");
+		m->local_point_scale	= cfg->lookupFloat("", "local_point_scale");
+		m->pointRadius			= cfg->lookupFloat("", "point_radius");
+		m->pointScale			= cfg->lookupFloat("", "point_scale");
+	}
+	catch (const config4cpp::ConfigurationException &e)
+	{
+		printf("ERROR: %s", e.c_str());
+	}
+}
+
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
-void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>& ret)
+void get_all(const fs::path& root, const std::string& ext, std::vector<ModelInfo>& ret)
 {  
 	if (!fs::exists(root)) return;
 
@@ -179,6 +193,7 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 	{
 		fs::directory_iterator it(root);
 		fs::directory_iterator endit;
+		// Look at the files in the directory
 		while(it != endit)
 		{
 			if (fs::is_regular_file(it->status()) && it->path().extension() == ext 
@@ -188,7 +203,12 @@ void get_all(const fs::path& root, const std::string& ext, std::vector<fs::path>
 				&& it->path().filename() != "bbox.ply"
 				&& it->path().filename() != "surface.ply")
 			{
-				ret.push_back(it->path());
+				// If this is a model im interested in, store the values of the parameters
+				// and insert the ModelInfo into the models array.
+				ModelInfo m;
+				loadModelInfo(it->path(), &m);
+				m.modelPath = it->path().string();
+				modelFiles.push_back(m);
 			}
 			++it;
 		}
@@ -233,7 +253,6 @@ void loadConfigFile( char ** argv )
 	try
 	{
 		cfg->parse("./app.cfg");
-		modelFile = cfg->lookupString("", "filename");
 		deviceType = (LYHapticInterface::LYDEVICE_TYPE) cfg->lookupInt("", "device");
 		influenceRadius = (float) cfg->lookupFloat("", "influenceRadius");
 		pointRadius = (float) cfg->lookupFloat("", "pointRadius");
@@ -244,8 +263,17 @@ void loadConfigFile( char ** argv )
 	}
 	loadedModel = 0;
 	get_all("./models", ".ply", modelFiles);
-	if (modelFile.empty()) modelFile = argv[1];
-	if (!modelFiles.empty() && !modelFile.empty()) modelFile = modelFiles.at(loadedModel).string();
+	modelFile = modelFiles[loadedModel].modelPath;
+}
+
+
+void loadModel_Params()
+{
+	global_point_scale = modelFiles[loadedModel].global_point_scale;
+	local_point_scale = modelFiles[loadedModel].local_point_scale;
+	pointRadius = modelFiles[loadedModel].pointRadius;
+	pointScale = modelFiles[loadedModel].pointScale;
+	m_pMesh = m_plyLoader->getInstance().readPointData(modelFiles[loadedModel].modelPath);
 }
 
 // initialize OpenGL
@@ -277,8 +305,8 @@ void initGL(int *argc, char **argv){
 	screenspace_renderer = new LYScreenspaceRenderer(m_pCamera);
 	overlay_renderer = new OverlayRenderer(m_plyLoader, m_pCamera);
 
-	m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
-	global_point_scale = m_pMesh->getScale();
+	// Load the initial model!
+	loadModel_Params();
 
 	//modelVoxelizer = new ModelVoxelization(m_pMesh, 20);
 	//m_physModel = modelVoxelizer->getModel();
@@ -386,6 +414,32 @@ void motion(int x, int y)
 	glutPostRedisplay();
 }
 
+
+void changeModel(LYMesh * tmpModel, LYSpaceHandler * tmpSpace, int pNext)
+{
+	ioInterface->getDevice()->pause();
+	loadedModel = (loadedModel + pNext)%modelFiles.size();
+	modelFile = modelFiles.at(loadedModel).modelPath;
+	printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
+	while (true)
+	{
+		try{
+			loadModel_Params();
+			break;	// Exit the loop
+		}
+		catch (int e){
+			printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
+			loadedModel = (loadedModel + pNext)%modelFiles.size();
+			modelFile = modelFiles.at(loadedModel).modelPath;
+		}
+	}
+	create_space_handler(spaceH_type, space_handler);
+	ioInterface->getDevice()->setSpaceHandler(space_handler);
+	ioInterface->getDevice()->start();
+	delete tmpModel;
+	delete tmpSpace;
+}
+
 void keyboardFunc(unsigned char key, int x, int y)
 {
 	static bool oriented(false);
@@ -405,52 +459,10 @@ void keyboardFunc(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case '[':
-		ioInterface->getDevice()->pause();
-		loadedModel = (--loadedModel)%modelFiles.size();
-		modelFile = modelFiles.at(loadedModel).string();
-		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
-		while (true)
-		{
-			try{
-				m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
-				global_point_scale = m_pMesh->getScale();
-				break;	// Exit the loop
-			}
-			catch (int e){
-				printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
-				loadedModel = (--loadedModel)%modelFiles.size();
-				modelFile = modelFiles.at(loadedModel).string();
-			}
-		}
-		create_space_handler(spaceH_type, space_handler);
-		ioInterface->getDevice()->setSpaceHandler(space_handler);
-		ioInterface->getDevice()->start();
-		delete tmpModel;
-		delete tmpSpace;
+		changeModel(tmpModel, tmpSpace, -1);
 		break;
 	case ']':
-		ioInterface->getDevice()->pause();
-		loadedModel = (++loadedModel)%modelFiles.size();
-		modelFile = modelFiles.at(loadedModel).string();
-		printf("Loading new object: %d - %s\n\n", loadedModel, modelFile.c_str());
-		while (true)
-		{
-			try{
-				m_pMesh = m_plyLoader->getInstance().readPointData(modelFile);
-				global_point_scale = m_pMesh->getScale();
-				break;
-			}
-			catch (int e){
-				printf("The object %d - %s could not be loaded, loading next model... and %d\n", loadedModel, modelFile.c_str(), e);
-				loadedModel = (++loadedModel)%modelFiles.size();
-				modelFile = modelFiles.at(loadedModel).string();
-			}
-		}
-		create_space_handler(spaceH_type, space_handler);
-		ioInterface->getDevice()->setSpaceHandler(space_handler);
-		ioInterface->getDevice()->start();
-		delete tmpModel;
-		delete tmpSpace;
+		changeModel(tmpModel, tmpSpace, +1);
 		break;
 	case 'p':
 		mode = (LYScreenspaceRenderer::DisplayMode)
@@ -640,7 +652,8 @@ void display()
 	static uint resetTimers = 0;
 	LYMesh *displayMesh = m_pMesh;
 	sdkStartTimer(&graphicsTimer);
-	Sleep(20);
+	
+	//if (bPause) Sleep(20);
 
 	// render
 

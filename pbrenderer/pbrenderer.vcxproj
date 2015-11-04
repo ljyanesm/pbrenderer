@@ -410,7 +410,7 @@
     </Link>
     <CudaCompile>
       <Include>./;./project libraries\common\inc;.\project libraries\freeglut\include</Include>
-      <CodeGeneration>compute_52,sm_52;</CodeGeneration>
+      <CodeGeneration>compute_20,sm_20;compute_35,sm_35;compute_52,sm_52;</CodeGeneration>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
     <ProjectReference>
@@ -843,6 +843,7 @@
     <ClInclude Include="LYScreenspaceRenderer.h" />
     <ClInclude Include="LYTexture.h" />
     <ClInclude Include="LYHapticDevice.h" />
+    <ClInclude Include="ModelInfo.h" />
     <ClInclude Include="ModelVoxelization.h" />
     <ClInclude Include="OverlayRenderer.h" />
     <ClInclude Include="CPUHashSTL.h" />

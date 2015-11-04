@@ -460,7 +460,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
 
-	_drawPoints(haptic_interface->getHIPObject());
+	_drawCollider();
 
 	modelMatrix = haptic_interface->getProxyMatrix();
 	modelViewMatrix = m_camera->getViewMatrix() * modelMatrix;
@@ -472,7 +472,7 @@ void LYScreenspaceRenderer::display(DisplayMode mode  = DISPLAY_TOTAL)
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointScale"), m_camera->getHeight() / tanf(m_camera->getFOV()*0.5f*(float)M_PI/180.0f) );
 	glUniform1f( glGetUniformLocation(depthShader->getProgramId(), "pointRadius"), haptic_interface->getSize()*8.0f);
 
-	_drawPoints(haptic_interface->getProxyObject());
+	_drawCollider();
 
 	glDisable(GL_POINT_SPRITE_ARB);
 
